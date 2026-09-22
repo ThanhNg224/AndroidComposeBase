@@ -13,10 +13,263 @@ package com.thanhng224.androidcomposebase.core.ui.base {
 
 }
 
+package com.thanhng224.androidcomposebase.core.ui.components {
+
+  public final class AppButtonKt {
+    method public static void AppOutlinedButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional Modifier modifier, optional boolean enabled, optional ImageVector? icon);
+    method public static void AppPrimaryButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional Modifier modifier, optional boolean enabled, optional boolean isLoading, optional ImageVector? icon);
+    method public static void AppSecondaryButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional Modifier modifier, optional boolean enabled, optional ImageVector? icon);
+  }
+
+  public final class AppDialogKt {
+    method public static void AppDialog(boolean visible, kotlin.jvm.functions.Function0<kotlin.Unit> onDismiss, optional Modifier modifier, optional ImageVector? icon, optional Color iconTint, optional String? title, optional String? message, optional String? primaryActionText, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onPrimaryAction, optional String? secondaryActionText, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onSecondaryAction, optional boolean dismissOnBackPress, optional boolean dismissOnClickOutside, optional EnterTransition enter, optional ExitTransition exit, optional kotlin.jvm.functions.Function0<kotlin.Unit>? content);
+  }
+
+  public final class AppTopBarKt {
+    method public static void AppCenterTopBar(String title, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<? super RowScope,kotlin.Unit> actions);
+    method public static void AppTopBar(String title, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<? super RowScope,kotlin.Unit> actions);
+  }
+
+  public final class AsyncContentKt {
+    method public static <T> void AsyncContent(com.thanhng224.androidcomposebase.core.ui.components.AsyncState<? extends T> state, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onRetry, optional kotlin.jvm.functions.Function0<kotlin.Unit> loadingContent, optional kotlin.jvm.functions.Function1<? super com.thanhng224.androidcomposebase.core.ui.components.AsyncState.Error,kotlin.Unit> errorContent, kotlin.jvm.functions.Function1<? super T,kotlin.Unit> successContent);
+    method public static void DefaultErrorView(String message, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onRetry);
+    method public static void DefaultLoadingView(optional Modifier modifier, optional String message);
+  }
+
+  public sealed exhaustive interface AsyncState<T> {
+  }
+
+  public static final class AsyncState.Error implements com.thanhng224.androidcomposebase.core.ui.components.AsyncState {
+    ctor public AsyncState.Error(String message, optional Throwable? throwable);
+    method public String component1();
+    method public Throwable? component2();
+    method public com.thanhng224.androidcomposebase.core.ui.components.AsyncState.Error copy(optional String message, optional Throwable? throwable);
+    method @InaccessibleFromKotlin public String getMessage();
+    method @InaccessibleFromKotlin public Throwable? getThrowable();
+    property public String message;
+    property public Throwable? throwable;
+  }
+
+  public static final class AsyncState.Idle implements com.thanhng224.androidcomposebase.core.ui.components.AsyncState {
+    field public static final com.thanhng224.androidcomposebase.core.ui.components.AsyncState.Idle INSTANCE;
+  }
+
+  public static final class AsyncState.Loading implements com.thanhng224.androidcomposebase.core.ui.components.AsyncState {
+    field public static final com.thanhng224.androidcomposebase.core.ui.components.AsyncState.Loading INSTANCE;
+  }
+
+  public static final class AsyncState.Success<T> implements com.thanhng224.androidcomposebase.core.ui.components.AsyncState<T> {
+    ctor public AsyncState.Success(T data);
+    method public T component1();
+    method public com.thanhng224.androidcomposebase.core.ui.components.AsyncState.Success<T> copy(optional T data);
+    method @InaccessibleFromKotlin public T getData();
+    property public T data;
+  }
+
+  public final class FloatingNavBarKt {
+    method public static void FloatingNavBar(java.util.List<com.thanhng224.androidcomposebase.core.ui.components.NavItem> items, optional Modifier modifier);
+  }
+
+  public final class NavItem {
+    ctor public NavItem(String title, ImageVector icon, optional ImageVector selectedIcon, optional int badgeCount, optional boolean isSelected, kotlin.jvm.functions.Function0<kotlin.Unit> onClick);
+    method public String component1();
+    method public ImageVector component2();
+    method public ImageVector component3();
+    method public int component4();
+    method public boolean component5();
+    method public kotlin.jvm.functions.Function0<kotlin.Unit> component6();
+    method public com.thanhng224.androidcomposebase.core.ui.components.NavItem copy(optional String title, optional ImageVector icon, optional ImageVector selectedIcon, optional int badgeCount, optional boolean isSelected, optional kotlin.jvm.functions.Function0<kotlin.Unit> onClick);
+    method @InaccessibleFromKotlin public int getBadgeCount();
+    method @InaccessibleFromKotlin public ImageVector getIcon();
+    method @InaccessibleFromKotlin public kotlin.jvm.functions.Function0<kotlin.Unit> getOnClick();
+    method @InaccessibleFromKotlin public ImageVector getSelectedIcon();
+    method @InaccessibleFromKotlin public String getTitle();
+    method @InaccessibleFromKotlin public boolean isSelected();
+    property public int badgeCount;
+    property public ErrorType icon;
+    property public boolean isSelected;
+    property public kotlin.jvm.functions.Function0<kotlin.Unit> onClick;
+    property public ErrorType selectedIcon;
+    property public String title;
+  }
+
+}
+
+package com.thanhng224.androidcomposebase.core.ui.text {
+
+  public final class UiTextExtensionsKt {
+    method public static String asString(UiText);
+  }
+
+}
+
 package com.thanhng224.androidcomposebase.core.ui.theme {
 
-  public final class ComposeThemeKt {
-    method public static void AndroidComposeBaseTheme(kotlin.jvm.functions.Function0<kotlin.Unit> content);
+  public final class ColorKt {
+    method @InaccessibleFromKotlin public static Color getBackgroundDark();
+    method @InaccessibleFromKotlin public static Color getBackgroundLight();
+    method @InaccessibleFromKotlin public static androidx.compose.material3.ColorScheme getDarkColorScheme();
+    method @InaccessibleFromKotlin public static Color getErrorContainerDark();
+    method @InaccessibleFromKotlin public static Color getErrorContainerLight();
+    method @InaccessibleFromKotlin public static Color getErrorDark();
+    method @InaccessibleFromKotlin public static Color getErrorLight();
+    method @InaccessibleFromKotlin public static androidx.compose.material3.ColorScheme getLightColorScheme();
+    method @InaccessibleFromKotlin public static Color getOnBackgroundDark();
+    method @InaccessibleFromKotlin public static Color getOnBackgroundLight();
+    method @InaccessibleFromKotlin public static Color getOnErrorContainerDark();
+    method @InaccessibleFromKotlin public static Color getOnErrorContainerLight();
+    method @InaccessibleFromKotlin public static Color getOnErrorDark();
+    method @InaccessibleFromKotlin public static Color getOnErrorLight();
+    method @InaccessibleFromKotlin public static Color getOnPrimaryContainerDark();
+    method @InaccessibleFromKotlin public static Color getOnPrimaryContainerLight();
+    method @InaccessibleFromKotlin public static Color getOnPrimaryDark();
+    method @InaccessibleFromKotlin public static Color getOnPrimaryLight();
+    method @InaccessibleFromKotlin public static Color getOnSecondaryContainerDark();
+    method @InaccessibleFromKotlin public static Color getOnSecondaryContainerLight();
+    method @InaccessibleFromKotlin public static Color getOnSecondaryDark();
+    method @InaccessibleFromKotlin public static Color getOnSecondaryLight();
+    method @InaccessibleFromKotlin public static Color getOnSurfaceDark();
+    method @InaccessibleFromKotlin public static Color getOnSurfaceLight();
+    method @InaccessibleFromKotlin public static Color getOnSurfaceVariantDark();
+    method @InaccessibleFromKotlin public static Color getOnSurfaceVariantLight();
+    method @InaccessibleFromKotlin public static Color getOnTertiaryContainerDark();
+    method @InaccessibleFromKotlin public static Color getOnTertiaryContainerLight();
+    method @InaccessibleFromKotlin public static Color getOnTertiaryDark();
+    method @InaccessibleFromKotlin public static Color getOnTertiaryLight();
+    method @InaccessibleFromKotlin public static Color getOutlineDark();
+    method @InaccessibleFromKotlin public static Color getOutlineLight();
+    method @InaccessibleFromKotlin public static Color getOutlineVariantDark();
+    method @InaccessibleFromKotlin public static Color getOutlineVariantLight();
+    method @InaccessibleFromKotlin public static Color getPrimaryContainerDark();
+    method @InaccessibleFromKotlin public static Color getPrimaryContainerLight();
+    method @InaccessibleFromKotlin public static Color getPrimaryDark();
+    method @InaccessibleFromKotlin public static Color getPrimaryLight();
+    method @InaccessibleFromKotlin public static Color getSecondaryContainerDark();
+    method @InaccessibleFromKotlin public static Color getSecondaryContainerLight();
+    method @InaccessibleFromKotlin public static Color getSecondaryDark();
+    method @InaccessibleFromKotlin public static Color getSecondaryLight();
+    method @InaccessibleFromKotlin public static Color getSuccessDark();
+    method @InaccessibleFromKotlin public static Color getSuccessLight();
+    method @InaccessibleFromKotlin public static Color getSurfaceDark();
+    method @InaccessibleFromKotlin public static Color getSurfaceLight();
+    method @InaccessibleFromKotlin public static Color getSurfaceVariantDark();
+    method @InaccessibleFromKotlin public static Color getSurfaceVariantLight();
+    method @InaccessibleFromKotlin public static Color getTertiaryContainerDark();
+    method @InaccessibleFromKotlin public static Color getTertiaryContainerLight();
+    method @InaccessibleFromKotlin public static Color getTertiaryDark();
+    method @InaccessibleFromKotlin public static Color getTertiaryLight();
+    property public static ErrorType BackgroundDark;
+    property public static ErrorType BackgroundLight;
+    property public static ErrorType DarkColorScheme;
+    property public static ErrorType ErrorContainerDark;
+    property public static ErrorType ErrorContainerLight;
+    property public static ErrorType ErrorDark;
+    property public static ErrorType ErrorLight;
+    property public static ErrorType LightColorScheme;
+    property public static ErrorType OnBackgroundDark;
+    property public static ErrorType OnBackgroundLight;
+    property public static ErrorType OnErrorContainerDark;
+    property public static ErrorType OnErrorContainerLight;
+    property public static ErrorType OnErrorDark;
+    property public static ErrorType OnErrorLight;
+    property public static ErrorType OnPrimaryContainerDark;
+    property public static ErrorType OnPrimaryContainerLight;
+    property public static ErrorType OnPrimaryDark;
+    property public static ErrorType OnPrimaryLight;
+    property public static ErrorType OnSecondaryContainerDark;
+    property public static ErrorType OnSecondaryContainerLight;
+    property public static ErrorType OnSecondaryDark;
+    property public static ErrorType OnSecondaryLight;
+    property public static ErrorType OnSurfaceDark;
+    property public static ErrorType OnSurfaceLight;
+    property public static ErrorType OnSurfaceVariantDark;
+    property public static ErrorType OnSurfaceVariantLight;
+    property public static ErrorType OnTertiaryContainerDark;
+    property public static ErrorType OnTertiaryContainerLight;
+    property public static ErrorType OnTertiaryDark;
+    property public static ErrorType OnTertiaryLight;
+    property public static ErrorType OutlineDark;
+    property public static ErrorType OutlineLight;
+    property public static ErrorType OutlineVariantDark;
+    property public static ErrorType OutlineVariantLight;
+    property public static ErrorType PrimaryContainerDark;
+    property public static ErrorType PrimaryContainerLight;
+    property public static ErrorType PrimaryDark;
+    property public static ErrorType PrimaryLight;
+    property public static ErrorType SecondaryContainerDark;
+    property public static ErrorType SecondaryContainerLight;
+    property public static ErrorType SecondaryDark;
+    property public static ErrorType SecondaryLight;
+    property public static ErrorType SuccessDark;
+    property public static ErrorType SuccessLight;
+    property public static ErrorType SurfaceDark;
+    property public static ErrorType SurfaceLight;
+    property public static ErrorType SurfaceVariantDark;
+    property public static ErrorType SurfaceVariantLight;
+    property public static ErrorType TertiaryContainerDark;
+    property public static ErrorType TertiaryContainerLight;
+    property public static ErrorType TertiaryDark;
+    property public static ErrorType TertiaryLight;
+  }
+
+  public final class Dimens {
+    method @InaccessibleFromKotlin public Dp getButtonHeight();
+    method @InaccessibleFromKotlin public Dp getElevationHigh();
+    method @InaccessibleFromKotlin public Dp getElevationLow();
+    method @InaccessibleFromKotlin public Dp getElevationMedium();
+    method @InaccessibleFromKotlin public Dp getElevationNone();
+    method @InaccessibleFromKotlin public Dp getInputHeight();
+    method @InaccessibleFromKotlin public Dp getMinTouchTarget();
+    method @InaccessibleFromKotlin public Dp getRadiusLarge();
+    method @InaccessibleFromKotlin public Dp getRadiusMedium();
+    method @InaccessibleFromKotlin public Dp getRadiusPill();
+    method @InaccessibleFromKotlin public Dp getRadiusSmall();
+    method @InaccessibleFromKotlin public Dp getSpaceLarge();
+    method @InaccessibleFromKotlin public Dp getSpaceMedium();
+    method @InaccessibleFromKotlin public Dp getSpaceMediumSmall();
+    method @InaccessibleFromKotlin public Dp getSpaceNone();
+    method @InaccessibleFromKotlin public Dp getSpaceSmall();
+    method @InaccessibleFromKotlin public Dp getSpaceXLarge();
+    method @InaccessibleFromKotlin public Dp getSpaceXSmall();
+    method @InaccessibleFromKotlin public Dp getSpaceXXLarge();
+    method @InaccessibleFromKotlin public Dp getSpaceXXSmall();
+    method @InaccessibleFromKotlin public Dp getSpaceXXXLarge();
+    property public ErrorType buttonHeight;
+    property public ErrorType elevationHigh;
+    property public ErrorType elevationLow;
+    property public ErrorType elevationMedium;
+    property public ErrorType elevationNone;
+    property public ErrorType inputHeight;
+    property public ErrorType minTouchTarget;
+    property public ErrorType radiusLarge;
+    property public ErrorType radiusMedium;
+    property public ErrorType radiusPill;
+    property public ErrorType radiusSmall;
+    property public ErrorType spaceLarge;
+    property public ErrorType spaceMedium;
+    property public ErrorType spaceMediumSmall;
+    property public ErrorType spaceNone;
+    property public ErrorType spaceSmall;
+    property public ErrorType spaceXLarge;
+    property public ErrorType spaceXSmall;
+    property public ErrorType spaceXXLarge;
+    property public ErrorType spaceXXSmall;
+    property public ErrorType spaceXXXLarge;
+    field public static final com.thanhng224.androidcomposebase.core.ui.theme.Dimens INSTANCE;
+  }
+
+  public final class ShapeKt {
+    method @InaccessibleFromKotlin public static Shapes getAppShapes();
+    property public static ErrorType AppShapes;
+  }
+
+  public final class ThemeKt {
+    method public static void AndroidComposeBaseTheme(optional boolean darkTheme, optional boolean dynamicColor, kotlin.jvm.functions.Function0<kotlin.Unit> content);
+  }
+
+  public final class TypeKt {
+    method @InaccessibleFromKotlin public static Typography getAppTypography();
+    property public static ErrorType AppTypography;
   }
 
 }

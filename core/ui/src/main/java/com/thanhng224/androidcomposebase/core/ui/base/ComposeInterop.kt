@@ -12,6 +12,6 @@ import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 public fun ComposeView.setThemedContent(content: @Composable () -> Unit) {
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     setContent {
-        AndroidComposeBaseTheme(content)
+        AndroidComposeBaseTheme(content = content)
     }
 }
