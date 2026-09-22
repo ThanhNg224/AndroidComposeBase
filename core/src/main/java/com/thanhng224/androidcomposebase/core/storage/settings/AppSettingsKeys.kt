@@ -8,4 +8,6 @@ public object AppSettingsKeys {
     public val OPEN_COUNT: SettingsKey.IntKey = SettingsKey.IntKey(name = "open_count", defaultValue = 0)
     public val DEBUG_LOGGING_ENABLED: SettingsKey.BooleanKey = SettingsKey.BooleanKey(name = "debug_logging_enabled", defaultValue = false)
     public val LANGUAGE_TAG: SettingsKey.StringKey = SettingsKey.StringKey(name = "language_tag", defaultValue = "")
+    public val ONBOARDING_COMPLETED: SettingsKey.BooleanKey = SettingsKey.BooleanKey(name = "onboarding_completed", defaultValue = false)
+    public val IS_LOGGED_IN: SettingsKey.BooleanKey = SettingsKey.BooleanKey(name = "is_logged_in", defaultValue = false)
 }
