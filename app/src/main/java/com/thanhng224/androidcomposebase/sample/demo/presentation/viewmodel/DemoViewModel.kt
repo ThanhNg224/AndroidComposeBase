@@ -4,6 +4,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thanhng224.androidcomposebase.R
+import com.thanhng224.androidcomposebase.core.ui.text.UiText
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherError
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherResult
 import com.thanhng224.androidcomposebase.sample.demo.domain.usecase.FetchDemoWeatherUseCase
@@ -16,7 +17,6 @@ import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoUiSt
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherError
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherState
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.PendingDemoMessage
-import com.thanhng224.androidcomposebase.core.ui.text.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

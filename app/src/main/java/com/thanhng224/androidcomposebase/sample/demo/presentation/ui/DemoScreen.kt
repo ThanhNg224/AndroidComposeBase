@@ -74,15 +74,17 @@ public fun DemoScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(
-                start = Dimens.spaceLarge,
-                end = Dimens.spaceLarge,
-                top = Dimens.spaceMedium,
-                bottom = 100.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            contentPadding =
+                PaddingValues(
+                    start = Dimens.spaceLarge,
+                    end = Dimens.spaceLarge,
+                    top = Dimens.spaceMedium,
+                    bottom = 100.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
         ) {
             item {

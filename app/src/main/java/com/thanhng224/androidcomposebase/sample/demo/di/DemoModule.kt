@@ -32,3 +32,26 @@ object DemoNetworkModule {
     @Singleton
     fun provideDemoApiService(retrofit: Retrofit): DemoApiService = retrofit.create(DemoApiService::class.java)
 }
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DemoDatabaseModule {
+    @Provides
+    @Singleton
+    fun provideAppDatabase(
+        @dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context,
+    ): com.thanhng224.androidcomposebase.sample.demo.data.local.AppDatabase =
+        androidx.room.Room
+            .databaseBuilder(
+                context,
+                com.thanhng224.androidcomposebase.sample.demo.data.local.AppDatabase::class.java,
+                "demo_weather.db",
+            ).fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideWeatherDao(
+        database: com.thanhng224.androidcomposebase.sample.demo.data.local.AppDatabase,
+    ): com.thanhng224.androidcomposebase.sample.demo.data.local.WeatherDao = database.weatherDao()
+}

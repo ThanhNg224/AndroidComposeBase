@@ -32,10 +32,11 @@ public fun OnboardingScreen(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(Dimens.spaceLarge),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(Dimens.spaceLarge),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -45,9 +46,10 @@ public fun OnboardingScreen(
         ) {
             Card(
                 shape = MaterialTheme.shapes.extraLarge,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                ),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
                 modifier = Modifier.size(120.dp),
             ) {
                 Box(
@@ -76,7 +78,9 @@ public fun OnboardingScreen(
             Spacer(modifier = Modifier.height(Dimens.spaceMedium))
 
             Text(
-                text = "A production-grade Android foundation built with 100% Jetpack Compose, Clean Architecture, and strict quality gates.",
+                text =
+                    "A production-grade Android foundation built with 100% Jetpack Compose, " +
+                        "Clean Architecture, and strict quality gates.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

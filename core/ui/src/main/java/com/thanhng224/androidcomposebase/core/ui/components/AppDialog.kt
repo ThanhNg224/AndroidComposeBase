@@ -36,7 +36,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
@@ -68,26 +67,27 @@ public fun AppDialog(
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            dismissOnBackPress = dismissOnBackPress,
-            dismissOnClickOutside = dismissOnClickOutside,
-            usePlatformDefaultWidth = false,
-        ),
+        properties =
+            DialogProperties(
+                dismissOnBackPress = dismissOnBackPress,
+                dismissOnClickOutside = dismissOnClickOutside,
+                usePlatformDefaultWidth = false,
+            ),
     ) {
         val interactionSource = remember { MutableInteractionSource() }
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.5f))
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = {
-                        if (dismissOnClickOutside) onDismiss()
-                    },
-                )
-                .padding(Dimens.spaceLarge),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = null,
+                        onClick = {
+                            if (dismissOnClickOutside) onDismiss()
+                        },
+                    ).padding(Dimens.spaceLarge),
             contentAlignment = Alignment.Center,
         ) {
             AnimatedVisibility(
@@ -100,13 +100,14 @@ public fun AppDialog(
                     tonalElevation = Dimens.elevationHigh,
                     shadowElevation = Dimens.elevationHigh,
                     color = MaterialTheme.colorScheme.surface,
-                    modifier = modifier
-                        .fillMaxWidth(0.92f)
-                        .clickable(
-                            interactionSource = interactionSource,
-                            indication = null,
-                            onClick = { /* Intercept tap inside card */ },
-                        ),
+                    modifier =
+                        modifier
+                            .fillMaxWidth(0.92f)
+                            .clickable(
+                                interactionSource = interactionSource,
+                                indication = null,
+                                onClick = { /* Intercept tap inside card */ },
+                            ),
                 ) {
                     Column(
                         modifier = Modifier.padding(Dimens.spaceLarge),
@@ -179,9 +180,10 @@ public fun AppDialog(
                                         },
                                         modifier = Modifier.height(Dimens.buttonHeight),
                                         shape = MaterialTheme.shapes.medium,
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.primary,
-                                        ),
+                                        colors =
+                                            ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.primary,
+                                            ),
                                     ) {
                                         Text(text = primaryActionText)
                                     }

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -41,9 +40,7 @@ import com.thanhng224.androidcomposebase.core.ui.components.AppSecondaryButton
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
 @Composable
-public fun DesignSystemScreen(
-    modifier: Modifier = Modifier,
-) {
+public fun DesignSystemScreen(modifier: Modifier = Modifier) {
     var showDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -53,15 +50,17 @@ public fun DesignSystemScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(
-                start = Dimens.spaceLarge,
-                end = Dimens.spaceLarge,
-                top = Dimens.spaceMedium,
-                bottom = 100.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            contentPadding =
+                PaddingValues(
+                    start = Dimens.spaceLarge,
+                    end = Dimens.spaceLarge,
+                    top = Dimens.spaceMedium,
+                    bottom = 100.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
         ) {
             item {
@@ -180,10 +179,11 @@ private fun ColorChip(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(MaterialTheme.shapes.small)
-                .background(color),
+            modifier =
+                Modifier
+                    .size(48.dp)
+                    .clip(MaterialTheme.shapes.small)
+                    .background(color),
         )
         Spacer(modifier = Modifier.height(Dimens.spaceXXSmall))
         Text(

@@ -1,6 +1,7 @@
 package com.thanhng224.androidcomposebase.sample.demo.presentation.viewmodel
 
 import app.cash.turbine.test
+import com.thanhng224.androidcomposebase.core.testing.MainDispatcherRule
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.DemoWeather
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherError
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherResult
@@ -13,7 +14,6 @@ import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoMess
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoUiEvent
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherError
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherState
-import com.thanhng224.androidcomposebase.core.testing.MainDispatcherRule
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

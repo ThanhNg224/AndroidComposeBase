@@ -39,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
 import com.thanhng224.androidcomposebase.core.ui.components.AppDialog
 import com.thanhng224.androidcomposebase.core.ui.text.resolve
@@ -78,15 +77,17 @@ public fun SettingsScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(
-                start = Dimens.spaceLarge,
-                end = Dimens.spaceLarge,
-                top = Dimens.spaceMedium,
-                bottom = 100.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            contentPadding =
+                PaddingValues(
+                    start = Dimens.spaceLarge,
+                    end = Dimens.spaceLarge,
+                    top = Dimens.spaceMedium,
+                    bottom = 100.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
         ) {
             item {
@@ -184,12 +185,12 @@ public fun SettingsScreen(
                             val isSelected = state.language?.languageTag == language.languageTag
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        viewModel.onEvent(SettingsUiEvent.LanguageSelected(language))
-                                    }
-                                    .padding(vertical = Dimens.spaceSmall),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.onEvent(SettingsUiEvent.LanguageSelected(language))
+                                        }.padding(vertical = Dimens.spaceSmall),
                             ) {
                                 RadioButton(
                                     selected = isSelected,
@@ -199,7 +200,9 @@ public fun SettingsScreen(
                                 )
                                 Spacer(modifier = Modifier.size(Dimens.spaceSmall))
                                 Text(
-                                    text = androidx.compose.ui.res.stringResource(language.displayNameResId),
+                                    text =
+                                        androidx.compose.ui.res
+                                            .stringResource(language.displayNameResId),
                                     style = MaterialTheme.typography.bodyMedium,
                                 )
                             }
@@ -223,9 +226,10 @@ public fun SettingsScreen(
                     shape = MaterialTheme.shapes.medium,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showLogoutDialog = true },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { showLogoutDialog = true },
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,

@@ -1,6 +1,9 @@
 complexity:
+  LongMethod:
+    ignoreAnnotated: ["Composable"]
   LongParameterList:
     active: true
+    ignoreAnnotated: ["Composable"]
     constructorThreshold: 8
     functionThreshold: 8
   TooManyFunctions:

@@ -3,11 +3,10 @@ package com.thanhng224.androidcomposebase.core.navigation
 import android.app.Activity
 import android.os.Bundle
 import android.os.Parcelable
-import androidx.core.os.BundleCompat
-import androidx.fragment.app.Fragment
 import java.io.Serializable
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
+import androidx.core.os.BundleCompat as AndroidXBundleCompat
 
 /**
  * Type-safe reified factory to extract non-null extras from an Activity Intent.
@@ -22,20 +21,6 @@ public inline fun <reified T> intentExtra(
  */
 public inline fun <reified T> intentExtraNullable(key: String): ReadOnlyProperty<Activity, T?> =
     IntentExtraNullableDelegate(key, T::class.java)
-
-/**
- * Type-safe reified factory to extract non-null arguments from a Fragment bundle.
- */
-public inline fun <reified T> fragmentArg(
-    key: String,
-    defaultValue: T? = null,
-): ReadOnlyProperty<Fragment, T> = FragmentArgumentDelegate(key, T::class.java, defaultValue)
-
-/**
- * Type-safe reified factory to extract nullable arguments from a Fragment bundle.
- */
-public inline fun <reified T> fragmentArgNullable(key: String): ReadOnlyProperty<Fragment, T?> =
-    FragmentArgumentNullableDelegate(key, T::class.java)
 
 @PublishedApi
 internal class IntentExtraDelegate<T>(
@@ -64,35 +49,6 @@ internal class IntentExtraNullableDelegate<T>(
         thisRef: Activity,
         property: KProperty<*>,
     ): T? = thisRef.intent?.extras?.getTyped(key, clazz)
-}
-
-@PublishedApi
-internal class FragmentArgumentDelegate<T>(
-    private val key: String,
-    private val clazz: Class<T>,
-    private val defaultValue: T? = null,
-) : ReadOnlyProperty<Fragment, T> {
-    override fun getValue(
-        thisRef: Fragment,
-        property: KProperty<*>,
-    ): T {
-        val bundle = thisRef.arguments
-        val value = bundle?.getTyped(key, clazz)
-        return value ?: defaultValue ?: throw IllegalArgumentException(
-            "Fragment argument with key '$key' is missing or has incorrect type.",
-        )
-    }
-}
-
-@PublishedApi
-internal class FragmentArgumentNullableDelegate<T>(
-    private val key: String,
-    private val clazz: Class<T>,
-) : ReadOnlyProperty<Fragment, T?> {
-    override fun getValue(
-        thisRef: Fragment,
-        property: KProperty<*>,
-    ): T? = thisRef.arguments?.getTyped(key, clazz)
 }
 
 /**
@@ -135,10 +91,10 @@ public fun <T> Bundle.getTyped(
         }
         clazz == Bundle::class.java -> getBundle(key) as? T
         Parcelable::class.java.isAssignableFrom(clazz) -> {
-            BundleCompat.getParcelable(this, key, clazz as Class<out Parcelable>) as? T
+            AndroidXBundleCompat.getParcelable(this, key, clazz as Class<out Parcelable>) as? T
         }
         Serializable::class.java.isAssignableFrom(clazz) -> {
-            BundleCompat.getSerializable(this, key, clazz as Class<out Serializable>) as? T
+            AndroidXBundleCompat.getSerializable(this, key, clazz as Class<out Serializable>) as? T
         }
         else -> throw IllegalArgumentException("Unsupported bundle value type: ${clazz.name}")
     }

@@ -3,6 +3,7 @@ package com.thanhng224.androidcomposebase.feature.settings.presentation.viewmode
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thanhng224.androidcomposebase.R
+import com.thanhng224.androidcomposebase.core.ui.text.UiText
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetCurrentLanguageUseCase
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetSupportedLanguagesUseCase
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.ObserveThemeUseCase
@@ -11,7 +12,6 @@ import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.SetThem
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.PendingSettingsMessage
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiEvent
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiState
-import com.thanhng224.androidcomposebase.core.ui.text.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow

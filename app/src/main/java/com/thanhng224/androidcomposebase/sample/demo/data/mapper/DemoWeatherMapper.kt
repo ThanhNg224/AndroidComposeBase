@@ -1,11 +1,11 @@
 package com.thanhng224.androidcomposebase.sample.demo.data.mapper
 
+import com.thanhng224.androidcomposebase.core.network.ApiFailure
+import com.thanhng224.androidcomposebase.core.network.ApiResult
 import com.thanhng224.androidcomposebase.sample.demo.data.dto.DemoWeatherResponseDto
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.DemoWeather
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherError
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherResult
-import com.thanhng224.androidcomposebase.core.network.ApiFailure
-import com.thanhng224.androidcomposebase.core.network.ApiResult
 
 fun ApiResult<DemoWeatherResponseDto>.toWeatherResult(): WeatherResult =
     when (this) {

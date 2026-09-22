@@ -1,7 +1,5 @@
 package com.thanhng224.androidcomposebase.core.ui.base
 
-import android.view.View
-
 /**
  * Pure, JVM-testable rate limiter: [shouldAllow] only returns true once per [intervalMs] window,
  * based on caller-supplied timestamps (no dependency on any clock).
@@ -19,20 +17,5 @@ public class Debouncer(
 
     public companion object {
         public const val DEFAULT_INTERVAL_MS: Long = 600L
-    }
-}
-
-/**
- * Android-only glue around [Debouncer]: ignores clicks that arrive within [intervalMs] of the
- * last accepted one. Not unit-tested directly (needs a real [View] click dispatch); the rate
- * limiting itself is covered by [Debouncer]'s own tests.
- */
-public fun View.setOnDebouncedClickListener(
-    intervalMs: Long = Debouncer.DEFAULT_INTERVAL_MS,
-    action: (View) -> Unit,
-) {
-    val debouncer = Debouncer(intervalMs)
-    setOnClickListener { view ->
-        if (debouncer.shouldAllow(System.currentTimeMillis())) action(view)
     }
 }

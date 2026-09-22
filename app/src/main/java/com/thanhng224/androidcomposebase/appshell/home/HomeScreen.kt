@@ -33,9 +33,7 @@ import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
 @Composable
-public fun HomeScreen(
-    modifier: Modifier = Modifier,
-) {
+public fun HomeScreen(modifier: Modifier = Modifier) {
     Scaffold(
         topBar = {
             AppCenterTopBar(title = "AndroidComposeBase")
@@ -43,23 +41,26 @@ public fun HomeScreen(
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(
-                start = Dimens.spaceLarge,
-                end = Dimens.spaceLarge,
-                top = Dimens.spaceMedium,
-                bottom = 100.dp, // Space for floating bottom bar
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            contentPadding =
+                PaddingValues(
+                    start = Dimens.spaceLarge,
+                    end = Dimens.spaceLarge,
+                    top = Dimens.spaceMedium,
+                    bottom = 100.dp, // Space for floating bottom bar
+                ),
             verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
         ) {
             item {
                 Card(
                     shape = MaterialTheme.shapes.large,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    ),
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        ),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Column(modifier = Modifier.padding(Dimens.spaceLarge)) {
@@ -140,9 +141,10 @@ private fun FeatureCard(
 ) {
     Card(
         shape = MaterialTheme.shapes.medium,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
         modifier = Modifier.fillMaxWidth(),
     ) {

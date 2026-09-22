@@ -26,15 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
-
-public sealed interface AsyncState<out T> {
-    public data object Idle : AsyncState<Nothing>
-    public data object Loading : AsyncState<Nothing>
-    public data class Success<T>(val data: T) : AsyncState<T>
-    public data class Error(val message: String, val throwable: Throwable? = null) : AsyncState<Nothing>
-}
 
 /**
  * Renders loading, error, and content states cleanly with animated crossfades.

@@ -2,10 +2,10 @@ package com.thanhng224.androidcomposebase.sample.designsystem.presentation.viewm
 
 import androidx.lifecycle.ViewModel
 import com.thanhng224.androidcomposebase.R
+import com.thanhng224.androidcomposebase.core.ui.text.UiText
 import com.thanhng224.androidcomposebase.sample.designsystem.presentation.state.DesignSystemDemoState
 import com.thanhng224.androidcomposebase.sample.designsystem.presentation.state.DesignSystemUiEvent
 import com.thanhng224.androidcomposebase.sample.designsystem.presentation.state.DesignSystemUiState
-import com.thanhng224.androidcomposebase.core.ui.text.UiText
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

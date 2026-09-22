@@ -7,13 +7,7 @@ plugins {
     alias(libs.plugins.detekt)
     alias(libs.plugins.kover)
     alias(libs.plugins.baselineprofile)
-    // Required because :app writes @Composable code (DesignSystemFragment's ComposeInteropDemo
-    // and the lambda it passes into :core's ComposeView.setThemedContent). Without this plugin,
-    // this module's compiler treats @Composable () -> Unit as a plain Function0 instead of doing
-    // the composer-parameter ABI transform, so a call site here would produce a Function0 call
-    // against a callee that :core (which does have the plugin) compiled as Function2 -- a
-    // NoSuchMethodError at runtime that compiles cleanly, because Kotlin's type checker sees the
-    // same declared type on both sides and only the bytecode shape actually differs.
+    // Jetpack Compose compiler plugin for Compose UI compilation.
     alias(libs.plugins.compose.compiler)
 }
 
@@ -47,7 +41,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
-        viewBinding = true
         buildConfig = true
         compose = true
     }
@@ -99,7 +92,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.fragment.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.startup.runtime)
@@ -107,8 +99,6 @@ dependencies {
     baselineProfile(project(":baselineprofile"))
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.hilt.work)
-    implementation(libs.material)
-    implementation(libs.androidx.constraintlayout)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)
@@ -118,10 +108,6 @@ dependencies {
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.hilt.android)
-    implementation(libs.androidx.navigation.fragment.ktx)
-    implementation(libs.androidx.navigation.ui.ktx)
-    implementation(libs.shimmer)
-    implementation(libs.lottie)
     implementation(libs.timber)
     ksp(libs.hilt.compiler)
     ksp(libs.androidx.hilt.compiler)
@@ -130,7 +116,6 @@ dependencies {
     testImplementation(libs.turbine)
     testImplementation(libs.okhttp.mockwebserver)
     androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.work.testing)
     androidTestImplementation(libs.kotlinx.coroutines.test)
 }

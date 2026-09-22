@@ -31,7 +31,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.core.ui.components.AppPrimaryButton
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
@@ -46,10 +45,11 @@ public fun LoginScreen(
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(Dimens.spaceLarge),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(Dimens.spaceLarge),
         contentAlignment = Alignment.Center,
     ) {
         Column(

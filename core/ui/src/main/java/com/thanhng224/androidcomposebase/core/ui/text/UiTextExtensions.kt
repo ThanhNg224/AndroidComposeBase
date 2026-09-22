@@ -7,8 +7,10 @@ import com.thanhng224.androidcomposebase.core.ui.text.UiText
 /**
  * Resolves a [UiText] instance into a localized [String] in Composable scope.
  */
+@Suppress("SpreadOperator")
 @Composable
-public fun UiText.asString(): String = when (this) {
-    is UiText.DynamicString -> value
-    is UiText.StringResource -> stringResource(resId, *formatArgs.toTypedArray())
-}
+public fun UiText.asString(): String =
+    when (this) {
+        is UiText.DynamicString -> value
+        is UiText.StringResource -> stringResource(resId, *formatArgs.toTypedArray())
+    }

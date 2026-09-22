@@ -35,13 +35,15 @@ public fun AppPrimaryButton(
         onClick = onClick,
         enabled = enabled && !isLoading,
         shape = MaterialTheme.shapes.medium,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(Dimens.buttonHeight),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-        ),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(Dimens.buttonHeight),
+        colors =
+            ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ),
     ) {
         if (isLoading) {
             CircularProgressIndicator(
@@ -81,13 +83,15 @@ public fun AppSecondaryButton(
         onClick = onClick,
         enabled = enabled,
         shape = MaterialTheme.shapes.medium,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(Dimens.buttonHeight),
-        colors = ButtonDefaults.filledTonalButtonColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-        ),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(Dimens.buttonHeight),
+        colors =
+            ButtonDefaults.filledTonalButtonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            ),
     ) {
         if (icon != null) {
             Icon(
@@ -119,9 +123,10 @@ public fun AppOutlinedButton(
         onClick = onClick,
         enabled = enabled,
         shape = MaterialTheme.shapes.medium,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(Dimens.buttonHeight),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(Dimens.buttonHeight),
     ) {
         if (icon != null) {
             Icon(

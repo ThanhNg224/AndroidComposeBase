@@ -40,7 +40,8 @@ uiautomator = "2.4.0"
 composeBom = "2026.09.00"
 metalava = "1.0.0-alpha15"
 coil = "2.7.0"
-room = "2.6.1"
+room = "2.7.2"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

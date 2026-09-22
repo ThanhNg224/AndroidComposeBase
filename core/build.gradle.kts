@@ -16,7 +16,6 @@ android {
     }
 
     buildFeatures {
-        viewBinding = true
         buildConfig = true
     }
 
@@ -28,7 +27,7 @@ android {
 publishedLibrary {
     artifactId.set("AndroidComposeBase")
     displayName.set("AndroidComposeBase Core")
-    description.set("Reusable XML + ViewBinding, MVVM + Clean Architecture Android base.")
+    description.set("Reusable headless architecture, storage, network, and foundation for AndroidComposeBase.")
 }
 
 kotlin {
@@ -41,11 +40,8 @@ dependencies {
     api(libs.androidx.lifecycle.runtime.ktx)
     api(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.activity.ktx)
-    api(libs.androidx.fragment.ktx)
     api(libs.androidx.appcompat)
     implementation(libs.androidx.core.splashscreen)
-    api(libs.material)
-    implementation(libs.lottie)
 
     // Coroutines
     api(libs.kotlinx.coroutines.core)
@@ -104,8 +100,6 @@ kover {
                     "*.core.navigation.ArgumentDelegatesKt",
                     "*.core.navigation.IntentExtraDelegate",
                     "*.core.navigation.IntentExtraNullableDelegate",
-                    "*.core.navigation.FragmentArgumentDelegate",
-                    "*.core.navigation.FragmentArgumentNullableDelegate",
                     // Android System & Storage Services
                     "*.core.storage.secure.EncryptedFileSecureStore*",
                     "*.core.storage.secure.EncryptedFileCodec*",

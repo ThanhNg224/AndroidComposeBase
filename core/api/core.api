@@ -126,8 +126,6 @@ package com.thanhng224.androidcomposebase.core.localization {
 package com.thanhng224.androidcomposebase.core.navigation {
 
   public final class ArgumentDelegatesKt {
-    method @KotlinOnly public static inline <reified T> ErrorType fragmentArg(String key, optional T? defaultValue);
-    method @KotlinOnly public static inline <reified T> ErrorType fragmentArgNullable(String key);
     method public static <T> T? getTyped(android.os.Bundle, String key, Class<T> clazz);
     method @KotlinOnly public static inline <reified T> ErrorType intentExtra(String key, optional T? defaultValue);
     method @KotlinOnly public static inline <reified T> ErrorType intentExtraNullable(String key);
@@ -411,65 +409,6 @@ package com.thanhng224.androidcomposebase.core.storage.settings {
 
 package com.thanhng224.androidcomposebase.core.ui.base {
 
-  public abstract class BaseActivity {
-    ctor public BaseActivity();
-    method protected final <T> void collectOnStarted(Flow<T>, kotlin.jvm.functions.Function2<? super T,? super error.NonExistentClass<kotlin.Unit!>!,? extends java.lang.Object?> action);
-    method @InaccessibleFromKotlin protected boolean getApplyInsetsToRoot();
-    method @InaccessibleFromKotlin protected boolean getUseImmersiveMode();
-    method public void onCreate(android.os.Bundle? savedInstanceState);
-    property protected boolean applyInsetsToRoot;
-    property protected boolean useImmersiveMode;
-  }
-
-  public abstract class BaseBindingActivity<VB> extends com.thanhng224.androidcomposebase.core.ui.base.BaseActivity {
-    ctor public BaseBindingActivity();
-    method @InaccessibleFromKotlin protected final VB getBinding();
-    method protected abstract VB inflateBinding(android.view.LayoutInflater inflater);
-    method protected abstract void onBindingReady(android.os.Bundle? savedInstanceState);
-    method public void onDestroy();
-    property protected final VB binding;
-  }
-
-  public abstract class BaseBottomSheetDialogFragment<VB> {
-    ctor public BaseBottomSheetDialogFragment();
-    method protected final <T> void collectOnStarted(Flow<T>, kotlin.jvm.functions.Function2<? super T,? super error.NonExistentClass<kotlin.Unit!>!,? extends java.lang.Object?> action);
-    method @InaccessibleFromKotlin protected final VB getBinding();
-    method protected abstract VB inflateBinding(android.view.LayoutInflater inflater, android.view.ViewGroup? container);
-    method protected abstract void onBindingReady(android.view.View view, android.os.Bundle? savedInstanceState);
-    method public android.view.View onCreateView(android.view.LayoutInflater inflater, android.view.ViewGroup? container, android.os.Bundle? savedInstanceState);
-    method public void onDestroyView();
-    method public void onViewCreated(android.view.View view, android.os.Bundle? savedInstanceState);
-    property protected final VB binding;
-  }
-
-  public abstract class BaseDialogFragment<VB> {
-    ctor public BaseDialogFragment();
-    method @InaccessibleFromKotlin protected int getBackgroundDrawableRes();
-    method @InaccessibleFromKotlin protected final VB getBinding();
-    method @InaccessibleFromKotlin protected com.thanhng224.androidcomposebase.core.ui.base.DialogAnimation getDialogAnimation();
-    method protected abstract VB inflateBinding(android.view.LayoutInflater inflater, android.view.ViewGroup? container);
-    method protected abstract void onBindingReady(android.os.Bundle? savedInstanceState);
-    method public android.view.View? onCreateView(android.view.LayoutInflater inflater, android.view.ViewGroup? container, android.os.Bundle? savedInstanceState);
-    method public void onDestroyView();
-    method public void onStart();
-    method public void onViewCreated(android.view.View view, android.os.Bundle? savedInstanceState);
-    property protected int backgroundDrawableRes;
-    property protected final VB binding;
-    property protected com.thanhng224.androidcomposebase.core.ui.base.DialogAnimation dialogAnimation;
-  }
-
-  public abstract class BaseFragment<VB> {
-    ctor public BaseFragment();
-    method protected final <T> void collectOnStarted(Flow<T>, kotlin.jvm.functions.Function2<? super T,? super error.NonExistentClass<kotlin.Unit!>!,? extends java.lang.Object?> action);
-    method @InaccessibleFromKotlin protected final VB getBinding();
-    method protected abstract VB inflateBinding(android.view.LayoutInflater inflater, android.view.ViewGroup? container);
-    method protected abstract void onBindingReady(android.view.View view, android.os.Bundle? savedInstanceState);
-    method public android.view.View onCreateView(android.view.LayoutInflater inflater, android.view.ViewGroup? container, android.os.Bundle? savedInstanceState);
-    method public void onDestroyView();
-    method public void onViewCreated(android.view.View view, android.os.Bundle? savedInstanceState);
-    property protected final VB binding;
-  }
-
   public final class Debouncer {
     ctor public Debouncer();
     ctor public Debouncer(optional long intervalMs);
@@ -482,62 +421,8 @@ package com.thanhng224.androidcomposebase.core.ui.base {
     property public static long DEFAULT_INTERVAL_MS;
   }
 
-  public final class DebouncerKt {
-    method public static void setOnDebouncedClickListener(android.view.View, optional long intervalMs, kotlin.jvm.functions.Function1<? super android.view.View,kotlin.Unit> action);
-  }
-
-  public enum DialogAnimation {
-    enum_constant public static final com.thanhng224.androidcomposebase.core.ui.base.DialogAnimation FADE;
-    enum_constant public static final com.thanhng224.androidcomposebase.core.ui.base.DialogAnimation NONE;
-    enum_constant public static final com.thanhng224.androidcomposebase.core.ui.base.DialogAnimation SCALE;
-    enum_constant public static final com.thanhng224.androidcomposebase.core.ui.base.DialogAnimation SLIDE;
-  }
-
   public final class LifecycleFlowExtensionsKt {
     method public static <T> void collectOnStartedBy(Flow<T>, LifecycleOwner lifecycleOwner, kotlin.jvm.functions.Function2<? super T,? super error.NonExistentClass<kotlin.Unit!>!,? extends java.lang.Object?> action);
-  }
-
-}
-
-package com.thanhng224.androidcomposebase.core.ui.components {
-
-  public final class ButtonStyleDelegate {
-    ctor public ButtonStyleDelegate(android.view.View targetView, com.thanhng224.androidcomposebase.core.ui.drawable.DrawableShape shape, int backgroundColor, float cornerRadiusPx, optional float strokeWidthPx, optional int strokeColor);
-    method public void apply();
-    field public static final int FALLBACK_RIPPLE_ALPHA = 51; // 0x33
-  }
-
-  public final class FrameButton extends android.widget.FrameLayout {
-    ctor public FrameButton(android.content.Context context, optional android.util.AttributeSet? attrs, optional int defStyleAttr);
-    field public static final int MIN_TOUCH_TARGET_DP = 48; // 0x30
-    field public static final int SHAPE_OVAL_ORDINAL = 1; // 0x1
-  }
-
-  public final class ShadowLayout extends android.widget.FrameLayout {
-    ctor public ShadowLayout(android.content.Context context, optional android.util.AttributeSet? attrs, optional int defStyleAttr);
-  }
-
-  public final class StyledSnackbar {
-    method public Snackbar show(android.view.View anchorView, String message, optional int duration);
-    field public static final com.thanhng224.androidcomposebase.core.ui.components.StyledSnackbar INSTANCE;
-  }
-
-  public class ThemedSwitch {
-    ctor public ThemedSwitch(android.content.Context context, optional android.util.AttributeSet? attrs, optional int defStyleAttr);
-  }
-
-}
-
-package com.thanhng224.androidcomposebase.core.ui.drawable {
-
-  public enum DrawableShape {
-    enum_constant public static final com.thanhng224.androidcomposebase.core.ui.drawable.DrawableShape OVAL;
-    enum_constant public static final com.thanhng224.androidcomposebase.core.ui.drawable.DrawableShape RECTANGLE;
-  }
-
-  public final class ShapeDrawableFactory {
-    method public android.graphics.drawable.GradientDrawable buildDrawable(com.thanhng224.androidcomposebase.core.ui.drawable.DrawableShape shape, float cornerRadiusPx, int fillColor, optional float strokeWidthPx, optional int strokeColor);
-    field public static final com.thanhng224.androidcomposebase.core.ui.drawable.ShapeDrawableFactory INSTANCE;
   }
 
 }
@@ -600,15 +485,6 @@ package com.thanhng224.androidcomposebase.core.ui.theme {
 
   public static final class ThemeManager.Companion {
     method public com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager create(com.thanhng224.androidcomposebase.core.foundation.SettingsStore settingsStore);
-  }
-
-}
-
-package com.thanhng224.androidcomposebase.core.ui.window {
-
-  public final class WindowExtensionsKt {
-    method public static void applySystemBarInsetsAsPadding(android.view.View, optional boolean left, optional boolean top, optional boolean right, optional boolean bottom);
-    method public static void setImmersiveMode(android.view.Window, boolean enabled);
   }
 
 }

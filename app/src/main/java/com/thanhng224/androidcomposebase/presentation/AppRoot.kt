@@ -38,24 +38,24 @@ import com.thanhng224.androidcomposebase.sample.demo.presentation.ui.DemoScreen
 import com.thanhng224.androidcomposebase.sample.designsystem.presentation.ui.DesignSystemScreen
 
 @Composable
-public fun AppRoot(
-    viewModel: AppViewModel = hiltViewModel(),
-) {
+public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
     val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
     val currentTheme by viewModel.currentTheme.collectAsStateWithLifecycle()
 
-    val isDark = when (currentTheme) {
-        AppTheme.LIGHT -> false
-        AppTheme.DARK -> true
-        AppTheme.SYSTEM -> isSystemInDarkTheme()
-    }
+    val isDark =
+        when (currentTheme) {
+            AppTheme.LIGHT -> false
+            AppTheme.DARK -> true
+            AppTheme.SYSTEM -> isSystemInDarkTheme()
+        }
 
     AndroidComposeBaseTheme(darkTheme = isDark) {
         if (startDestination == null) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -67,12 +67,13 @@ public fun AppRoot(
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
 
-        val topLevelRoutes = listOf(
-            ScreenRoute.Home::class.qualifiedName,
-            ScreenRoute.Demo::class.qualifiedName,
-            ScreenRoute.Settings::class.qualifiedName,
-            ScreenRoute.DesignSystem::class.qualifiedName,
-        )
+        val topLevelRoutes =
+            listOf(
+                ScreenRoute.Home::class.qualifiedName,
+                ScreenRoute.Demo::class.qualifiedName,
+                ScreenRoute.Settings::class.qualifiedName,
+                ScreenRoute.DesignSystem::class.qualifiedName,
+            )
 
         val showBottomBar = currentDestination?.hierarchy?.any { it.route in topLevelRoutes } == true
 
@@ -80,9 +81,10 @@ public fun AppRoot(
             containerColor = MaterialTheme.colorScheme.background,
         ) { innerPadding ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
             ) {
                 NavHost(
                     navController = navController,
@@ -135,64 +137,73 @@ public fun AppRoot(
                 }
 
                 if (showBottomBar) {
-                    val navItems = listOf(
-                        NavItem(
-                            title = "Home",
-                            icon = Icons.Default.Home,
-                            isSelected = currentDestination?.hierarchy?.any { it.route == ScreenRoute.Home::class.qualifiedName } == true,
-                            onClick = {
-                                navController.navigate(ScreenRoute.Home) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                    val navItems =
+                        listOf(
+                            NavItem(
+                                title = "Home",
+                                icon = Icons.Default.Home,
+                                isSelected = isSelectedRoute(currentDestination, ScreenRoute.Home::class.qualifiedName),
+                                onClick = {
+                                    navController.navigate(ScreenRoute.Home) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                        ),
-                        NavItem(
-                            title = "Demo",
-                            icon = Icons.Default.Cloud,
-                            isSelected = currentDestination?.hierarchy?.any { it.route == ScreenRoute.Demo::class.qualifiedName } == true,
-                            onClick = {
-                                navController.navigate(ScreenRoute.Demo) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                                },
+                            ),
+                            NavItem(
+                                title = "Demo",
+                                icon = Icons.Default.Cloud,
+                                isSelected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),
+                                onClick = {
+                                    navController.navigate(ScreenRoute.Demo) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                        ),
-                        NavItem(
-                            title = "Design",
-                            icon = Icons.Default.Palette,
-                            isSelected = currentDestination?.hierarchy?.any { it.route == ScreenRoute.DesignSystem::class.qualifiedName } == true,
-                            onClick = {
-                                navController.navigate(ScreenRoute.DesignSystem) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                                },
+                            ),
+                            NavItem(
+                                title = "Design",
+                                icon = Icons.Default.Palette,
+                                isSelected =
+                                    isSelectedRoute(
+                                        currentDestination,
+                                        ScreenRoute.DesignSystem::class.qualifiedName,
+                                    ),
+                                onClick = {
+                                    navController.navigate(ScreenRoute.DesignSystem) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                        ),
-                        NavItem(
-                            title = "Settings",
-                            icon = Icons.Default.Settings,
-                            isSelected = currentDestination?.hierarchy?.any { it.route == ScreenRoute.Settings::class.qualifiedName } == true,
-                            onClick = {
-                                navController.navigate(ScreenRoute.Settings) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                                },
+                            ),
+                            NavItem(
+                                title = "Settings",
+                                icon = Icons.Default.Settings,
+                                isSelected =
+                                    isSelectedRoute(
+                                        currentDestination,
+                                        ScreenRoute.Settings::class.qualifiedName,
+                                    ),
+                                onClick = {
+                                    navController.navigate(ScreenRoute.Settings) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
-                                }
-                            },
-                        ),
-                    )
+                                },
+                            ),
+                        )
 
                     FloatingNavBar(
                         items = navItems,
@@ -203,3 +214,8 @@ public fun AppRoot(
         }
     }
 }
+
+private fun isSelectedRoute(
+    destination: androidx.navigation.NavDestination?,
+    routeQualifiedName: String?,
+): Boolean = destination?.hierarchy?.any { it.route == routeQualifiedName } == true

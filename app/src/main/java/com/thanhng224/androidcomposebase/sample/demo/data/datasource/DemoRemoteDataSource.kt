@@ -1,8 +1,8 @@
 package com.thanhng224.androidcomposebase.sample.demo.data.datasource
 
-import com.thanhng224.androidcomposebase.sample.demo.data.dto.DemoWeatherResponseDto
 import com.thanhng224.androidcomposebase.core.network.ApiClient
 import com.thanhng224.androidcomposebase.core.network.ApiResult
+import com.thanhng224.androidcomposebase.sample.demo.data.dto.DemoWeatherResponseDto
 import javax.inject.Inject
 
 interface DemoRemoteDataSource {

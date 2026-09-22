@@ -20,21 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
-
-/**
- * Descriptor for a navigation item in [FloatingNavBar].
- */
-public data class NavItem(
-    val title: String,
-    val icon: ImageVector,
-    val selectedIcon: ImageVector = icon,
-    val badgeCount: Int = 0,
-    val isSelected: Boolean = false,
-    val onClick: () -> Unit,
-)
 
 /**
  * Modern floating bottom navigation bar with elevation, rounded corners,
@@ -46,9 +33,10 @@ public fun FloatingNavBar(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
-            .fillMaxWidth(),
+        modifier =
+            modifier
+                .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
+                .fillMaxWidth(),
     ) {
         Surface(
             shape = MaterialTheme.shapes.large,
@@ -84,20 +72,22 @@ public fun FloatingNavBar(
                                     Icon(
                                         imageVector = if (item.isSelected) item.selectedIcon else item.icon,
                                         contentDescription = item.title,
-                                        modifier = Modifier.graphicsLayer {
-                                            scaleX = scale
-                                            scaleY = scale
-                                        },
+                                        modifier =
+                                            Modifier.graphicsLayer {
+                                                scaleX = scale
+                                                scaleY = scale
+                                            },
                                     )
                                 }
                             } else {
                                 Icon(
                                     imageVector = if (item.isSelected) item.selectedIcon else item.icon,
                                     contentDescription = item.title,
-                                    modifier = Modifier.graphicsLayer {
-                                        scaleX = scale
-                                        scaleY = scale
-                                    },
+                                    modifier =
+                                        Modifier.graphicsLayer {
+                                            scaleX = scale
+                                            scaleY = scale
+                                        },
                                 )
                             }
                         },
@@ -110,13 +100,14 @@ public fun FloatingNavBar(
                             }
                         },
                         alwaysShowLabel = false,
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        ),
+                        colors =
+                            NavigationBarItemDefaults.colors(
+                                selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                selectedTextColor = MaterialTheme.colorScheme.primary,
+                                indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            ),
                     )
                 }
             }
