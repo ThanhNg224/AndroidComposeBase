@@ -6,10 +6,10 @@ Read `docs/CORE_MODULES.md` alongside this doc for the API surface of everything
 
 ## 1. Folder layout
 
-A feature lives under `app/src/main/java/com/example/androidcorebase/feature/<name>/` with up to three top-level packages. Not every feature needs all three — see section 3 for when `data/` earns its place. Do not create a root-level `screens/` package: a screen belongs beside the domain and data code of the feature that owns it.
+A feature lives under `app/src/main/java/com/thanhng224/androidcomposebase/feature/<name>/` with up to three top-level packages. Not every feature needs all three — see section 3 for when `data/` earns its place. Do not create a root-level `screens/` package: a screen belongs beside the domain and data code of the feature that owns it.
 
 ```
-sample/demo/
+feature/demo/
   domain/
     repository/
       DemoRepository.kt              # interface: fun observeCount(): Flow<Int>, suspend fun saveCount(count: Int), suspend fun fetchWeather(): WeatherResult
@@ -22,21 +22,21 @@ sample/demo/
       WeatherResult.kt                 # feature-owned sealed Success/Failure + WeatherError, not a core type
   data/
     repository/
-      DemoRepositoryImpl.kt           # implements DemoRepository, owns a feature-private SettingsKey
+      DemoRepositoryImpl.kt           # implements DemoRepository (Room DAO + Retrofit API)
     datasource/
       DemoApiService.kt               # Retrofit interface
       DemoRemoteDataSource.kt         # interface + DemoRemoteDataSourceImpl, wraps ApiClient.execute
     dto/
       DemoWeatherResponseDto.kt        # @Serializable wire model
     mapper/
-      DemoWeatherMapper.kt             # DemoWeatherResponseDto -> DemoWeather (domain model)
+      DemoWeatherMapper.kt             # DemoWeatherResponseDto -> WeatherEntity & DemoWeather
   presentation/
     state/
-      DemoUiState.kt, DemoUiEvent.kt, PendingDemoMessage.kt, DemoWeatherState.kt
+      DemoUiState.kt, DemoUiEvent.kt, PendingDemoMessage.kt
     viewmodel/
       DemoViewModel.kt
     ui/
-      DemoFragment.kt
+      DemoScreen.kt
   di/
     DemoModule.kt                    # Hilt bindings and feature-local Retrofit service provider
 ```
@@ -54,17 +54,17 @@ feature/settings/
   presentation/
     state/          # SettingsUiState (+ PendingSettingsMessage), SettingsUiEvent
     viewmodel/      # SettingsViewModel
-    ui/             # SettingsFragment
+    ui/             # SettingsScreen.kt
   domain/
   data/
   di/
 ```
 
-`SettingsFragment` is a `NavController` destination in the app's single-Activity nav graph (`main_navigation.xml`), reached from the shared top app bar's overflow menu — there is no separate Settings Activity or transition host. It renders a grouped settings list; theme and language are values on that screen, so they open single-choice dialogs instead of artificial child screens. The repository adapts reusable app-wide services (`ThemeManager` and `LocaleManager`) rather than duplicating their persistence/platform logic. Selecting a language calls `SettingsRepository.setLanguage`, which persists through `SettingsStore` first and only then applies the locale via `LocaleManager` — the ViewModel updates its committed `language` state only after that call succeeds, and queues a `PendingSettingsMessage` on failure. See "Settings and Locale Mutation" in `docs/CORE_V2_DESIGN.md`.
+`SettingsScreen` is a destination in `AppNavHost` routed by `ScreenRoute.Settings`. It renders a grouped settings list; theme and language selections open single-choice dialogs (`AppDialog`) instead of artificial child screens. The repository adapts reusable app-wide services (`ThemeManager` and `LocaleManager`) rather than duplicating their persistence/platform logic. Selecting a language calls `SettingsRepository.setLanguage`, which persists through `SettingsStore` first and only then applies the locale via `LocaleManager` — the ViewModel updates its committed `language` state only after that call succeeds, and queues a `PendingSettingsMessage` on failure.
 
 ### When a feature has more than one screen
 
-`sample/demo` and `sample/designsystem` each currently have one screen, so their flat `presentation/ui`, `presentation/viewmodel`, and `presentation/state` packages are intentional. Adding a `presentation/demo/` or `presentation/designsystem/` level now would add naming noise without creating a boundary.
+`feature/demo` and `feature/designsystem` each currently have one screen, so their flat `presentation/ui`, `presentation/viewmodel`, and `presentation/state` packages are intentional. Adding a `presentation/demo/` or `presentation/designsystem/` level now would add naming noise without creating a boundary.
 
 Before adding a second screen to a feature, move the first screen's UI host, ViewModel, and `UiState`/`UiEvent` together into a named presentation package, then add the second screen beside it:
 
@@ -72,12 +72,12 @@ Before adding a second screen to a feature, move the first screen's UI host, Vie
 feature/auth/
   presentation/
     login/
-      LoginFragment.kt
+      LoginScreen.kt
       LoginViewModel.kt
       LoginUiState.kt
       LoginUiEvent.kt
     otp/
-      OtpFragment.kt
+      OtpScreen.kt
       OtpViewModel.kt
       OtpUiState.kt
       OtpUiEvent.kt
@@ -93,23 +93,25 @@ Migration is mechanical and should be performed only when the second screen is i
 
 ## 2. Wiring a screen end to end
 
-The real call chain in `sample/demo`, read bottom-to-top from where a tap originates to where data comes back:
+The real call chain in `feature/demo`, read bottom-to-top from where a tap originates to where data comes back:
 
 ```
-DemoFragment (@AndroidEntryPoint, extends BaseFragment<FragmentDemoBinding>)
+DemoScreen (Composable screen observing DemoViewModel.uiState)
   -> DemoViewModel (@HiltViewModel, plain ViewModel with MutableStateFlow<DemoUiState>)
     -> IncrementCounterUseCase          (plain sync class — no repository)
     -> SaveDemoCountUseCase             (plain class, one suspend operation)
     -> FetchDemoWeatherUseCase          (plain class, returns WeatherResult)
-    -> ObserveDemoCountUseCase          (plain class, returns Flow<Int>)
+    -> ObserveWeatherUseCase            (plain class, returns Flow<WeatherEntity?> from Room)
+    -> RefreshWeatherUseCase            (plain class, refreshes from API and caches in Room)
       -> DemoRepository (domain interface) / DemoRepositoryImpl (data)
-        -> SettingsStore                (persistence, via core/storage — constructed with SettingsStoreFactory in app/di)
+        -> SettingsStore                (persistence, via core/storage)
+        -> WeatherDao / AppDatabase     (local Room persistence)
         -> DemoRemoteDataSource / DemoApiService / ApiClient (network, via core/network)
 ```
 
-Concretely, in `DemoFragment.onBindingReady`:
-1. `binding.btnIncrement.setOnDebouncedClickListener { viewModel.onEvent(DemoUiEvent.IncrementClicked) }` — a `FrameButton` (see `docs/DESIGN_SYSTEM.md`), debounced via `core.ui.base.setOnDebouncedClickListener` since it's the control most likely to be rapid-tapped.
-2. `viewModel.state.collectOnStarted { ... }` renders `count`, the typed live-weather state into `tvCount`/`tvWeather`, and the head of `state.pendingMessages` (if any) as a Snackbar.
+Concretely, in `DemoScreen`:
+1. `AppButton(onClick = { viewModel.onEvent(DemoUiEvent.IncrementClicked) })` triggers the increment intent.
+2. `val state by viewModel.uiState.collectAsStateWithLifecycle()` renders the reactive state, and `LaunchedEffect(state.pendingMessages)` handles transient snackbar events safely.
 
 In `DemoViewModel`:
 - `init` launches the persisted-count collector and a current-weather refresh. The weather path calls `fetchDemoWeather()`, maps the returned `WeatherResult` to `DemoWeatherState`, and can be triggered again from the Refresh weather control. The Open-Meteo request is a real, keyless API call for Ho Chi Minh City; its DTO stays in `data/` and only `DemoWeather` crosses into domain/presentation.

@@ -50,6 +50,7 @@ private class FakeThemeManager(
     }
 }
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class AppStartupCoordinatorTest {
     /**
      * Regression: the coordinator used to call `applyTheme` straight from the application scope's

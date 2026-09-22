@@ -50,7 +50,7 @@ afterEvaluate {
                 artifactId = publishedLibrary.artifactId.get()
                 // VERSION_NAME lives in :core/gradle.properties. Resolve it explicitly for both
                 // published modules instead of relying on Gradle's deprecated parent-project
-                // property lookup from :core:ui-compose.
+                // property lookup from :core:ui.
                 val localVersionName = if (project.path == ":core") {
                     project.findProperty("VERSION_NAME") as? String
                 } else {

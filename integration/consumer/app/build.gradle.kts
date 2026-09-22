@@ -56,6 +56,6 @@ kotlin {
 dependencies {
     implementation("com.github.ThanhNg224:AndroidComposeBase:$androidCoreBaseVersion")
     if (includeCompose) {
-        implementation("com.github.ThanhNg224:AndroidComposeBase-ui-compose:$androidCoreBaseVersion")
+        implementation("com.github.ThanhNg224:AndroidComposeBase-ui:$androidCoreBaseVersion")
     }
 }

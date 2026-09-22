@@ -20,6 +20,7 @@ import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()

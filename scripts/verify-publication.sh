@@ -45,13 +45,13 @@ trap 'rm -rf "$TEMP_REPO_DIR"' EXIT
 echo "==> Publishing AndroidComposeBase $VERIFY_VERSION to a temporary repository: $TEMP_REPO_DIR"
 VERSION="$VERIFY_VERSION" "$REPO_ROOT/gradlew" -p "$REPO_ROOT" \
     :core:publishReleasePublicationToTemporaryRepository \
-    :core:ui-compose:publishReleasePublicationToTemporaryRepository \
+    :core:ui:publishReleasePublicationToTemporaryRepository \
     -PpublishRepoUrl="file://$TEMP_REPO_DIR"
 
-CORE_POM="$(find "$TEMP_REPO_DIR" -name 'AndroidComposeBase-*.pom' ! -name '*ui-compose*')"
-COMPOSE_POM="$(find "$TEMP_REPO_DIR" -name 'AndroidComposeBase-ui-compose-*.pom')"
-CORE_AAR="$(find "$TEMP_REPO_DIR" -name 'AndroidComposeBase-*.aar' ! -name '*ui-compose*' ! -name '*test-fixtures*')"
-COMPOSE_AAR="$(find "$TEMP_REPO_DIR" -name 'AndroidComposeBase-ui-compose-*.aar' ! -name '*test-fixtures*')"
+CORE_POM="$(find "$TEMP_REPO_DIR" -name 'AndroidComposeBase-*.pom' ! -name '*ui*')"
+COMPOSE_POM="$(find "$TEMP_REPO_DIR" -name 'AndroidComposeBase-ui-*.pom')"
+CORE_AAR="$(find "$TEMP_REPO_DIR" -name 'AndroidComposeBase-*.aar' ! -name '*ui*' ! -name '*test-fixtures*')"
+COMPOSE_AAR="$(find "$TEMP_REPO_DIR" -name 'AndroidComposeBase-ui-*.aar' ! -name '*test-fixtures*')"
 
 for path in "$CORE_POM" "$COMPOSE_POM" "$CORE_AAR" "$COMPOSE_AAR"; do
     if [[ -z "$path" || ! -f "$path" ]]; then

@@ -80,7 +80,7 @@ A **screen** is one concrete presentation destination within a feature: an Activ
 
 A **flow** is a user journey through one or more screens, for example Login → OTP verification → password reset. A flow does not introduce another package layer. Its screens remain owned by their feature; when a journey crosses feature boundaries, communicate through navigation and stable public contracts rather than direct feature dependencies.
 
-The app uses a single **app shell** for its equally important top-level areas. `MainActivity` owns the shared app bar, `BottomNavigationView`, and `NavHostFragment`; Home, Demo, and UI Kit are Fragment destinations in `main_navigation.xml`. A bottom-navigation item represents a top-level destination, not a feature package. Secondary utilities such as Settings are opened from the app bar and may use a separate Activity when they form a self-contained task. Do not add Settings, dialogs, or every screen in a feature to the bottom bar.
+The app uses a single **app shell** for its equally important top-level areas. `MainActivity` hosts `AppRoot` using Jetpack Navigation Compose (`NavHost`) and `FloatingNavBar`; Home, Demo, and Design System are Composable destinations routed via type-safe `ScreenRoute`. A bottom-navigation item represents a top-level destination, not a feature package. Secondary utilities such as Settings are opened from the app bar or profile actions. Do not add Settings, dialogs, or every screen in a feature to the bottom bar.
 
 Each feature should own:
 
@@ -116,12 +116,12 @@ When a feature grows to two or more screens, group the presentation code by scre
 feature/auth/
     presentation/
         login/
-            LoginFragment.kt
+            LoginScreen.kt
             LoginViewModel.kt
             LoginUiState.kt
             LoginUiEvent.kt
         otp/
-            OtpFragment.kt
+            OtpScreen.kt
             OtpViewModel.kt
             OtpUiState.kt
             OtpUiEvent.kt
@@ -251,57 +251,71 @@ Improve architecture incrementally by making small, safe refactors that preserve
 - [ ] Is the architecture scalable and maintainable for future growth?  
 - [ ] Are tests easily written for UseCases, repositories, and ViewModels?
 
-## Current Package Layout (Phase 0-6)
+### Current Package Layout
 
-Everything above this section describes the target architecture. The folders below are what actually exists in the codebase today; check here (or the source tree) before assuming something already exists.
+Everything above this section describes the target architecture. The folders below represent the current structure in the codebase:
 
-The base was later split into its own `:core` Gradle module (package `com.thanhng224.androidcomposebase.core`, published to JitPack) — `core/` is **no longer** a subfolder of `app/`'s package. See `docs/CORE_MODULES.md` for `:core`'s real, current layout; only the `:app`-side tree (feature/sample code) is shown below. See also `docs/FEATURE_TEMPLATE.md` and `docs/DESIGN_SYSTEM.md` for a full walkthrough of building a new feature on top of it.
+The base is partitioned into `:core` (headless foundation) and `:core:ui` (Material 3 Compose design system), both published to JitPack. `:app` owns the Hilt DI graph, database, type-safe navigation, and Compose feature screens.
 
-`feature/settings` is the first product vertical slice. It owns app-preference presentation and adapts the app-wide theme and locale services through its own repository contract. `sample/` remains reference code only.
-
-app/src/main/java/com/example/androidcorebase/
-  MainActivity.kt                            # single-Activity shell: app bar + NavHostFragment + bottom navigation
-  di/                                        # app-owned Hilt modules calling :core's public factories (AppCoreModule, AppNetworkModule)
-  startup/AppStartupCoordinator.kt           # bounded (2s) theme-apply-at-startup; replaces the deleted core initializers
-  logging/AppReleaseTree.kt                  # release Timber tree; :core plants no tree of its own
+```
+app/src/main/java/com/thanhng224/androidcomposebase/
+  MainActivity.kt                            # single-Activity shell: extends BaseComposeActivity, hosts AppRoot
+  AndroidComposeBaseApplication.kt           # application entry point: Timber logging, bounded startup
+  di/                                        # app-owned Hilt modules (AppCoreModule, NetworkModule, DatabaseModule)
+  startup/AppStartupCoordinator.kt           # bounded theme-apply-at-startup
+  navigation/
+    ScreenRoute.kt                           # type-safe route definitions (@Serializable)
+    AppNavHost.kt                            # Navigation Compose NavHost
   appshell/
-    home/HomeFragment.kt                     # shell-owned landing destination; no business layer
+    AppRoot.kt                               # root composable: Scaffold, FloatingNavBar, snackbar host
+    AppViewModel.kt                          # global app shell state & theme/navigation observation
+    NavItem.kt                               # bottom navigation item definition
+    HomeScreen.kt                            # landing home destination
+  database/                                  # Room offline-first database
+    AppDatabase.kt                           # RoomDatabase definition
+    WeatherDao.kt                            # DAO for weather cache
+    WeatherEntity.kt                         # cached entity
+    RoomTypeConverters.kt                    # serialization converters
   feature/
     settings/
       domain/
         repository/SettingsRepository.kt
         usecase/ObserveThemeUseCase.kt, SetThemeUseCase.kt, GetCurrentLanguageUseCase.kt, SetLanguageUseCase.kt
       data/
-        repository/SettingsRepositoryImpl.kt # persists language via SettingsStore, then applies via LocaleManager; adapts ThemeManager
+        repository/SettingsRepositoryImpl.kt # persists language via SettingsStore, applies via LocaleManager
       presentation/
-        state/                               # SettingsUiState (+ PendingSettingsMessage), SettingsUiEvent
-        viewmodel/                           # SettingsViewModel
-        ui/                                  # SettingsFragment (a NavController destination, no TransitionActivity)
+        state/SettingsUiState.kt, SettingsUiEvent.kt, PendingSettingsMessage.kt
+        viewmodel/SettingsViewModel.kt
+        ui/SettingsScreen.kt                 # pure Composable settings screen
       di/SettingsModule.kt
-  sample/
     demo/
       domain/
         repository/DemoRepository.kt
         usecase/IncrementCounterUseCase.kt, ObserveDemoCountUseCase.kt, SaveDemoCountUseCase.kt,
-          FetchDemoWeatherUseCase.kt
+          FetchDemoWeatherUseCase.kt, ObserveWeatherUseCase.kt, RefreshWeatherUseCase.kt
       data/
-        repository/DemoRepositoryImpl.kt     # SettingsStore- and remote-data-source-backed
+        repository/DemoRepositoryImpl.kt     # Room DAO + Retrofit API offline-first implementation
         dto/DemoWeatherResponseDto.kt
         datasource/DemoApiService.kt, DemoRemoteDataSource.kt (+ DemoRemoteDataSourceImpl)
-        mapper/DemoWeatherMapper.kt          # WeatherResult (feature-owned) mapping, not a core DomainResult
+        mapper/DemoWeatherMapper.kt
       presentation/
-        state/DemoUiState.kt, DemoUiEvent.kt, PendingDemoMessage.kt, DemoWeatherState.kt
+        state/DemoUiState.kt, DemoUiEvent.kt, PendingDemoMessage.kt
         viewmodel/DemoViewModel.kt
-        ui/DemoFragment.kt
+        ui/DemoScreen.kt                     # pure Composable demo & weather screen
       di/DemoModule.kt
     designsystem/
       presentation/
-        state/DesignSystemUiState.kt, DesignSystemUiEvent.kt, DesignSystemDemoState.kt
-        viewmodel/DesignSystemViewModel.kt   # plain ViewModel, synchronous state updates, no data/domain layers
-        ui/DesignSystemFragment.kt           # showcases FrameButton, ShadowLayout, ThemedSwitch, StyledSnackbar, and the screen-owned loading/success/error demo
+        state/DesignSystemUiState.kt, DesignSystemUiEvent.kt
+        viewmodel/DesignSystemViewModel.kt
+        ui/DesignSystemScreen.kt             # showcases FloatingNavBar, AppDialog, AsyncContent, AppButton, AppTopBar
+    onboarding/
+      presentation/ui/OnboardingScreen.kt    # onboarding flow
+    login/
+      presentation/ui/LoginScreen.kt         # authentication screen
+```
 
-`feature/settings` is the canonical single-screen product feature. `SettingsFragment` renders theme and language as settings-list rows and uses single-choice dialogs for their finite values; those selections do not become separate screens merely to demonstrate package nesting. Selecting a language persists through `SettingsRepository` first, then the app-owned `LocaleManager` applies it via `AppCompatDelegate` — a failed persist leaves the previous language in state and queues a `PendingSettingsMessage`, never launching a transition Activity (see `docs/CORE_V2_DESIGN.md`'s "Settings and Locale Mutation"). `SettingsRepository` is a feature-domain contract; its implementation adapts the reusable `ThemeManager` and `LocaleManager`, so UI never calls either core service directly. Hilt wires the feature binding in `feature/settings/di/SettingsModule`.
+`feature/settings` is the canonical product feature. `SettingsScreen` renders theme and language as interactive setting rows with Material 3 selection dialogs (`AppDialog`). Selecting a language persists through `SettingsRepository` first, then the app-owned `LocaleManager` applies it via `AppCompatDelegate`.
 
-`sample/demo` remains the data/network reference: its counter persists through `DemoRepositoryImpl`, backed by the real `DataStoreSettingsStore` (via `:core`'s `SettingsStoreFactory`), and it fetches live weather for Ho Chi Minh City through `DemoRemoteDataSourceImpl` -> `DemoRepositoryImpl.fetchWeather()` -> `FetchDemoWeatherUseCase`. `DemoWeatherResponseDto` is mapped to the pure `DemoWeather` domain model before presentation sees it; a feature-owned `WeatherResult`/`WeatherError` sealed hierarchy (not a core `DomainResult`/`AppError`) carries the outcome. Sample-specific Retrofit service providers stay in the sample package, while `app/di/AppNetworkModule` only provides reusable Retrofit/OkHttp infrastructure built from `:core`'s `NetworkClientFactory`. Product feature providers follow the same ownership rule under their own `feature/<name>/di` package. `SecureStore` handles auth/refresh tokens separately from normal settings, and backup/data-extraction rules exclude the secure store's file.
+`feature/demo` represents the offline-first data and network reference: its counter persists through `DemoRepositoryImpl` backed by `SettingsStore`, while weather data is persisted in Room (`AppDatabase`) and refreshed from network (`DemoApiService`) with fallback to cache when offline.
 
-`MainActivity` extends `core/ui/base/BaseBindingActivity`; `HomeFragment`, `SettingsFragment`, `DemoFragment`, and `DesignSystemFragment` extend `BaseFragment`. Both base hosts own ViewBinding inflation and expose lifecycle-safe `collectOnStarted`. `MainActivity` is the single-Activity composition root: it owns the `NavController` and `AppBarConfiguration`, and delegates all destination content — including Settings — to Fragments. `DesignSystemFragment.render()` consumes its own screen-owned `DesignSystemDemoState` (loading/success/error), while `DemoFragment` maps `DemoWeatherState` to localized strings. Its increment and refresh controls use `View.setOnDebouncedClickListener` to avoid accidental duplicate actions.
+`MainActivity` extends `core/ui/base/BaseComposeActivity` and calls `setContent` to host `AppRoot`. Inside `AppRoot`, `AppNavHost` coordinates navigation between destinations using AndroidX Navigation Compose and type-safe `ScreenRoute`. Floating navigation is handled smoothly by `FloatingNavBar`.
