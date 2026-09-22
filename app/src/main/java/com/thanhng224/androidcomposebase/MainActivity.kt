@@ -1,0 +1,64 @@
+package com.thanhng224.androidcomposebase
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupWithNavController
+import com.thanhng224.androidcomposebase.databinding.ActivityAppshellMainBinding
+import com.thanhng224.androidcomposebase.core.ui.base.BaseBindingActivity
+import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
+
+@AndroidEntryPoint
+class MainActivity : BaseBindingActivity<ActivityAppshellMainBinding>() {
+    @Inject
+    lateinit var themeManager: ThemeManager
+
+    private lateinit var navController: NavController
+    private lateinit var appBarConfiguration: AppBarConfiguration
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
+        super.onCreate(savedInstanceState)
+        splashScreen.setKeepOnScreenCondition { !themeManager.isThemeApplied.value }
+    }
+
+    override fun inflateBinding(inflater: LayoutInflater): ActivityAppshellMainBinding = ActivityAppshellMainBinding.inflate(inflater)
+
+    override fun onBindingReady(savedInstanceState: Bundle?) {
+        // BaseActivity already pads the root by the navigation-bar inset, which lifts the whole nav
+        // card clear of the bars. Material's BottomNavigationView installs its own listener that
+        // pads itself by that same inset, which would leave a dead strip inside the card -- so
+        // replace that listener with one that consumes the insets and pads nothing.
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomNavigation) { _, _ ->
+            WindowInsetsCompat.CONSUMED
+        }
+
+        navController =
+            (supportFragmentManager.findFragmentById(R.id.navHostFragment) as NavHostFragment)
+                .navController
+        appBarConfiguration = AppBarConfiguration(setOf(R.id.homeFragment, R.id.demoFragment, R.id.designSystemFragment))
+        binding.bottomNavigation.setupWithNavController(navController)
+        binding.topAppBar.setupWithNavController(navController, appBarConfiguration)
+
+        binding.topAppBar.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.actionSettings -> {
+                    navController.navigate(R.id.settingsFragment)
+                    true
+                }
+
+                else -> false
+            }
+        }
+    }
+
+    override fun onSupportNavigateUp(): Boolean = navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+}

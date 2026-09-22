@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context=".appshell.home.HomeFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/core_space_24"
+        android:paddingTop="@dimen/core_space_24"
+        android:paddingBottom="@dimen/core_space_32">
+
+        <TextView
+            android:id="@+id/tvGreeting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/appshell_home_greeting"
+            android:textAppearance="@style/TextAppearance.AndroidComposeBase.Headline" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/core_space_8"
+            android:text="@string/appshell_home_subtitle"
+            android:textAppearance="@style/TextAppearance.AndroidComposeBase.BodyMedium" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/core_space_32"
+            app:cardBackgroundColor="@color/core_color_primary_container"
+            app:cardCornerRadius="@dimen/core_radius_24"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/core_space_24">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_card_eyebrow"
+                    android:textAllCaps="true"
+                    android:textAppearance="@style/TextAppearance.AndroidComposeBase.Micro"
+                    android:textColor="@color/core_color_on_primary_container" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/core_space_8"
+                    android:text="@string/home_card_title"
+                    android:textAppearance="@style/TextAppearance.AndroidComposeBase.BodyEmphasis"
+                    android:textColor="@color/core_color_on_primary_container" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/core_space_8"
+                    android:text="@string/home_card_body"
+                    android:textAppearance="@style/TextAppearance.AndroidComposeBase.Body"
+                    android:textColor="@color/core_color_on_primary_container" />
+
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/core_space_24"
+            android:text="@string/home_navigation_hint"
+            android:textAppearance="@style/TextAppearance.AndroidComposeBase.Caption"
+            android:textColor="@color/core_color_on_surface_variant" />
+
+    </LinearLayout>
+
+</ScrollView>

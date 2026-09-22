@@ -1,0 +1,25 @@
+complexity:
+  LongParameterList:
+    active: true
+    constructorThreshold: 8
+    functionThreshold: 8
+  TooManyFunctions:
+    active: false
+
+style:
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    active: true
+    maxLineLength: 140
+  ReturnCount:
+    active: false
+
+naming:
+  # Allow PascalCase for @Composable UI functions
+  FunctionNaming:
+    ignoreAnnotated: ["Composable"]
+
+exceptions:
+  TooGenericExceptionCaught:
+    active: false

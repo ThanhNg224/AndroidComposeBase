@@ -1,0 +1,108 @@
+name: check
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['*']
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+  schedule:
+    # Weekly Baseline Profile / Macrobenchmark run (see the baseline-profile job below). Normal
+    # pull requests never run this: it needs a real emulator and 10+ iterations per mode.
+    - cron: '0 6 * * 1'
+
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6.3.0
+
+      - name: Run the full local gate
+        run: ./gradlew check --stacktrace
+
+      - name: Verify the published library assembles
+        run: ./gradlew :core:assembleRelease --stacktrace
+
+      - name: Verify Hilt-free artifacts with an isolated consumer (quick)
+        if: github.event_name == 'pull_request'
+        run: ./scripts/verify-publication.sh --quick
+
+      - name: Verify Hilt-free artifacts with an isolated consumer (release)
+        if: github.event_name != 'pull_request'
+        run: ./scripts/verify-publication.sh --release
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: |
+            **/build/reports/**
+          retention-days: 7
+
+  baseline-profile:
+    # Manual dispatch or the weekly schedule only: never a normal pull request or push, since it
+    # boots an emulator (see Task 2 of docs/superpowers/plans/2026-09-09-core-v2-release-proof.md).
+    #
+    # This job COLLECTS the profile; it does not measure it. androidx.benchmark deliberately
+    # refuses to report timings on an emulator ("ERRORS (not suppressed): EMULATOR") because they
+    # are not representative, and suppressing that guard would publish numbers that look real and
+    # are not. Measurement is a physical-device step, recorded in
+    # docs/performance/BASELINE_PROFILE_RESULTS.md.
+    #
+    # Collection is still worth running here: it is deterministic, it proves the generator and the
+    # critical journey survive a cold, uncompiled, non-minified build, and it caught a real
+    # main-thread startup crash that every physical device raced past.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6.3.0
+
+      - name: Enable KVM for the emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Generate Baseline Profile
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          script: ./gradlew :app:generateBaselineProfile --stacktrace
+
+      - name: Upload Baseline Profile reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: baseline-profile-reports
+          path: |
+            baselineprofile/build/outputs/**
+            app/src/release/generated/baselineProfiles/baseline-prof.txt
+          retention-days: 30
