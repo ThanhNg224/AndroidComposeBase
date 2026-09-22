@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.thanhng224.androidcomposebase.core.compose"
+    namespace = "com.thanhng224.androidcomposebase.core.ui"
 
     buildFeatures {
         compose = true
@@ -14,9 +14,9 @@ android {
 }
 
 publishedLibrary {
-    artifactId.set("AndroidComposeBase-ui-compose")
-    displayName.set("AndroidComposeBase Compose Interop")
-    description.set("Optional Jetpack Compose interoperability for AndroidCoreBase.")
+    artifactId.set("AndroidComposeBase-ui")
+    displayName.set("AndroidComposeBase UI")
+    description.set("Jetpack Compose Design System and UI components for AndroidComposeBase.")
 }
 
 kotlin {
@@ -28,6 +28,9 @@ dependencies {
     api(platform(libs.androidx.compose.bom))
     api(libs.androidx.compose.ui)
     api(libs.androidx.compose.material3)
+    api(libs.androidx.compose.material.icons.extended)
+    api(libs.androidx.lifecycle.runtime.compose)
+    api(libs.coil.compose)
     implementation(libs.androidx.activity.compose)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))
