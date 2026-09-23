@@ -145,6 +145,54 @@ ksp {{
             after = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
             self.assertEqual(after, before)
 
+    def test_late_core_destination_collision_does_not_partially_move_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_preflight_fixture(root)
+            core_source = root / "core/src/main/java" / Path(*SOURCE_CORE_PACKAGE.split(".")) / "Marker.kt"
+            core_source.parent.mkdir(parents=True)
+            core_source.write_text("package marker\n", encoding="utf-8")
+            core_collision = root / "core/src/main/java/com/acme/shop/core/Keep.kt"
+            core_collision.parent.mkdir(parents=True)
+            core_collision.write_text("preserve me\n", encoding="utf-8")
+            before = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+            with self.assertRaisesRegex(InitError, "Refusing to overwrite existing path"):
+                run(
+                    root=root,
+                    project_name="AcmeShop",
+                    app_name="Acme Shop",
+                    app_package="com.acme.shop",
+                    core_package="com.acme.shop.core",
+                    scope="full",
+                    clean=False,
+                    dry_run=False,
+                    force=True,
+                    skip_build_check=True,
+                )
+            after = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+            self.assertEqual(after, before)
+
+    def test_package_target_nested_in_source_is_rejected_before_any_move(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_preflight_fixture(root)
+            before = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+            with self.assertRaisesRegex(InitError, "move a directory into itself"):
+                run(
+                    root=root,
+                    project_name="AcmeShop",
+                    app_name="Acme Shop",
+                    app_package=f"{SOURCE_APP_PACKAGE}.feature",
+                    core_package=SOURCE_CORE_PACKAGE,
+                    scope="app-only",
+                    clean=False,
+                    dry_run=False,
+                    force=True,
+                    skip_build_check=True,
+                )
+            after = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+            self.assertEqual(after, before)
+
     def test_validates_names_and_packages(self) -> None:
         self.assertTrue(valid_project_name("AcmeShop_2"))
         self.assertFalse(valid_project_name("acmeShop"))

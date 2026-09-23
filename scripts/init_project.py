@@ -151,39 +151,55 @@ def _replacement_pairs(project_name: str, app_package: str, core_package: str, s
     return sorted(set(pairs), key=lambda item: len(item[0]), reverse=True)
 
 
-def _move_package(root: Path, module: Path, source_package: str, target_package: str, source_sets: Iterable[str], dry_run: bool) -> int:
+def _package_moves(root: Path, module: Path, source_package: str, target_package: str, source_sets: Iterable[str]) -> list[tuple[Path, Path]]:
     source = Path(*source_package.split("."))
     target = Path(*target_package.split("."))
-    moved = 0
     if source == target:
-        return moved
-    for source_set in source_sets:
-        source_dir = root / module / "src" / source_set / "java" / source
-        target_dir = root / module / "src" / source_set / "java" / target
-        moved += _move(root, source_dir, target_dir, dry_run)
-    return moved
+        return []
+    return [
+        (root / module / "src" / source_set / "java" / source, root / module / "src" / source_set / "java" / target)
+        for source_set in source_sets
+    ]
+
+
+def _planned_moves(root: Path, project_name: str, app_package: str, core_package: str, scope: str) -> list[tuple[Path, Path]]:
+    old_app = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / "AndroidComposeBaseApplication.kt"
+    new_app = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / f"{project_name}Application.kt"
+    moves = [(old_app, new_app)]
+    moves.extend(_package_moves(root, Path("app"), SOURCE_APP_PACKAGE, app_package, ("main", "test", "androidTest")))
+    moves.extend(_package_moves(root, Path("baselineprofile"), f"{SOURCE_APP_PACKAGE}.baselineprofile", f"{app_package}.baselineprofile", ("main",)))
+    if scope != "full":
+        return moves
+
+    moves.extend(_package_moves(root, Path("core"), SOURCE_CORE_PACKAGE, core_package, ("main", "test", "testFixtures", "androidTest")))
+    moves.extend(_package_moves(root, Path("core/ui"), f"{SOURCE_CORE_PACKAGE}.ui", f"{core_package}.ui", ("main", "test", "androidTest")))
+
+    plugin_prefix = re.sub(r"[^a-zA-Z0-9]", "", project_name).lower()
+    moves.append((
+        root / "build-logic/src/main/kotlin/androidcomposebase",
+        root / "build-logic/src/main/kotlin" / plugin_prefix,
+    ))
+    for name in ("android-library", "published-library", "quality"):
+        moves.append((
+            root / f"build-logic/src/main/kotlin/androidcomposebase.{name}.gradle.kts",
+            root / f"build-logic/src/main/kotlin/{plugin_prefix}.{name}.gradle.kts",
+        ))
+    return moves
+
+
+def _validate_planned_moves(root: Path, moves: Iterable[tuple[Path, Path]]) -> None:
+    for source, destination in moves:
+        if not source.exists() or source.resolve() == destination.resolve():
+            continue
+        if source.is_dir() and source.resolve() in destination.resolve().parents:
+            raise InitError(f"Refusing to move a directory into itself: {source.relative_to(root)} -> {destination.relative_to(root)}")
+        _tracked_or_existing(root, source, destination)
 
 
 def _move_source_tree(root: Path, project_name: str, app_package: str, core_package: str, scope: str, dry_run: bool) -> int:
-    old_app = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / "AndroidComposeBaseApplication.kt"
-    new_app = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / f"{project_name}Application.kt"
-    count = _move(root, old_app, new_app, dry_run)
-    count += _move_package(root, Path("app"), SOURCE_APP_PACKAGE, app_package, ("main", "test", "androidTest"), dry_run)
-    count += _move_package(root, Path("baselineprofile"), f"{SOURCE_APP_PACKAGE}.baselineprofile", f"{app_package}.baselineprofile", ("main",), dry_run)
-    if scope != "full":
-        return count
-
-    count += _move_package(root, Path("core"), SOURCE_CORE_PACKAGE, core_package, ("main", "test", "testFixtures", "androidTest"), dry_run)
-    count += _move_package(root, Path("core/ui"), f"{SOURCE_CORE_PACKAGE}.ui", f"{core_package}.ui", ("main", "test", "androidTest"), dry_run)
-
-    old_plugin_dir = root / "build-logic/src/main/kotlin/androidcomposebase"
-    new_plugin_dir = root / "build-logic/src/main/kotlin" / re.sub(r"[^a-zA-Z0-9]", "", project_name).lower()
-    count += _move(root, old_plugin_dir, new_plugin_dir, dry_run)
-    for name in ("android-library", "published-library", "quality"):
-        old_plugin = root / f"build-logic/src/main/kotlin/androidcomposebase.{name}.gradle.kts"
-        new_plugin = root / f"build-logic/src/main/kotlin/{re.sub(r'[^a-zA-Z0-9]', '', project_name).lower()}.{name}.gradle.kts"
-        count += _move(root, old_plugin, new_plugin, dry_run)
-    return count
+    moves = _planned_moves(root, project_name, app_package, core_package, scope)
+    _validate_planned_moves(root, moves)
+    return sum(_move(root, source, destination, dry_run) for source, destination in moves)
 
 
 def _replace_app_name(root: Path, app_name: str, dry_run: bool) -> int:
