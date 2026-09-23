@@ -14,6 +14,10 @@ sealed interface WeatherError {
         val cause: Throwable,
     ) : WeatherError
 
+    data class Storage(
+        val cause: Exception,
+    ) : WeatherError
+
     data object EmptyBody : WeatherError
 }
 

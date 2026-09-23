@@ -193,6 +193,7 @@ class DemoViewModel
                 is WeatherError.Server -> DemoWeatherError.SERVER
                 is WeatherError.Network -> DemoWeatherError.NO_CONNECTION
                 is WeatherError.Parse -> DemoWeatherError.UNEXPECTED_RESPONSE
+                is WeatherError.Storage -> DemoWeatherError.STORAGE_FAILURE
                 WeatherError.EmptyBody -> DemoWeatherError.EMPTY_RESPONSE
             }
     }

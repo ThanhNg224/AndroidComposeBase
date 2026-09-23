@@ -10,6 +10,8 @@ import com.thanhng224.androidcomposebase.sample.demo.data.dto.DemoWeatherRespons
 import com.thanhng224.androidcomposebase.sample.demo.data.local.WeatherDao
 import com.thanhng224.androidcomposebase.sample.demo.data.local.WeatherEntity
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.DemoWeather
+import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherError
+import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherResult
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -19,6 +21,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
 
@@ -27,6 +30,7 @@ class DemoRepositoryImplTest {
     private class FakeWeatherDao(
         initial: WeatherEntity? = null,
         private val saveGate: CompletableDeferred<Unit>? = null,
+        private val saveFailure: Exception? = null,
     ) : WeatherDao {
         private val weather = MutableStateFlow(initial)
 
@@ -34,6 +38,7 @@ class DemoRepositoryImplTest {
 
         override suspend fun saveWeather(entity: WeatherEntity) {
             saveGate?.await()
+            saveFailure?.let { throw it }
             weather.value = entity
         }
 
@@ -46,11 +51,16 @@ class DemoRepositoryImplTest {
 
     private class QueuedRemoteDataSource : DemoRemoteDataSource {
         private val responses = mutableListOf<CompletableDeferred<ApiResult<DemoWeatherResponseDto>>>()
+        var fetchCount: Int = 0
+            private set
 
         fun enqueue(): CompletableDeferred<ApiResult<DemoWeatherResponseDto>> =
             CompletableDeferred<ApiResult<DemoWeatherResponseDto>>().also(responses::add)
 
-        override suspend fun fetchCurrentWeather(): ApiResult<DemoWeatherResponseDto> = responses.removeAt(0).await()
+        override suspend fun fetchCurrentWeather(): ApiResult<DemoWeatherResponseDto> {
+            fetchCount += 1
+            return responses.removeAt(0).await()
+        }
     }
 
     @Test
@@ -87,6 +97,27 @@ class DemoRepositoryImplTest {
             refresh.await()
 
             assertEquals(cached, dao.current())
+        }
+
+    @Test
+    fun `older success is retained when a newer refresh fails`() =
+        runTest {
+            val dao = FakeWeatherDao()
+            val remote = QueuedRemoteDataSource()
+            val repository = DemoRepositoryImpl(FakeSettingsStore(), remote, dao)
+            val olderResponse = remote.enqueue()
+            val olderRefresh = async { repository.refreshWeather() }
+            runCurrent()
+            val newerResponse = remote.enqueue()
+            val newerRefresh = async { repository.refreshWeather() }
+            runCurrent()
+
+            newerResponse.complete(ApiResult.Failure(ApiFailure.Network(IOException("offline"))))
+            assertTrue(newerRefresh.await() is WeatherResult.Failure)
+            olderResponse.complete(weather(25.0))
+            assertTrue(olderRefresh.await() is WeatherResult.Success)
+
+            assertEquals(25.0, dao.current()?.temperatureCelsius ?: 0.0, 0.0)
         }
 
     @Test
@@ -142,6 +173,7 @@ class DemoRepositoryImplTest {
             val secondResponse = remote.enqueue()
             val second = async { repository.refreshWeather() }
             runCurrent()
+            assertEquals("The next request must reach the network while Room is writing", 2, remote.fetchCount)
             secondResponse.complete(weather(30.0))
             runCurrent()
             assertNull(dao.current())
@@ -152,6 +184,24 @@ class DemoRepositoryImplTest {
             second.await()
 
             assertEquals(30.0, dao.current()?.temperatureCelsius ?: 0.0, 0.0)
+        }
+
+    @Test
+    fun `Room write exception returns retryable storage failure and preserves cache`() =
+        runTest {
+            val cached = WeatherEntity(temperatureCelsius = 21.0, apparentTemperatureCelsius = 22.0, weatherCode = 1, windSpeedKph = 4.0)
+            val dao = FakeWeatherDao(initial = cached, saveFailure = IllegalStateException("database unavailable"))
+            val remote = QueuedRemoteDataSource()
+            val repository = DemoRepositoryImpl(FakeSettingsStore(), remote, dao)
+            val response = remote.enqueue()
+            val refresh = async { repository.refreshWeather() }
+            runCurrent()
+            response.complete(weather(30.0))
+
+            val result = refresh.await() as WeatherResult.Failure
+
+            assertTrue(result.error is WeatherError.Storage)
+            assertEquals(cached, dao.current())
         }
 
     private fun demoWeather(temperatureCelsius: Double): DemoWeather =

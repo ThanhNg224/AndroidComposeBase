@@ -21,4 +21,5 @@ enum class DemoWeatherError {
     NO_CONNECTION,
     UNEXPECTED_RESPONSE,
     EMPTY_RESPONSE,
+    STORAGE_FAILURE,
 }

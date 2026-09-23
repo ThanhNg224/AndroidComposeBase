@@ -414,6 +414,19 @@ class DemoViewModelTest {
         }
 
     @Test
+    fun `storage failure ends refreshing and keeps the cached weather retryable`() =
+        runTest {
+            val result = WeatherResult.Failure(WeatherError.Storage(IllegalStateException("database unavailable")))
+            val viewModel = createViewModel(FakeDemoRepository(weatherResult = result, initialWeather = DEMO_WEATHER))
+            runCurrent()
+
+            val weather = viewModel.state.value.weather as DemoWeatherState.Success
+            assertEquals(DEMO_WEATHER, weather.weather)
+            assertEquals(false, weather.isRefreshing)
+            assertEquals(DemoWeatherError.STORAGE_FAILURE, weather.refreshError)
+        }
+
+    @Test
     fun `failed refresh with no cache exposes retryable error state`() =
         runTest {
             val result = WeatherResult.Failure(WeatherError.Network(Throwable("network down")))

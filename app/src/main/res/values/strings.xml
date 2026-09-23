@@ -46,6 +46,7 @@
     <string name="demo_weather_error_no_connection">No internet connection</string>
     <string name="demo_weather_error_unexpected_response">Could not read weather data</string>
     <string name="demo_weather_error_empty_response">Weather service returned no data</string>
+    <string name="demo_weather_error_storage">Could not save weather data. Try again.</string>
     <string name="demo_counter_save_failed">Could not save the counter. Please try again.</string>
     <string name="demo_max_count_reached">Max count reached</string>
     <string name="demo_reset_action">Reset</string>

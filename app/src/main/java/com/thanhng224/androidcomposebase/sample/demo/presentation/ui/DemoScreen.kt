@@ -274,4 +274,5 @@ private fun DemoWeatherError.toStringResource(): Int =
         DemoWeatherError.NO_CONNECTION -> R.string.demo_weather_error_no_connection
         DemoWeatherError.UNEXPECTED_RESPONSE -> R.string.demo_weather_error_unexpected_response
         DemoWeatherError.EMPTY_RESPONSE -> R.string.demo_weather_error_empty_response
+        DemoWeatherError.STORAGE_FAILURE -> R.string.demo_weather_error_storage
     }

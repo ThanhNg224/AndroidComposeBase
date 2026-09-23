@@ -7,8 +7,10 @@ import com.thanhng224.androidcomposebase.sample.demo.data.local.WeatherDao
 import com.thanhng224.androidcomposebase.sample.demo.data.local.WeatherEntity
 import com.thanhng224.androidcomposebase.sample.demo.data.mapper.toWeatherResult
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.DemoWeather
+import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherError
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherResult
 import com.thanhng224.androidcomposebase.sample.demo.domain.repository.DemoRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -25,6 +27,7 @@ class DemoRepositoryImpl
     ) : DemoRepository {
         private val refreshGeneration = AtomicLong(0)
         private val weatherCommitMutex = Mutex()
+        private var latestCommittedGeneration = 0L
 
         override fun observeCount(): Flow<Int> = settingsStore.observe(DEMO_COUNTER_COUNT)
 
@@ -35,17 +38,28 @@ class DemoRepositoryImpl
         override fun observeWeather(): Flow<DemoWeather?> = weatherDao.observeWeather().map { it?.toDomain() }
 
         override suspend fun refreshWeather(): WeatherResult {
-            val generation = weatherCommitMutex.withLock { refreshGeneration.incrementAndGet() }
+            val generation = refreshGeneration.incrementAndGet()
             val remote = remoteDataSource.fetchCurrentWeather().toWeatherResult()
-            weatherCommitMutex.withLock {
-                if (generation == refreshGeneration.get()) {
-                    when (remote) {
-                        is WeatherResult.Success -> weatherDao.saveWeather(WeatherEntity.fromDomain(remote.weather))
-                        is WeatherResult.Failure -> Unit
+            return weatherCommitMutex.withLock {
+                when (remote) {
+                    is WeatherResult.Success -> {
+                        if (generation >= latestCommittedGeneration) {
+                            try {
+                                weatherDao.saveWeather(WeatherEntity.fromDomain(remote.weather))
+                                latestCommittedGeneration = generation
+                                remote
+                            } catch (cancelled: CancellationException) {
+                                throw cancelled
+                            } catch (error: Exception) {
+                                WeatherResult.Failure(WeatherError.Storage(error))
+                            }
+                        } else {
+                            remote
+                        }
                     }
+                    is WeatherResult.Failure -> remote
                 }
             }
-            return remote
         }
 
         private companion object {
