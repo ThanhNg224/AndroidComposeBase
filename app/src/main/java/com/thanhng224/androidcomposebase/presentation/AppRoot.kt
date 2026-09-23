@@ -115,12 +115,13 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                     }
                 }
 
-                LaunchedEffect(onboardingState.isComplete) {
-                    if (onboardingState.isComplete) {
+                LaunchedEffect(onboardingState.shouldNavigateHome) {
+                    if (onboardingState.shouldNavigateHome) {
                         navController.navigate(ScreenRoute.Home) {
                             popUpTo(ScreenRoute.Onboarding) { inclusive = true }
                             launchSingleTop = true
                         }
+                        viewModel.onOnboardingNavigationHandled()
                     }
                 }
 

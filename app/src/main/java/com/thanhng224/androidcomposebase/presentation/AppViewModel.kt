@@ -59,7 +59,9 @@ public class AppViewModel
             viewModelScope.launch {
                 try {
                     onboardingRepository.complete()
-                    _onboardingState.update { it.copy(isSaving = false, isComplete = true) }
+                    _onboardingState.update {
+                        it.copy(isSaving = false, isComplete = true, shouldNavigateHome = true)
+                    }
                 } catch (exception: CancellationException) {
                     throw exception
                 } catch (_: Exception) {
@@ -68,6 +70,10 @@ public class AppViewModel
                     }
                 }
             }
+        }
+
+        public fun onOnboardingNavigationHandled() {
+            _onboardingState.update { it.copy(shouldNavigateHome = false) }
         }
 
         public fun retryStartup() {

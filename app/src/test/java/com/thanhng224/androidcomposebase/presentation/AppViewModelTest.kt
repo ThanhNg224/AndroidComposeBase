@@ -78,7 +78,16 @@ class AppViewModelTest {
 
             assertTrue(viewModel.onboardingState.value.isComplete)
             assertFalse(viewModel.onboardingState.value.isSaving)
+            assertTrue(viewModel.onboardingState.value.shouldNavigateHome)
             assertEquals(ScreenRoute.Onboarding, viewModel.startDestination.value)
+
+            viewModel.onOnboardingNavigationHandled()
+            viewModel.completeOnboarding()
+            advanceUntilIdle()
+
+            assertTrue(viewModel.onboardingState.value.isComplete)
+            assertFalse(viewModel.onboardingState.value.shouldNavigateHome)
+            assertEquals(1, repository.completeCalls)
         }
 
     @Test
