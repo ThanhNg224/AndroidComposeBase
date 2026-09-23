@@ -237,7 +237,9 @@ def _validate_app_name_resources(root: Path) -> None:
 
 
 def _app_branding_paths(root: Path, app_package: str) -> tuple[Path, Path]:
-    app_dir = root / "app/src/main/java" / Path(*app_package.split("."))
+    target_dir = root / "app/src/main/java" / Path(*app_package.split("."))
+    source_package = app_package if target_dir.exists() else SOURCE_APP_PACKAGE
+    app_dir = root / "app/src/main/java" / Path(*source_package.split("."))
     return (
         app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt",
         app_dir / "appshell/home/HomeScreen.kt",
