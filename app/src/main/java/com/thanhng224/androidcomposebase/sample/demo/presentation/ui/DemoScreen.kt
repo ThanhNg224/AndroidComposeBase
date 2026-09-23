@@ -21,6 +21,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -33,16 +34,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
 import com.thanhng224.androidcomposebase.core.ui.components.AppOutlinedButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppPrimaryButton
 import com.thanhng224.androidcomposebase.core.ui.text.resolve
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoUiEvent
+import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherError
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherState
 import com.thanhng224.androidcomposebase.sample.demo.presentation.viewmodel.DemoViewModel
 
@@ -164,7 +168,7 @@ public fun DemoScreen(
                             }
                             is DemoWeatherState.Error -> {
                                 Text(
-                                    text = "Failed to load weather (${weather.reason})",
+                                    text = stringResource(weather.reason.toStringResource()),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.error,
                                 )
@@ -176,6 +180,10 @@ public fun DemoScreen(
                                 )
                             }
                             is DemoWeatherState.Success -> {
+                                if (weather.isRefreshing) {
+                                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                                    Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+                                }
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.WbSunny,
@@ -237,6 +245,15 @@ public fun DemoScreen(
 
                                 Spacer(modifier = Modifier.height(Dimens.spaceLarge))
 
+                                weather.refreshError?.let { error ->
+                                    Text(
+                                        text = stringResource(error.toStringResource()),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.error,
+                                    )
+                                    Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+                                }
+
                                 AppOutlinedButton(
                                     text = "Refresh Weather",
                                     icon = Icons.Default.Refresh,
@@ -250,3 +267,11 @@ public fun DemoScreen(
         }
     }
 }
+
+private fun DemoWeatherError.toStringResource(): Int =
+    when (this) {
+        DemoWeatherError.SERVER -> R.string.demo_weather_error_server
+        DemoWeatherError.NO_CONNECTION -> R.string.demo_weather_error_no_connection
+        DemoWeatherError.UNEXPECTED_RESPONSE -> R.string.demo_weather_error_unexpected_response
+        DemoWeatherError.EMPTY_RESPONSE -> R.string.demo_weather_error_empty_response
+    }

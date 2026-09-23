@@ -1,5 +1,6 @@
 package com.thanhng224.androidcomposebase.sample.demo.domain.repository
 
+import com.thanhng224.androidcomposebase.sample.demo.domain.model.DemoWeather
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherResult
 import kotlinx.coroutines.flow.Flow
 
@@ -8,5 +9,7 @@ interface DemoRepository {
 
     suspend fun saveCount(count: Int)
 
-    suspend fun fetchWeather(): WeatherResult
+    fun observeWeather(): Flow<DemoWeather?>
+
+    suspend fun refreshWeather(): WeatherResult
 }

@@ -46,8 +46,7 @@ object DemoDatabaseModule {
                 context,
                 com.thanhng224.androidcomposebase.sample.demo.data.local.AppDatabase::class.java,
                 "demo_weather.db",
-            ).fallbackToDestructiveMigration(dropAllTables = true)
-            .build()
+            ).build()
 
     @Provides
     @Singleton

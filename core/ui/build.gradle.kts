@@ -30,7 +30,6 @@ dependencies {
     api(libs.androidx.compose.material3)
     api(libs.androidx.compose.material.icons.extended)
     api(libs.androidx.lifecycle.runtime.compose)
-    api(libs.coil.compose)
     implementation(libs.androidx.activity.compose)
 
     androidTestImplementation(platform(libs.androidx.compose.bom))

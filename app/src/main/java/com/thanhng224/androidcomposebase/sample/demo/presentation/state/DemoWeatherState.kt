@@ -7,6 +7,8 @@ sealed interface DemoWeatherState {
 
     data class Success(
         val weather: DemoWeather,
+        val isRefreshing: Boolean = false,
+        val refreshError: DemoWeatherError? = null,
     ) : DemoWeatherState
 
     data class Error(

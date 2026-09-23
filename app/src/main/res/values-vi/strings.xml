@@ -42,6 +42,7 @@
     <string name="demo_weather_error_no_connection">Không có kết nối mạng</string>
     <string name="demo_weather_error_unexpected_response">Không thể đọc dữ liệu thời tiết</string>
     <string name="demo_weather_error_empty_response">Dịch vụ thời tiết không trả dữ liệu</string>
+    <string name="demo_counter_save_failed">Không thể lưu bộ đếm. Vui lòng thử lại.</string>
     <string name="demo_max_count_reached">Đã đạt số tối đa</string>
     <string name="demo_reset_action">Đặt lại</string>
     <string name="design_system_title">UI Kit</string>

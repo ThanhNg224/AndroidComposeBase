@@ -4,11 +4,12 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 public interface WeatherDao {
     @Query("SELECT * FROM weather_cache WHERE id = 1")
-    public suspend fun getWeather(): WeatherEntity?
+    public fun observeWeather(): Flow<WeatherEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     public suspend fun saveWeather(entity: WeatherEntity)
