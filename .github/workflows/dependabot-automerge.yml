@@ -1,7 +1,7 @@
 name: dependabot-automerge
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 permissions:
@@ -10,8 +10,10 @@ permissions:
 
 jobs:
   automerge:
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]' && github.event.pull_request.base.ref == 'develop'
     steps:
       - name: Fetch Dependabot metadata
         id: metadata
@@ -19,15 +21,45 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Approve Dependabot PR
-        run: gh pr review --approve "$PR_URL"
-        continue-on-error: true
+      - name: Allow patch and minor updates only
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+        run: |
+          case "$UPDATE_TYPE" in
+            version-update:semver-patch|version-update:semver-minor)
+              echo "Eligible Dependabot update: $UPDATE_TYPE"
+              ;;
+            *)
+              echo "Skipping auto-merge for update type: ${UPDATE_TYPE:-unknown}"
+              exit 1
+              ;;
+          esac
+
+      - name: Require auto-merge and protected main branch
+        env:
+          GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_READ_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "FAIL: configure BRANCH_PROTECTION_READ_TOKEN with repository Administration:read." >&2
+            exit 1
+          fi
+
+          allow_auto_merge="$(gh api "repos/$REPOSITORY" --jq '.allow_auto_merge')"
+          if [[ "$allow_auto_merge" != "true" ]]; then
+            echo "FAIL: repository auto-merge is not enabled." >&2
+            exit 1
+          fi
+
+          required_check="$(gh api "repos/$REPOSITORY/branches/main/protection" \
+            --jq '((.required_status_checks.contexts // []) + [.required_status_checks.checks[]?.context]) | any(. == "check")')"
+          if [[ "$required_check" != "true" ]]; then
+            echo "FAIL: main branch protection must require the 'check' status." >&2
+            exit 1
+          fi
 
       - name: Enable auto-merge for Dependabot PR
-        run: gh pr merge --auto --merge --delete-branch "$PR_URL"
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --merge "$PR_URL"

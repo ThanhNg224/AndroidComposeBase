@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Publishes AndroidCoreBase's two published modules to a throwaway Maven repository, then builds
+# Publishes AndroidComposeBase's two published modules to a throwaway Maven repository, then builds
 # an isolated consumer project (integration/consumer) against ONLY that repository (plus
 # Google/Maven Central) to prove the artifacts are self-contained and Hilt/Compose-free where they
-# should be. See docs/CORE_V2_DESIGN.md's "Published Consumer Verification" section.
+# should be. See docs/CORE_MODULES.md's publication verification section.
 #
 # Usage: scripts/verify-publication.sh --quick|--release
 #   --quick    Compile debug for both consumer modes (main-only, then +Compose). Fast; PR gate.
@@ -60,11 +60,8 @@ for path in "$CORE_POM" "$COMPOSE_POM" "$CORE_AAR" "$COMPOSE_AAR"; do
     fi
 done
 
-echo "==> Asserting the main module's POM has no Compose, Hilt, or test-only dependency"
-if grep -Eio '(compose|hilt|>junit<|kotlinx-coroutines-test)' "$CORE_POM"; then
-    echo "FAIL: $CORE_POM leaks a Compose/Hilt/test-only dependency" >&2
-    exit 1
-fi
+echo "==> Asserting the main module's POM dependency entries"
+python3 "$REPO_ROOT/scripts/publication_pom.py" "$CORE_POM"
 
 echo "==> Asserting both AAR manifests are passive (no permission/component nodes)"
 for aar in "$CORE_AAR" "$COMPOSE_AAR"; do
