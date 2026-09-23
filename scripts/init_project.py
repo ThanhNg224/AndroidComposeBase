@@ -204,6 +204,15 @@ def _replace_app_name(root: Path, app_name: str, dry_run: bool) -> int:
     return count
 
 
+def _validate_app_name_resources(root: Path) -> None:
+    for path in (root / "app/src/main/res/values/strings.xml", root / "app/src/main/res/values-vi/strings.xml"):
+        if not path.is_file():
+            raise InitError(f"Missing app name resources: {path.relative_to(root)}")
+        tree = ET.parse(path)
+        if tree.getroot().find("string[@name='app_name']") is None:
+            raise InitError(f"Missing app_name resource in {path.relative_to(root)}")
+
+
 def _replace_text(root: Path, pairs: list[tuple[str, str]], dry_run: bool, scope: str) -> int:
     changed = 0
     ignored_files = {"init_project.py", "test_init_project.py", "smoke_init_project.py"}
@@ -250,7 +259,7 @@ def _remove_tree(root: Path, path: Path, dry_run: bool) -> int:
     return 1
 
 
-def _remove_sample_routes(root: Path, app_package: str, dry_run: bool) -> int:
+def _clean_sample_route_sources(root: Path, app_package: str) -> tuple[Path, str, Path, str]:
     target_dir = root / "app/src/main/java" / Path(*app_package.split("."))
     package_dir = target_dir if target_dir.exists() else root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split("."))
     source_app_package = app_package if target_dir.exists() else SOURCE_APP_PACKAGE
@@ -265,6 +274,8 @@ def _remove_sample_routes(root: Path, app_package: str, dry_run: bool) -> int:
         "import androidx.compose.material.icons.filled.Palette\n",
         "import " + source_app_package + ".sample.demo.presentation.ui.DemoScreen\n",
         "import " + source_app_package + ".sample.designsystem.presentation.ui.DesignSystemScreen\n",
+        "                ScreenRoute.Demo::class.qualifiedName,\n",
+        "                ScreenRoute.DesignSystem::class.qualifiedName,\n",
         "                    composable<ScreenRoute.Demo> {\n",
         "                    composable<ScreenRoute.DesignSystem> {\n",
         '                                title = "Demo",\n',
@@ -273,6 +284,14 @@ def _remove_sample_routes(root: Path, app_package: str, dry_run: bool) -> int:
     missing = [marker for marker in required if marker not in source]
     if missing:
         raise InitError("AppRoot sample markers changed; refusing partial cleanup: " + ", ".join(missing))
+    route_markers = (
+        "\n    @Serializable\n    public data object Demo : ScreenRoute\n",
+        "\n    @Serializable\n    public data object DesignSystem : ScreenRoute\n",
+    )
+    route_source = route_file.read_text(encoding="utf-8")
+    missing_routes = [marker for marker in route_markers if marker not in route_source]
+    if missing_routes:
+        raise InitError("ScreenRoute sample markers changed; refusing partial cleanup: " + ", ".join(missing_routes))
     source = source.replace(required[0], "").replace(required[1], "")
     source = source.replace(required[2], "").replace(required[3], "")
     source = source.replace("                ScreenRoute.Demo::class.qualifiedName,\n", "")
@@ -280,12 +299,17 @@ def _remove_sample_routes(root: Path, app_package: str, dry_run: bool) -> int:
     source = _remove_kotlin_block(source, "                    composable<ScreenRoute.Demo> {\n", "                    composable<ScreenRoute.Settings> {\n")
     source = _remove_kotlin_block(source, "                    composable<ScreenRoute.DesignSystem> {\n", "                }\n\n                LaunchedEffect")
     source = _remove_kotlin_block(source, '                            NavItem(\n                                title = "Demo",\n', '                            NavItem(\n                                title = "Settings",\n')
-    route_source = route_file.read_text(encoding="utf-8")
-    route_source = re.sub(r"\n    @Serializable\n    public data object Demo : ScreenRoute\n", "", route_source)
-    route_source = re.sub(r"\n    @Serializable\n    public data object DesignSystem : ScreenRoute\n", "", route_source)
+    route_source = route_source.replace(route_markers[0], "").replace(route_markers[1], "")
     if "ScreenRoute.Demo" in source or "ScreenRoute.DesignSystem" in source or "data object Demo" in route_source or "data object DesignSystem" in route_source:
         raise InitError("Sample navigation references remain after cleanup.")
-    changed = source != app_root.read_text(encoding="utf-8") or route_source != route_file.read_text(encoding="utf-8")
+    return app_root, source, route_file, route_source
+
+
+def _remove_sample_routes(root: Path, app_package: str, dry_run: bool) -> int:
+    app_root, source, route_file, route_source = _clean_sample_route_sources(root, app_package)
+    original_source = app_root.read_text(encoding="utf-8")
+    original_route_source = route_file.read_text(encoding="utf-8")
+    changed = source != original_source or route_source != original_route_source
     if dry_run:
         if changed:
             print("  clean sample routes in AppRoot.kt and ScreenRoute.kt")
@@ -308,6 +332,17 @@ def _remove_kotlin_block(source: str, start: str, end: str) -> str:
 def _clean_sample_build(root: Path, dry_run: bool) -> int:
     build_file = root / "app/build.gradle.kts"
     source = build_file.read_text(encoding="utf-8")
+    new_source = _clean_sample_build_source(source)
+    changes = int(new_source != source)
+    if dry_run:
+        if changes:
+            print("  clean app/build.gradle.kts sample dependencies/configuration")
+    elif changes:
+        build_file.write_text(new_source, encoding="utf-8")
+    return changes
+
+
+def _clean_sample_build_source(source: str) -> str:
     dependency_markers = (
         "    implementation(libs.room.runtime)\n", "    implementation(libs.room.ktx)\n", "    ksp(libs.room.compiler)\n",
         "    implementation(libs.retrofit.core)\n", "    implementation(libs.retrofit.kotlinx.serialization.converter)\n",
@@ -333,13 +368,7 @@ def _clean_sample_build(root: Path, dry_run: bool) -> int:
             raise InitError("Could not safely remove sample Kover configuration.")
     if "Room" in new_source or "Retrofit" in new_source or "API_BASE_URL" in new_source or "sample.demo" in new_source:
         raise InitError("Sample-only build configuration remains after cleanup.")
-    changes = int(new_source != source)
-    if dry_run:
-        if changes:
-            print("  clean app/build.gradle.kts sample dependencies/configuration")
-    elif changes:
-        build_file.write_text(new_source, encoding="utf-8")
-    return changes
+    return new_source
 
 
 def _clean_sample_resources(root: Path, dry_run: bool) -> int:
@@ -390,6 +419,24 @@ def clean_samples(root: Path, app_package: str, dry_run: bool) -> int:
     if changed == 0:
         raise InitError("--clean-samples found no known sample markers; refusing to report a no-op success.")
     return changed
+
+
+def validate_clean_sample_source(root: Path) -> None:
+    """Validate every marker cleanup needs while the checkout is still untouched."""
+    _clean_sample_route_sources(root, SOURCE_APP_PACKAGE)
+    build_file = root / "app/build.gradle.kts"
+    _clean_sample_build_source(build_file.read_text(encoding="utf-8"))
+    for resource_file in (root / "app/src/main/res/values/strings.xml", root / "app/src/main/res/values-vi/strings.xml"):
+        if not resource_file.is_file():
+            raise InitError(f"Missing sample string resources: {resource_file.relative_to(root)}")
+        ET.parse(resource_file)
+    manifest_path = root / "app/src/main/AndroidManifest.xml"
+    manifest = manifest_path.read_text(encoding="utf-8")
+    if '    <uses-permission android:name="android.permission.INTERNET" />\n' not in manifest:
+        raise InitError("Missing Internet permission marker in AndroidManifest.xml")
+    journey_path = root / "baselineprofile/src/main/java" / Path(*f"{SOURCE_APP_PACKAGE}.baselineprofile".split(".")) / "CriticalJourney.kt"
+    if not journey_path.is_file():
+        raise InitError(f"Missing baseline profile journey: {journey_path.relative_to(root)}")
 
 
 def _clean_critical_journey(root: Path, app_package: str, dry_run: bool, journey_source_package: str | None = None) -> int:
@@ -505,6 +552,9 @@ def run(root: Path, project_name: str, app_name: str, app_package: str, core_pac
     if scope == "full" and app_package == core_package:
         raise InitError("Application and core packages must be different.")
     validate_source(root, scope)
+    _validate_app_name_resources(root)
+    if clean:
+        validate_clean_sample_source(root)
     if not dry_run and not force and (root / ".git").exists():
         status = subprocess.run(["git", "status", "--porcelain"], cwd=root, check=True, capture_output=True, text=True)
         if status.stdout.strip():

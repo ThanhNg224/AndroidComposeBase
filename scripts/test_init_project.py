@@ -19,11 +19,132 @@ from init_project import (
     escape_android_string_resource,
     valid_package,
     valid_project_name,
+    run,
     validate_source,
 )
 
 
 class InitializerUnitTests(unittest.TestCase):
+    @staticmethod
+    def write_preflight_fixture(root: Path) -> None:
+        app_dir = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split("."))
+        profile_dir = root / "baselineprofile/src/main/java" / Path(*f"{SOURCE_APP_PACKAGE}.baselineprofile".split("."))
+        app_root = app_dir / "presentation/AppRoot.kt"
+        app_root.parent.mkdir(parents=True)
+        app_root.write_text(
+            f'''package {SOURCE_APP_PACKAGE}.presentation
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Palette
+import {SOURCE_APP_PACKAGE}.sample.demo.presentation.ui.DemoScreen
+import {SOURCE_APP_PACKAGE}.sample.designsystem.presentation.ui.DesignSystemScreen
+val topRoutes = listOf(
+                ScreenRoute.Demo::class.qualifiedName,
+                ScreenRoute.DesignSystem::class.qualifiedName,
+)
+                    composable<ScreenRoute.Demo> {{
+                        DemoScreen()
+                    }}
+                    composable<ScreenRoute.Settings> {{
+                        SettingsScreen()
+                    }}
+                    composable<ScreenRoute.DesignSystem> {{
+                        DesignSystemScreen()
+                    }}
+                }}
+
+                LaunchedEffect(value) {{ }}
+                            NavItem(
+                                title = "Home",
+                            ),
+                            NavItem(
+                                title = "Demo",
+                            ),
+                            NavItem(
+                                title = "Design",
+                            ),
+                            NavItem(
+                                title = "Settings",
+                            ),
+''',
+            encoding="utf-8",
+        )
+        app_source = app_dir / "AndroidComposeBaseApplication.kt"
+        app_source.write_text(f"package {SOURCE_APP_PACKAGE}\nclass AndroidComposeBaseApplication\n", encoding="utf-8")
+        routes = app_dir / "navigation/ScreenRoute.kt"
+        routes.parent.mkdir(parents=True)
+        routes.write_text(
+            "\n    @Serializable\n    public data object Demo : ScreenRoute\n"
+            "\n    @Serializable\n    public data object DesignSystem : ScreenRoute\n",
+            encoding="utf-8",
+        )
+        for sample in ("demo", "designsystem"):
+            sample_file = app_dir / f"sample/{sample}/Sample.kt"
+            sample_file.parent.mkdir(parents=True)
+            sample_file.write_text("sample\n", encoding="utf-8")
+        di = app_dir / "di/AppNetworkModule.kt"
+        di.parent.mkdir(parents=True)
+        di.write_text("network sample\n", encoding="utf-8")
+
+        profile = profile_dir / "CriticalJourney.kt"
+        profile.parent.mkdir(parents=True)
+        profile.write_text(f"package {SOURCE_APP_PACKAGE}.baselineprofile\n", encoding="utf-8")
+        (root / "settings.gradle.kts").write_text(f'rootProject.name = "{SOURCE_NAME}"\n', encoding="utf-8")
+        (root / "app/build.gradle.kts").write_text(
+            f'''android {{
+    namespace = "{SOURCE_APP_PACKAGE}"
+    defaultConfig {{ applicationId = "{SOURCE_APP_PACKAGE}" }}
+}}
+dependencies {{
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.kotlinx.serialization.converter)
+    implementation(libs.okhttp.core)
+    implementation(libs.okhttp.logging.interceptor)
+    testImplementation(libs.okhttp.mockwebserver)
+}}
+ksp {{
+    arg("room.schemaLocation", "$projectDir/schemas")
+}}
+''',
+            encoding="utf-8",
+        )
+        for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
+            path = root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('<resources><string name="app_name">Starter</string></resources>', encoding="utf-8")
+        manifest = root / "app/src/main/AndroidManifest.xml"
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        manifest.write_text('<manifest />\n', encoding="utf-8")
+        (root / "core/build.gradle.kts").parent.mkdir(parents=True, exist_ok=True)
+        (root / "core/build.gradle.kts").write_text(f'namespace = "{SOURCE_CORE_PACKAGE}"\n', encoding="utf-8")
+        (root / "core/ui/build.gradle.kts").parent.mkdir(parents=True, exist_ok=True)
+        (root / "core/ui/build.gradle.kts").write_text(f'namespace = "{SOURCE_CORE_PACKAGE}.ui"\n', encoding="utf-8")
+        (root / "core/api/core.api").parent.mkdir(parents=True, exist_ok=True)
+        (root / "core/api/core.api").write_text("api snapshot\n", encoding="utf-8")
+
+    def test_clean_sample_marker_failure_does_not_partially_rename_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_preflight_fixture(root)
+            before = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+            with self.assertRaisesRegex(InitError, "Internet permission marker"):
+                run(
+                    root=root,
+                    project_name="AcmeShop",
+                    app_name="Acme Shop",
+                    app_package="com.acme.shop",
+                    core_package="com.acme.shop.core",
+                    scope="app-only",
+                    clean=True,
+                    dry_run=False,
+                    force=True,
+                    skip_build_check=True,
+                )
+            after = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+            self.assertEqual(after, before)
+
     def test_validates_names_and_packages(self) -> None:
         self.assertTrue(valid_project_name("AcmeShop_2"))
         self.assertFalse(valid_project_name("acmeShop"))
