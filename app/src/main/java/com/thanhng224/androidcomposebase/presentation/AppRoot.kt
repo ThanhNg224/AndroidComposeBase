@@ -14,13 +14,13 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -30,7 +30,6 @@ import com.thanhng224.androidcomposebase.core.ui.components.FloatingNavBar
 import com.thanhng224.androidcomposebase.core.ui.components.NavItem
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
-import com.thanhng224.androidcomposebase.feature.auth.presentation.ui.LoginScreen
 import com.thanhng224.androidcomposebase.feature.onboarding.presentation.ui.OnboardingScreen
 import com.thanhng224.androidcomposebase.feature.settings.presentation.ui.SettingsScreen
 import com.thanhng224.androidcomposebase.navigation.ScreenRoute
@@ -41,6 +40,7 @@ import com.thanhng224.androidcomposebase.sample.designsystem.presentation.ui.Des
 public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
     val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
     val currentTheme by viewModel.currentTheme.collectAsStateWithLifecycle()
+    val onboardingState by viewModel.onboardingState.collectAsStateWithLifecycle()
 
     val isDark =
         when (currentTheme) {
@@ -88,27 +88,13 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
             ) {
                 NavHost(
                     navController = navController,
-                    startDestination = startDestination!!,
+                    startDestination = checkNotNull(startDestination),
                 ) {
                     composable<ScreenRoute.Onboarding> {
                         OnboardingScreen(
-                            onGetStarted = {
-                                viewModel.completeOnboarding()
-                                navController.navigate(ScreenRoute.Login) {
-                                    popUpTo(ScreenRoute.Onboarding) { inclusive = true }
-                                }
-                            },
-                        )
-                    }
-
-                    composable<ScreenRoute.Login> {
-                        LoginScreen(
-                            onLoginSuccess = {
-                                viewModel.loginSuccess()
-                                navController.navigate(ScreenRoute.Home) {
-                                    popUpTo(ScreenRoute.Login) { inclusive = true }
-                                }
-                            },
+                            state = onboardingState,
+                            onContinue = viewModel::completeOnboarding,
+                            onRetryStartup = viewModel::retryStartup,
                         )
                     }
 
@@ -121,18 +107,20 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                     }
 
                     composable<ScreenRoute.Settings> {
-                        SettingsScreen(
-                            onLogout = {
-                                viewModel.logout()
-                                navController.navigate(ScreenRoute.Login) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            },
-                        )
+                        SettingsScreen()
                     }
 
                     composable<ScreenRoute.DesignSystem> {
                         DesignSystemScreen()
+                    }
+                }
+
+                LaunchedEffect(onboardingState.isComplete) {
+                    if (onboardingState.isComplete) {
+                        navController.navigate(ScreenRoute.Home) {
+                            popUpTo(ScreenRoute.Onboarding) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 }
 
@@ -145,7 +133,7 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                                 isSelected = isSelectedRoute(currentDestination, ScreenRoute.Home::class.qualifiedName),
                                 onClick = {
                                     navController.navigate(ScreenRoute.Home) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
+                                        popUpTo<ScreenRoute.Home> {
                                             saveState = true
                                         }
                                         launchSingleTop = true
@@ -159,7 +147,7 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                                 isSelected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),
                                 onClick = {
                                     navController.navigate(ScreenRoute.Demo) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
+                                        popUpTo<ScreenRoute.Home> {
                                             saveState = true
                                         }
                                         launchSingleTop = true
@@ -177,7 +165,7 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                                     ),
                                 onClick = {
                                     navController.navigate(ScreenRoute.DesignSystem) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
+                                        popUpTo<ScreenRoute.Home> {
                                             saveState = true
                                         }
                                         launchSingleTop = true
@@ -195,7 +183,7 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                                     ),
                                 onClick = {
                                     navController.navigate(ScreenRoute.Settings) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
+                                        popUpTo<ScreenRoute.Home> {
                                             saveState = true
                                         }
                                         launchSingleTop = true

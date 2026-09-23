@@ -37,8 +37,6 @@ internal object CriticalJourney {
         val getStarted = device.findObject(By.text("Get Started"))
         if (getStarted != null) {
             getStarted.click()
-            val loginBtn = device.findObject(By.text("Log In"))
-            loginBtn?.click()
         }
 
         // Wait for Home screen
@@ -54,13 +52,13 @@ internal object CriticalJourney {
 
         // Navigate to UI Kit (Design System)
         device.clickOrFail(By.text("Design"), "the Design tab")
-        check(device.wait(Until.hasObject(By.text("Color Palette"), WAIT_TIMEOUT_MS)) {
+        check(device.wait(Until.hasObject(By.text("Color Palette")), WAIT_TIMEOUT_MS)) {
             "Design system tab never rendered"
         }
 
         // Navigate to Settings
         device.clickOrFail(By.text("Settings"), "the Settings tab")
-        check(device.wait(Until.hasObject(By.text("Personalization"), WAIT_TIMEOUT_MS)) {
+        check(device.wait(Until.hasObject(By.text("Appearance")), WAIT_TIMEOUT_MS)) {
             "Settings tab never rendered"
         }
 

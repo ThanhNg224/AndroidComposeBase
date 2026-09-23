@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">Android Compose Base</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="onboarding_retry">Retry</string>
+    <string name="onboarding_startup_read_failed">Couldn’t load your setup status. Please try again.</string>
+    <string name="onboarding_save_failed">Couldn’t save your setup. Please try again.</string>
     <string name="appshell_home_greeting">Hello Android!</string>
     <string name="appshell_home_subtitle">A production-ready XML foundation for Android apps.</string>
     <string name="home_title">Home</string>

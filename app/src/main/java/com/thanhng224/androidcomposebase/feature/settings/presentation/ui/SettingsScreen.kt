@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Card
@@ -29,9 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
-import com.thanhng224.androidcomposebase.core.ui.components.AppDialog
 import com.thanhng224.androidcomposebase.core.ui.text.resolve
 import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
@@ -49,14 +45,12 @@ import com.thanhng224.androidcomposebase.feature.settings.presentation.viewmodel
 
 @Composable
 public fun SettingsScreen(
-    onLogout: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    var showLogoutDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.pendingMessages) {
         val message = state.pendingMessages.firstOrNull()
@@ -210,56 +204,6 @@ public fun SettingsScreen(
                     }
                 }
             }
-
-            item {
-                Text(
-                    text = "Account",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = Dimens.spaceSmall),
-                )
-            }
-
-            item {
-                Card(
-                    shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable { showLogoutDialog = true },
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(Dimens.spaceMedium),
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Logout,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.error,
-                        )
-                        Spacer(modifier = Modifier.size(Dimens.spaceMedium))
-                        Text(
-                            text = "Sign Out",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.error,
-                        )
-                    }
-                }
-            }
         }
     }
-
-    AppDialog(
-        visible = showLogoutDialog,
-        onDismiss = { showLogoutDialog = false },
-        title = "Sign Out",
-        message = "Are you sure you want to sign out? You will be routed back to the login screen.",
-        primaryActionText = "Sign Out",
-        onPrimaryAction = onLogout,
-        secondaryActionText = "Cancel",
-    )
 }

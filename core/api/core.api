@@ -385,14 +385,12 @@ package com.thanhng224.androidcomposebase.core.storage.settings {
   public final class AppSettingsKeys {
     method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey getDEBUG_LOGGING_ENABLED();
     method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.LongKey getFIRST_OPEN_AT();
-    method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey getIS_LOGGED_IN();
     method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.StringKey getLANGUAGE_TAG();
     method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey getONBOARDING_COMPLETED();
     method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.IntKey getOPEN_COUNT();
     method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.StringKey getTHEME_MODE();
     property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey DEBUG_LOGGING_ENABLED;
     property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.LongKey FIRST_OPEN_AT;
-    property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey IS_LOGGED_IN;
     property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.StringKey LANGUAGE_TAG;
     property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey ONBOARDING_COMPLETED;
     property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.IntKey OPEN_COUNT;
