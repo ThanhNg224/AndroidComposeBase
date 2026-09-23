@@ -42,6 +42,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6.3.0
 
+      - name: Smoke test initializer on four clean Git archive clones
+        run: python3 scripts/smoke_init_project.py --build full-clean
+
       - name: Run the full local gate
         run: ./gradlew check --stacktrace
 
@@ -66,8 +69,9 @@ jobs:
           retention-days: 7
 
   baseline-profile:
-    # Manual dispatch or the weekly schedule only: never a normal pull request or push, since it
-    # boots an emulator (see Task 2 of docs/superpowers/plans/2026-09-09-core-v2-release-proof.md).
+    # Manual dispatch or the weekly schedule only: collection boots an emulator and is kept out of
+    # the normal PR/push path to bound CI time. Collection validates the journey; it does not
+    # measure performance (see docs/performance/BASELINE_PROFILE_RESULTS.md for device results).
     #
     # This job COLLECTS the profile; it does not measure it. androidx.benchmark deliberately
     # refuses to report timings on an emulator ("ERRORS (not suppressed): EMULATOR") because they
