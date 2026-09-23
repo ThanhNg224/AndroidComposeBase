@@ -2,7 +2,8 @@
 """Exercise initializer modes on clean copies produced by `git archive`.
 
 All four combinations are checked for package, route, resource, dependency, and
-profile residue. CI may also request one representative build with `--build full-clean`.
+profile residue. A representative clean clone can also be built with `--build full-clean`
+or `--build app-only-clean`.
 """
 
 from __future__ import annotations
@@ -69,6 +70,13 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
     assert (app_dir / f"{name}Application.kt").is_file()
     app_root = text(app_dir / "presentation/AppRoot.kt")
     routes = text(app_dir / "navigation/ScreenRoute.kt")
+    onboarding = text(app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt")
+    home = text(app_dir / "appshell/home/HomeScreen.kt")
+    display_name_literal = '"Smoke & Demo \\"App\\""'
+    assert f"text = {display_name_literal}" in onboarding
+    assert f"title = {display_name_literal}" in home
+    assert '"AndroidComposeBase"' not in onboarding
+    assert '"AndroidComposeBase"' not in home
     assert not (clone / "app/src/release/generated/baselineProfiles/baseline-prof.txt").exists()
     sample_dirs = (app_dir / "sample/demo", app_dir / "sample/designsystem")
     if clean:
@@ -93,6 +101,7 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
     else:
         assert f'namespace = "{CORE_SOURCE}"' in text(clone / "core/build.gradle.kts")
         assert f'namespace = "{CORE_SOURCE}.ui"' in text(clone / "core/ui/build.gradle.kts")
+        assert "AndroidComposeBaseTheme" in app_root
 
     if build:
         subprocess.run(
@@ -109,7 +118,7 @@ def main() -> int:
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parent.parent)
     parser.add_argument("--revision", default="HEAD")
     parser.add_argument("--keep-dir", type=Path, help="Keep the four initialized archive clones at this new directory")
-    parser.add_argument("--build", choices=("full-clean",), help="Also build the full-scope clean clone")
+    parser.add_argument("--build", choices=("full-clean", "app-only-clean"), help="Also build one representative clean clone")
     args = parser.parse_args()
     repo = args.repo.resolve()
 

@@ -13,7 +13,9 @@ from init_project import (
     SOURCE_CORE_PACKAGE,
     SOURCE_NAME,
     InitError,
+    kotlin_string_literal,
     _replacement_pairs,
+    _replace_app_branding,
     _replace_app_name,
     _move,
     escape_android_string_resource,
@@ -70,6 +72,12 @@ val topRoutes = listOf(
         )
         app_source = app_dir / "AndroidComposeBaseApplication.kt"
         app_source.write_text(f"package {SOURCE_APP_PACKAGE}\nclass AndroidComposeBaseApplication\n", encoding="utf-8")
+        onboarding = app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt"
+        onboarding.parent.mkdir(parents=True)
+        onboarding.write_text('Text(text = "AndroidComposeBase")\n', encoding="utf-8")
+        home = app_dir / "appshell/home/HomeScreen.kt"
+        home.parent.mkdir(parents=True)
+        home.write_text('AppCenterTopBar(title = "AndroidComposeBase")\n', encoding="utf-8")
         routes = app_dir / "navigation/ScreenRoute.kt"
         routes.parent.mkdir(parents=True)
         routes.write_text(
@@ -202,6 +210,26 @@ ksp {{
 
     def test_android_string_escaping_handles_resource_prefix_and_quotes(self) -> None:
         self.assertEqual(escape_android_string_resource("@New's \"Shop\""), "\\@New\\'s \\\"Shop\\\"")
+
+    def test_kotlin_display_literal_escapes_interpolation_and_quotes(self) -> None:
+        self.assertEqual(kotlin_string_literal('Shop "$price"\n'), '"Shop \\"\\$price\\"\\n"')
+
+    def test_app_branding_replacement_is_scoped_to_app_screens(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            app_dir = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split("."))
+            onboarding = app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt"
+            home = app_dir / "appshell/home/HomeScreen.kt"
+            unrelated = app_dir / "core/ui/theme/Theme.kt"
+            for path in (onboarding, home, unrelated):
+                path.parent.mkdir(parents=True, exist_ok=True)
+            onboarding.write_text('Text(text = "AndroidComposeBase")\n', encoding="utf-8")
+            home.write_text('AppCenterTopBar(title = "AndroidComposeBase")\n', encoding="utf-8")
+            unrelated.write_text('val theme = AndroidComposeBaseTheme\n', encoding="utf-8")
+            self.assertEqual(_replace_app_branding(root, "AcmeShop", SOURCE_APP_PACKAGE, "AndroidComposeBase $Shop", "app-only", False), 2)
+            self.assertIn('"AndroidComposeBase \\$Shop"', onboarding.read_text(encoding="utf-8"))
+            self.assertIn('"AndroidComposeBase \\$Shop"', home.read_text(encoding="utf-8"))
+            self.assertEqual(unrelated.read_text(encoding="utf-8"), "val theme = AndroidComposeBaseTheme\n")
 
     def test_full_replacements_cover_current_compose_library_identity(self) -> None:
         pairs = dict(_replacement_pairs("AcmeShop", "com.acme.app", "com.acme.core", "full"))

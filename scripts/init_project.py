@@ -51,6 +51,13 @@ def valid_package(value: str) -> bool:
     return not any(part in keywords or part == "_" for part in value.split("."))
 
 
+def kotlin_string_literal(value: str) -> str:
+    """Return a Kotlin quoted string literal without interpolation or control chars."""
+    escapes = {"\\": "\\\\", '"': '\\"', "$": "\\$", "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\u000c", "\r": "\\r"}
+    encoded = "".join(escapes.get(character, f"\\u{ord(character):04x}" if ord(character) < 0x20 else character) for character in value)
+    return f'"{encoded}"'
+
+
 def escape_android_string_resource(value: str) -> str:
     """Escape Android string syntax; ElementTree separately escapes XML markup."""
     escaped = value.replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
@@ -227,6 +234,39 @@ def _validate_app_name_resources(root: Path) -> None:
         tree = ET.parse(path)
         if tree.getroot().find("string[@name='app_name']") is None:
             raise InitError(f"Missing app_name resource in {path.relative_to(root)}")
+
+
+def _app_branding_paths(root: Path, app_package: str) -> tuple[Path, Path]:
+    app_dir = root / "app/src/main/java" / Path(*app_package.split("."))
+    return (
+        app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt",
+        app_dir / "appshell/home/HomeScreen.kt",
+    )
+
+
+def _validate_app_branding_source(root: Path) -> None:
+    for path in _app_branding_paths(root, SOURCE_APP_PACKAGE):
+        if not path.is_file() or '"AndroidComposeBase"' not in path.read_text(encoding="utf-8"):
+            raise InitError(f"Missing app branding marker in {path.relative_to(root)}")
+
+
+def _replace_app_branding(root: Path, project_name: str, app_package: str, app_name: str, scope: str, dry_run: bool) -> int:
+    source_literal = '"AndroidComposeBase"'
+    initialized_literal = kotlin_string_literal(project_name) if scope == "full" and not dry_run else source_literal
+    replacement = kotlin_string_literal(app_name)
+    changed = 0
+    for path in _app_branding_paths(root, app_package):
+        source = path.read_text(encoding="utf-8")
+        if initialized_literal not in source:
+            raise InitError(f"Missing app branding marker after rename in {path.relative_to(root)}")
+        updated = source.replace(initialized_literal, replacement)
+        if updated != source:
+            changed += 1
+            if dry_run:
+                print(f"  update app display name in {path.relative_to(root)}")
+            else:
+                path.write_text(updated, encoding="utf-8")
+    return changed
 
 
 def _replace_text(root: Path, pairs: list[tuple[str, str]], dry_run: bool, scope: str) -> int:
@@ -569,6 +609,7 @@ def run(root: Path, project_name: str, app_name: str, app_package: str, core_pac
         raise InitError("Application and core packages must be different.")
     validate_source(root, scope)
     _validate_app_name_resources(root)
+    _validate_app_branding_source(root)
     if clean:
         validate_clean_sample_source(root)
     if not dry_run and not force and (root / ".git").exists():
@@ -578,6 +619,7 @@ def run(root: Path, project_name: str, app_name: str, app_package: str, core_pac
 
     moves = _move_source_tree(root, project_name, app_package, core_package, scope, dry_run)
     changes = _replace_text(root, _replacement_pairs(project_name, app_package, core_package, scope), dry_run, scope)
+    changes += _replace_app_branding(root, project_name, app_package, app_name, scope, dry_run)
     changes += _replace_app_name(root, app_name, dry_run)
     changes += _remove_tree(root, root / "app/src/release/generated/baselineProfiles/baseline-prof.txt", dry_run)
     if moves + changes == 0:
