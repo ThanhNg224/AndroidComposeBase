@@ -1,45 +1,45 @@
-# Android 13 Device Smoke
+# Android 13 UI and Adaptive Layout Smoke
 
-This is a functional smoke check and a small startup sample for the AndroidComposeBase 0.1.0 working tree. It is not a macrobenchmark, a release-device qualification, or a performance guarantee for other devices.
+Functional checks on one Samsung handset after the Compose UI, locale handling, and adaptive width updates. This is a smoke report, not a device qualification or a performance benchmark.
 
-## Environment
+## Device and artifact provenance
 
-| Item | Value |
+| Checks | Source revision | Artifact |
+|---|---|---|
+| Onboarding, settings, locale persistence, theme, system bars, counter, weather, startup observations | `6f654e9` | Debug APK |
+| Adaptive width and large-window measurements | `d37cb7c` | Debug APK after the content-width fix |
+| Baseline profile journey and benchmark test cases | `d37cb7c` | Release instrumentation/benchmark variants |
+
+| Device | Value |
 |---|---|
-| Source revision | `2862bf1` (`main`; the measured APK was built from this tree) |
-| Device | Samsung `SM-N770F` (`RF8NA2EZKZK`) |
+| Model | Samsung `SM-N770F` (`RF8NA2EZKZK`) |
 | Android | 13, API 33 |
-| Variant | `debug`, installed from `app/build/outputs/apk/debug/app-debug.apk` |
-| App package | `com.thanhng224.androidcomposebase` (not installed before this smoke) |
-| Network before and after | `wifi_on=1`, `mobile_data=1` |
+| App package | `com.thanhng224.androidcomposebase` |
+| App installation | Not installed before the smoke; uninstalled after the checks |
 
-## Functional checks
+## UI and behavior checks
 
-- Fresh install succeeded. The first `am start -W` reported `Status: ok`, `LaunchState: COLD`, `TotalTime: 1470 ms`, and `WaitTime: 1478 ms`.
-- Onboarding showed **Get Started**. Tapping it saved completion and opened Home. Subsequent cold launches opened the app without showing onboarding again.
-- Settings opened. The Light appearance option became selected; language changed from English to Vietnamese and its radio selection updated. Theme and language were restored to System and English after the check.
-- Demo counter changed from `0` to `1` after one increment.
-- Weather loaded and remained visible after an online refresh: `28.3°C`, `12.3 km/h`; the refresh showed no error.
-- With both Wi-Fi and mobile data disabled, refreshing displayed **No internet connection** while cached `28.3°C` remained visible. A `finally` path restored the original network toggles, and both were read back as `1`.
+- Fresh onboarding in English showed no app navigation. Continuing opened Home.
+- In Settings, changing language from English to `vi-VN` translated the UI; Vietnamese remained selected after relaunch. English was restored afterward.
+- Light and Dark app themes were each checked against the opposite system theme. The selected app theme remained independent of system Night mode. Sampled background colors were RGB `(246, 250, 255)` in Light and `(13, 20, 25)` in Dark. System bar icon colors had visible contrast in both mismatched combinations.
+- The counter changed from `0` to `1` and retained its value after switching tabs.
+- Weather showed cached `26.7°C`. With Wi-Fi and mobile data disabled, refresh displayed **No internet connection** and retained the cached temperature.
+- At font scale `2.0`, Settings theme chips wrapped into a `FlowRow`; onboarding kept its primary action visible in portrait and reachable by scrolling in a short `1600×800` window. The UI Kit dialog kept its content and buttons visible.
 
-## Startup smoke
+## Adaptive layout check
 
-Three additional cold launches used `adb shell am force-stop` followed by `adb shell am start -W -n com.thanhng224.androidcomposebase/.MainActivity`:
+On a `2160×1600` window at density `180`, navigation used a rail. Before the width fix (`6f654e9`), the Settings language row spanned `1962 px`; with the debug APK from `d37cb7c`, it measured `720 px`.
 
-| Run | Launch state | TotalTime | WaitTime |
-|---:|---|---:|---:|
-| 1 | COLD | 1399 ms | 1402 ms |
-| 2 | COLD | 1395 ms | 1398 ms |
-| 3 | COLD | 1386 ms | 1388 ms |
+This verifies the reported layout on the tested window configuration. No physical foldable was tested.
 
-The observed `TotalTime` range was 1386–1399 ms (median 1395 ms). These three `am start -W` observations do not control thermal state, background load, compilation mode, or repeated device conditions; they are startup smoke values only.
+## Baseline profile and startup observations
 
-## Baseline profile status
+- `connectedNonMinifiedReleaseAndroidTest` exited `0` in `187.253 s`; `BaselineProfileGenerator` passed.
+- The release benchmark run passed both `StartupBenchmark` cases. Profile generation was skipped in that run. No benchmark timing comparison is reported here.
+- Separate debug `am start -W` cold-start observations were approximately `1505 ms`, `1564 ms`, and `1764 ms` across fresh starts. Conditions were not controlled, so these values do not support a performance comparison or guarantee.
 
-The stale committed `app/src/release/generated/baselineProfiles/baseline-prof.txt` from the earlier XML sample journey was removed. The release APK built after that removal still contains compiled `assets/dexopt/baseline.prof` and `baseline.profm` files (5915 and 887 bytes). The generated merged, combined, and R8 profile text intermediates contained no `DemoFragment` or `DesignSystemFragment` references. The binary assets are expected build outputs; their presence does not mean the old app journey remains.
+## Accessibility and device state
 
-`:baselineprofile:compileBenchmarkReleaseKotlin` passed. Profile collection with `:app:generateBaselineProfile` and macrobenchmark measurement with `:baselineprofile:connectedCheck` were not run as part of this smoke, so there are no current baseline-profile timing results. Generate a fresh profile after defining the journeys for a consuming app.
+TalkBack was enabled, but its training Activity interrupted the in-app spoken journey; TalkBack behavior is **unverified**. Touch and visual checks do not substitute for a completed TalkBack walkthrough.
 
-## Limits
-
-The device check used one Android 13 handset and one newly installed debug app. It did not test a minified APK on-device, sustained frame rendering, battery or memory use, a range of API levels, or startup under controlled benchmark conditions. Remote CI was not run from this local checkout.
+Device settings were restored to: resolution `1080×2400`, density `420`, font scale `1.1`, system Night mode, auto-rotate `1`, user rotation `0`, `accessibility_enabled=0`, `enabled_accessibility_services=null`, Wi-Fi `1`, and mobile data `1`. The app was uninstalled after testing.

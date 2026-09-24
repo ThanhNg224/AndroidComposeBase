@@ -56,4 +56,4 @@ Dependabot auto-merge is inactive until remote setup is complete. Protect `main`
 - [Git workflow](docs/GIT_FLOW.md)
 - [Feature template](docs/FEATURE_TEMPLATE.md)
 - [Compose design system](docs/DESIGN_SYSTEM.md)
-- [Current Android 13 device smoke](docs/performance/ANDROID_13_SMOKE.md)
+- [Android 13 UI and adaptive layout smoke](docs/performance/ANDROID_13_SMOKE.md)
