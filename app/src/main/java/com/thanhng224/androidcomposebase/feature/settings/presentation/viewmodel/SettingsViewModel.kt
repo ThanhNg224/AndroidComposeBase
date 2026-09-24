@@ -94,8 +94,8 @@ class SettingsViewModel
                     } catch (_: IOException) {
                         if (latestRequestedLanguageTag == requestedLanguageTag) {
                             latestRequestedLanguageTag = mutableState.value.language?.languageTag
+                            enqueueMessage(UiText.StringResource(R.string.settings_language_update_failed))
                         }
-                        enqueueMessage(UiText.StringResource(R.string.settings_language_update_failed))
                     }
                 }
             }

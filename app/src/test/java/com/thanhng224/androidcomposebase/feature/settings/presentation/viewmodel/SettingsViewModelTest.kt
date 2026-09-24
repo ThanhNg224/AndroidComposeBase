@@ -61,7 +61,9 @@ class SettingsViewModelTest {
         }
     }
 
-    private class DelayedLanguageSettingsRepository : SettingsRepository {
+    private class DelayedLanguageSettingsRepository(
+        private val failEnglishMutation: Boolean = false,
+    ) : SettingsRepository {
         private val themeFlow = MutableStateFlow(AppTheme.SYSTEM)
         val englishMutationStarted = CompletableDeferred<Unit>()
         val finishEnglishMutation = CompletableDeferred<Unit>()
@@ -82,6 +84,7 @@ class SettingsViewModelTest {
             if (languageTag == AppLanguage.ENGLISH.languageTag) {
                 englishMutationStarted.complete(Unit)
                 finishEnglishMutation.await()
+                if (failEnglishMutation) throw IOException("persist failed")
             }
             persistedLanguageTag = languageTag
             appliedLocaleTag = languageTag.orEmpty()
@@ -237,6 +240,30 @@ class SettingsViewModelTest {
             assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.persistedLanguageTag)
             assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.appliedLocaleTag)
             assertEquals(AppLanguage.VIETNAMESE, viewModel.state.value.language)
+        }
+
+    @Test
+    fun `superseded language failure does not enqueue a stale error after latest selection succeeds`() =
+        runTest {
+            val repository = DelayedLanguageSettingsRepository(failEnglishMutation = true)
+            val viewModel = createViewModel(repository)
+            advanceUntilIdle()
+
+            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.ENGLISH))
+            repository.englishMutationStarted.await()
+            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
+            advanceUntilIdle()
+
+            repository.finishEnglishMutation.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.persistedLanguageTag)
+            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.appliedLocaleTag)
+            assertEquals(AppLanguage.VIETNAMESE, viewModel.state.value.language)
+            assertTrue(
+                viewModel.state.value.pendingMessages
+                    .isEmpty(),
+            )
         }
 
     private fun createViewModel(
