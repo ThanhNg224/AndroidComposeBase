@@ -1,6 +1,5 @@
 package com.thanhng224.androidcomposebase.core.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -92,12 +91,10 @@ public fun FloatingNavBar(
                             }
                         },
                         label = {
-                            AnimatedVisibility(visible = item.isSelected) {
-                                Text(
-                                    text = item.title,
-                                    style = MaterialTheme.typography.labelMedium,
-                                )
-                            }
+                            Text(
+                                text = item.title,
+                                style = MaterialTheme.typography.labelMedium,
+                            )
                         },
                         alwaysShowLabel = false,
                         colors =
