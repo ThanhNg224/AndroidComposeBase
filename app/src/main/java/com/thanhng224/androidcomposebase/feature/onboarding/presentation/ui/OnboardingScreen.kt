@@ -3,13 +3,21 @@ package com.thanhng224.androidcomposebase.feature.onboarding.presentation.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material3.Card
@@ -21,6 +29,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -37,29 +49,31 @@ public fun OnboardingScreen(
     onRetryStartup: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    BoxWithConstraints(
         modifier =
             modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .padding(Dimens.spaceLarge),
+                .windowInsetsPadding(WindowInsets.safeDrawing),
         contentAlignment = Alignment.Center,
     ) {
         Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 560.dp)
+                    .heightIn(min = maxHeight, max = maxHeight)
+                    .verticalScroll(rememberScrollState())
+                    .padding(Dimens.spaceLarge),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth(),
         ) {
             Card(
                 shape = MaterialTheme.shapes.extraLarge,
-                colors =
-                    CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    ),
-                modifier = Modifier.size(120.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
             ) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.padding(Dimens.spaceLarge),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -74,11 +88,12 @@ public fun OnboardingScreen(
             Spacer(modifier = Modifier.height(Dimens.spaceXLarge))
 
             Text(
-                text = "AndroidComposeBase",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
+                modifier = Modifier.semantics { heading() },
             )
 
             state.error?.let { error ->
@@ -94,15 +109,14 @@ public fun OnboardingScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
                 )
             }
 
             Spacer(modifier = Modifier.height(Dimens.spaceMedium))
 
             Text(
-                text =
-                    "A production-grade Android foundation built with 100% Jetpack Compose, " +
-                        "Clean Architecture, and strict quality gates.",
+                text = stringResource(R.string.onboarding_welcome_body),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -122,7 +136,7 @@ public fun OnboardingScreen(
                     ),
                 onClick =
                     if (state.error == OnboardingError.STARTUP_READ_FAILED) onRetryStartup else onContinue,
-                modifier = Modifier.fillMaxWidth(0.85f),
+                modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isSaving,
                 isLoading = state.isSaving,
             )

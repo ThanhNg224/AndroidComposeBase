@@ -1,6 +1,8 @@
 package com.thanhng224.androidcomposebase.sample.demo.presentation.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -35,6 +38,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -62,209 +69,241 @@ public fun DemoScreen(
     LaunchedEffect(state.pendingMessages) {
         val message = state.pendingMessages.firstOrNull()
         if (message != null) {
-            val text = message.text.resolve(context)
-            snackbarHostState.showSnackbar(message = text)
+            snackbarHostState.showSnackbar(message = message.text.resolve(context))
             viewModel.onMessageHandled(message.id)
         }
     }
 
     Scaffold(
-        topBar = {
-            AppCenterTopBar(title = "Demo Feature")
-        },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
+        topBar = { AppCenterTopBar(title = stringResource(R.string.demo_title)) },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         modifier = modifier.fillMaxSize(),
     ) { innerPadding ->
-        LazyColumn(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-            contentPadding =
-                PaddingValues(
-                    start = Dimens.spaceLarge,
-                    end = Dimens.spaceLarge,
-                    top = Dimens.spaceMedium,
-                    bottom = 100.dp,
-                ),
-            verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
+        Box(
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            item {
-                Text(
-                    text = "Interactive Counter (DataStore)",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize().widthIn(max = 800.dp),
+                contentPadding =
+                    PaddingValues(
+                        start = Dimens.spaceLarge,
+                        end = Dimens.spaceLarge,
+                        top = Dimens.spaceMedium,
+                        bottom = Dimens.spaceLarge,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
+            ) {
+                item {
+                    Text(
+                        text = stringResource(R.string.demo_counter_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.semantics { heading() },
+                    )
+                }
 
-            item {
-                Card(
-                    shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(
-                        modifier = Modifier.padding(Dimens.spaceLarge),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                item {
+                    Card(
+                        shape = MaterialTheme.shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        Text(
-                            text = "${state.count}",
-                            style = MaterialTheme.typography.displayMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                        Spacer(modifier = Modifier.height(Dimens.spaceSmall))
-                        Text(
-                            text = "Persisted via DataStore Preferences",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
-                        AppPrimaryButton(
-                            text = "Increment Count",
-                            icon = Icons.Default.Add,
-                            onClick = { viewModel.onEvent(DemoUiEvent.IncrementClicked) },
-                        )
+                        Column(
+                            modifier = Modifier.padding(Dimens.spaceLarge),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.demo_count_format, state.count),
+                                style = MaterialTheme.typography.displayMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(modifier = Modifier.height(Dimens.spaceSmall))
+                            Text(
+                                text = stringResource(R.string.demo_counter_description),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+                            AppPrimaryButton(
+                                text = stringResource(R.string.demo_increment),
+                                icon = Icons.Default.Add,
+                                onClick = { viewModel.onEvent(DemoUiEvent.IncrementClicked) },
+                            )
+                        }
                     }
                 }
-            }
 
-            item {
-                Text(
-                    text = "Live API Weather (NetworkClientFactory)",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = Dimens.spaceSmall),
-                )
-            }
+                item {
+                    Text(
+                        text = stringResource(R.string.demo_weather_section_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = Dimens.spaceSmall).semantics { heading() },
+                    )
+                }
 
-            item {
-                Card(
-                    shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(modifier = Modifier.padding(Dimens.spaceLarge)) {
-                        when (val weather = state.weather) {
-                            is DemoWeatherState.Loading -> {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(Dimens.spaceMedium),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                                    Spacer(modifier = Modifier.size(Dimens.spaceMedium))
+                item {
+                    Card(
+                        shape = MaterialTheme.shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(modifier = Modifier.padding(Dimens.spaceLarge)) {
+                            when (val weather = state.weather) {
+                                is DemoWeatherState.Loading -> {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(Dimens.spaceMedium),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                        Spacer(modifier = Modifier.size(Dimens.spaceMedium))
+                                        Text(
+                                            text = stringResource(R.string.demo_weather_loading),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                        )
+                                    }
+                                }
+
+                                is DemoWeatherState.Error -> {
                                     Text(
-                                        text = "Fetching weather data...",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                    )
-                                }
-                            }
-                            is DemoWeatherState.Error -> {
-                                Text(
-                                    text = stringResource(weather.reason.toStringResource()),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.error,
-                                )
-                                Spacer(modifier = Modifier.height(Dimens.spaceMedium))
-                                AppOutlinedButton(
-                                    text = "Retry",
-                                    icon = Icons.Default.Refresh,
-                                    onClick = { viewModel.onEvent(DemoUiEvent.RefreshWeatherClicked) },
-                                )
-                            }
-                            is DemoWeatherState.Success -> {
-                                if (weather.isRefreshing) {
-                                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                                    Spacer(modifier = Modifier.height(Dimens.spaceMedium))
-                                }
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.WbSunny,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(36.dp),
-                                    )
-                                    Spacer(modifier = Modifier.size(Dimens.spaceMedium))
-                                    Column {
-                                        Text(
-                                            text = "Open-Meteo API",
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.SemiBold,
-                                        )
-                                        Text(
-                                            text = "Fetched dynamically via Retrofit + OkHttp",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(Dimens.spaceLarge))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceAround,
-                                ) {
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(Icons.Default.Thermostat, contentDescription = null)
-                                        Spacer(modifier = Modifier.height(Dimens.spaceXXSmall))
-                                        Text(
-                                            text = "${weather.weather.temperatureCelsius}°C",
-                                            style = MaterialTheme.typography.titleLarge,
-                                            fontWeight = FontWeight.Bold,
-                                        )
-                                        Text(
-                                            text = "Temperature",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-
-                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(Icons.Default.Air, contentDescription = null)
-                                        Spacer(modifier = Modifier.height(Dimens.spaceXXSmall))
-                                        Text(
-                                            text = "${weather.weather.windSpeedKph} km/h",
-                                            style = MaterialTheme.typography.titleLarge,
-                                            fontWeight = FontWeight.Bold,
-                                        )
-                                        Text(
-                                            text = "Wind Speed",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(Dimens.spaceLarge))
-
-                                weather.refreshError?.let { error ->
-                                    Text(
-                                        text = stringResource(error.toStringResource()),
+                                        text = stringResource(weather.reason.toStringResource()),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
                                     )
                                     Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+                                    AppOutlinedButton(
+                                        text = stringResource(R.string.demo_weather_retry),
+                                        icon = Icons.Default.Refresh,
+                                        onClick = { viewModel.onEvent(DemoUiEvent.RefreshWeatherClicked) },
+                                    )
                                 }
 
-                                AppOutlinedButton(
-                                    text = "Refresh Weather",
-                                    icon = Icons.Default.Refresh,
-                                    onClick = { viewModel.onEvent(DemoUiEvent.RefreshWeatherClicked) },
-                                )
+                                is DemoWeatherState.Success -> {
+                                    if (weather.isRefreshing) {
+                                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                                        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+                                    }
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.WbSunny,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(36.dp),
+                                        )
+                                        Spacer(modifier = Modifier.size(Dimens.spaceMedium))
+                                        Column {
+                                            Text(
+                                                text = stringResource(R.string.demo_weather_conditions_title),
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.SemiBold,
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.demo_weather_conditions_subtitle),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(Dimens.spaceLarge))
+                                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                                        val temperature =
+                                            stringResource(
+                                                R.string.demo_weather_temperature_value,
+                                                weather.weather.temperatureCelsius,
+                                            )
+                                        val windSpeed =
+                                            stringResource(
+                                                R.string.demo_weather_wind_value,
+                                                weather.weather.windSpeedKph,
+                                            )
+                                        val temperatureLabel = stringResource(R.string.demo_weather_temperature_label)
+                                        val windLabel = stringResource(R.string.demo_weather_wind_label)
+                                        if (maxWidth < 360.dp) {
+                                            Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
+                                                WeatherMetric(
+                                                    icon = { Icon(Icons.Default.Thermostat, contentDescription = null) },
+                                                    value = temperature,
+                                                    label = temperatureLabel,
+                                                )
+                                                WeatherMetric(
+                                                    icon = { Icon(Icons.Default.Air, contentDescription = null) },
+                                                    value = windSpeed,
+                                                    label = windLabel,
+                                                )
+                                            }
+                                        } else {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceAround,
+                                            ) {
+                                                WeatherMetric(
+                                                    icon = { Icon(Icons.Default.Thermostat, contentDescription = null) },
+                                                    value = temperature,
+                                                    label = temperatureLabel,
+                                                )
+                                                WeatherMetric(
+                                                    icon = { Icon(Icons.Default.Air, contentDescription = null) },
+                                                    value = windSpeed,
+                                                    label = windLabel,
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(Dimens.spaceLarge))
+                                    weather.refreshError?.let { error ->
+                                        Text(
+                                            text = stringResource(error.toStringResource()),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
+                                        )
+                                        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+                                    }
+
+                                    AppOutlinedButton(
+                                        text = stringResource(R.string.demo_weather_refresh),
+                                        icon = Icons.Default.Refresh,
+                                        onClick = { viewModel.onEvent(DemoUiEvent.RefreshWeatherClicked) },
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun WeatherMetric(
+    icon: @Composable () -> Unit,
+    value: String,
+    label: String,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        icon()
+        Spacer(modifier = Modifier.height(Dimens.spaceXXSmall))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
