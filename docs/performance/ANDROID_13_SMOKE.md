@@ -8,7 +8,7 @@ Functional checks on one Samsung handset after the Compose UI, locale handling, 
 |---|---|---|
 | Onboarding, settings, locale persistence, theme, system bars, counter, weather, startup observations | `6f654e9` | Debug APK |
 | Adaptive width and large-window measurements | `d37cb7c` | Debug APK after the content-width fix |
-| Baseline profile journey and benchmark test cases | `d37cb7c` | Release instrumentation/benchmark variants |
+| Baseline profile journey and benchmark test cases | `6f654e9` | Release instrumentation/benchmark variants |
 
 | Device | Value |
 |---|---|
@@ -20,7 +20,7 @@ Functional checks on one Samsung handset after the Compose UI, locale handling, 
 ## UI and behavior checks
 
 - Fresh onboarding in English showed no app navigation. Continuing opened Home.
-- In Settings, changing language from English to `vi-VN` translated the UI; Vietnamese remained selected after relaunch. English was restored afterward.
+- In Settings, changing language from English to `vi-VN` translated the UI. After relaunch, Home remained in Vietnamese and the app locale was `[vi-VN]`; the Settings radio selection was not rechecked after relaunch. English was restored afterward.
 - Light and Dark app themes were each checked against the opposite system theme. The selected app theme remained independent of system Night mode. Sampled background colors were RGB `(246, 250, 255)` in Light and `(13, 20, 25)` in Dark. System bar icon colors had visible contrast in both mismatched combinations.
 - The counter changed from `0` to `1` and retained its value after switching tabs.
 - Weather showed cached `26.7°C`. With Wi-Fi and mobile data disabled, refresh displayed **No internet connection** and retained the cached temperature.
@@ -42,4 +42,4 @@ This verifies the reported layout on the tested window configuration. No physica
 
 TalkBack was enabled, but its training Activity interrupted the in-app spoken journey; TalkBack behavior is **unverified**. Touch and visual checks do not substitute for a completed TalkBack walkthrough.
 
-Device settings were restored to: resolution `1080×2400`, density `420`, font scale `1.1`, system Night mode, auto-rotate `1`, user rotation `0`, `accessibility_enabled=0`, `enabled_accessibility_services=null`, Wi-Fi `1`, and mobile data `1`. The app was uninstalled after testing.
+Device settings were restored to: resolution `1080×2400`, density `420`, font scale `1.1`, system Night mode `no`, auto-rotate `1`, user rotation `0`, `accessibility_enabled=0`, `enabled_accessibility_services=null`, Wi-Fi `1`, and mobile data `1`. The app was uninstalled after testing.
