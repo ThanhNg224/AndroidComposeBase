@@ -14,6 +14,7 @@ import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,9 +31,7 @@ class ThemeManagerPlatformTest {
         val activityScenario = ActivityScenario.launch(MainActivity::class.java)
 
         try {
-            activityScenario.onActivity { activity ->
-                assertEquals(true, activity.startupCoordinator.isReady.value)
-            }
+            awaitStartupReady(activityScenario, instrumentation)
             applyTheme(themeManager, AppTheme.SYSTEM, activityScenario, instrumentation)
             val expectedSystemNightMode = currentNightMode(activityScenario)
             applyAndAssert(themeManager, AppTheme.LIGHT, Configuration.UI_MODE_NIGHT_NO, activityScenario, instrumentation)
@@ -43,6 +42,22 @@ class ThemeManagerPlatformTest {
             instrumentation.waitForIdleSync()
             activityScenario.close()
         }
+    }
+
+    private fun awaitStartupReady(
+        activityScenario: ActivityScenario<MainActivity>,
+        instrumentation: Instrumentation,
+    ) {
+        val deadline = SystemClock.elapsedRealtime() + CONFIGURATION_TIMEOUT_MILLIS
+        var isReady = false
+        while (!isReady && SystemClock.elapsedRealtime() < deadline) {
+            instrumentation.waitForIdleSync()
+            activityScenario.onActivity { activity ->
+                isReady = activity.startupCoordinator.isReady.value
+            }
+            if (!isReady) SystemClock.sleep(CONFIGURATION_POLL_INTERVAL_MILLIS)
+        }
+        assertTrue("Startup coordinator did not become ready before the timeout", isReady)
     }
 
     private fun applyAndAssert(
