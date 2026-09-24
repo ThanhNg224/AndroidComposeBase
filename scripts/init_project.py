@@ -481,10 +481,11 @@ def clean_samples(root: Path, app_package: str, dry_run: bool) -> int:
     changed = _remove_sample_routes(root, app_package, dry_run)
     target_dir = root / "app/src/main/java" / Path(*app_package.split("."))
     package_dir = target_dir if target_dir.exists() else root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split("."))
+    logger_package = app_package if target_dir.exists() else SOURCE_APP_PACKAGE
     for sample_dir in (package_dir / "sample/demo", package_dir / "sample/designsystem"):
         changed += _remove_tree(root, sample_dir, dry_run)
     changed += _remove_tree(root, package_dir / "di/AppNetworkModule.kt", dry_run)
-    changed += _remove_metadata_logger(root, app_package, dry_run)
+    changed += _remove_metadata_logger(root, logger_package, dry_run)
     changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_demo.xml", dry_run)
     changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_ui_kit.xml", dry_run)
     changed += _remove_tree(root, root / "app/schemas", dry_run)

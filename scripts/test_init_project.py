@@ -174,6 +174,23 @@ ksp {{
                     '<manifest>\n    <uses-permission android:name="android.permission.INTERNET" />\n</manifest>\n',
                     encoding="utf-8",
                 )
+                before_dry_run = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+
+                run(
+                    root=root,
+                    project_name="AcmeShop",
+                    app_name="Acme Shop",
+                    app_package="com.acme.shop",
+                    core_package="com.acme.shop.core",
+                    scope=scope,
+                    clean=True,
+                    dry_run=True,
+                    force=True,
+                    skip_build_check=True,
+                )
+
+                after_dry_run = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+                self.assertEqual(after_dry_run, before_dry_run)
 
                 run(
                     root=root,
