@@ -1,0 +1,135 @@
+name: dependabot-automerge-finalize
+
+on:
+  workflow_run:
+    workflows: [dependabot-automerge-eligibility]
+    types: [completed]
+    branches: [main]
+
+# workflow_run runs this trusted workflow from the default branch and permits write
+# permissions even when the source pull_request_target run was read-only.
+permissions:
+  actions: read
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify exact trusted source run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          SOURCE_RUN_ID: ${{ github.event.workflow_run.id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          SOURCE_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$SOURCE_RUN_ATTEMPT" =~ ^[0-9]+$ ]]
+          [[ "$SOURCE_HEAD_SHA" =~ ^[0-9a-f]{40}$ ]]
+
+          expected_workflow_id="$(gh api "repos/$REPOSITORY/actions/workflows/dependabot-automerge.yml" --jq '.id')"
+          gh api "repos/$REPOSITORY/actions/runs/$SOURCE_RUN_ID" > "$RUNNER_TEMP/source-run.json"
+          jq -e \
+            --argjson workflow_id "$expected_workflow_id" \
+            --argjson run_id "$SOURCE_RUN_ID" \
+            --argjson attempt "$SOURCE_RUN_ATTEMPT" \
+            --arg source_head_sha "$SOURCE_HEAD_SHA" \
+            '.workflow_id == $workflow_id and
+             .id == $run_id and
+             .run_attempt == $attempt and
+             .head_sha == $source_head_sha and
+             .status == "completed" and
+             .conclusion == "success" and
+             .event == "pull_request_target" and
+             .head_branch == "main" and
+             (.path | split("@")[0]) == ".github/workflows/dependabot-automerge.yml"' \
+            "$RUNNER_TEMP/source-run.json" > /dev/null
+
+      - name: Download eligibility artifact from the verified run
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: dependabot-eligibility
+          path: ${{ runner.temp }}/dependabot-eligibility
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Validate bounded eligibility artifact
+        id: eligibility
+        env:
+          REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          artifact="$RUNNER_TEMP/dependabot-eligibility/eligibility.json"
+          jq -e '
+            type == "object" and
+            (keys | sort) == ["eligible", "pull_request_head_sha", "pull_request_number"] and
+            (.eligible | type == "boolean") and
+            (.pull_request_number | type == "number" and floor == . and . > 0 and . <= 2147483647) and
+            (.pull_request_head_sha | type == "string" and test("^[0-9a-f]{40}$"))
+          ' "$artifact" > /dev/null
+
+          if [[ "$(jq -r '.eligible' "$artifact")" != "true" ]]; then
+            echo "Dependabot update is not an eligible patch or minor update; skipping auto-merge."
+            echo "eligible=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          pr_number="$(jq -r '.pull_request_number' "$artifact")"
+          expected_head_sha="$(jq -r '.pull_request_head_sha' "$artifact")"
+          gh api "repos/$REPOSITORY/pulls/$pr_number" > "$RUNNER_TEMP/pull-request.json"
+
+          jq -e \
+            --argjson pr_number "$pr_number" \
+            --arg expected_head_sha "$expected_head_sha" \
+            '.number == $pr_number and
+             .state == "open" and
+             .user.login == "dependabot[bot]" and
+             .base.ref == "main" and
+             .head.sha == $expected_head_sha and
+             (.draft | not)' \
+            "$RUNNER_TEMP/pull-request.json" > /dev/null
+
+          echo "eligible=true" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "pr_head_sha=$expected_head_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Require auto-merge and classic main branch protection
+        if: steps.eligibility.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_READ_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "FAIL: configure Actions secret BRANCH_PROTECTION_READ_TOKEN with repository Administration:read." >&2
+            exit 1
+          fi
+
+          allow_auto_merge="$(gh api "repos/$REPOSITORY" --jq '.allow_auto_merge')"
+          if [[ "$allow_auto_merge" != "true" ]]; then
+            echo "FAIL: repository auto-merge is not enabled." >&2
+            exit 1
+          fi
+
+          required_check="$(gh api "repos/$REPOSITORY/branches/main/protection" \
+            --jq '((.required_status_checks.contexts // []) + [.required_status_checks.checks[]?.context]) | any(. == "check")')"
+          if [[ "$required_check" != "true" ]]; then
+            echo "FAIL: classic branch protection on main must require the 'check' status." >&2
+            exit 1
+          fi
+
+      - name: Enable auto-merge for Dependabot PR
+        if: steps.eligibility.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ steps.eligibility.outputs.pr_number }}
+          EXPECTED_HEAD_SHA: ${{ steps.eligibility.outputs.pr_head_sha }}
+        run: gh pr merge --repo "$REPOSITORY" --match-head-commit "$EXPECTED_HEAD_SHA" --auto --merge "$PR_NUMBER"

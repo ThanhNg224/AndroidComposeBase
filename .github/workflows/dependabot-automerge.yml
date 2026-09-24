@@ -1,18 +1,18 @@
-name: dependabot-automerge
+name: dependabot-automerge-eligibility
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize, reopened]
     branches: [main]
 
-# Dependabot pull_request runs receive a read-only GITHUB_TOKEN. The merge token is
-# supplied separately through the repository's Dependabot secrets store.
+# Dependabot pull_request_target runs are restricted by GitHub to a read-only token
+# with no secrets. This workflow uses only trusted default-branch workflow code.
 permissions:
   contents: read
   pull-requests: read
 
 jobs:
-  automerge:
+  eligibility:
     if: >-
       github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.event.pull_request.base.ref == 'main'
@@ -24,54 +24,36 @@ jobs:
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Allow patch and minor updates only
-        id: eligibility
+      - name: Write bounded eligibility artifact
         env:
           UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUNNER_TEMP: ${{ runner.temp }}
         run: |
+          set -euo pipefail
+          eligible=false
           case "$UPDATE_TYPE" in
             version-update:semver-patch|version-update:semver-minor)
-              echo "Eligible Dependabot update: $UPDATE_TYPE"
-              echo "eligible=true" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "Skipping auto-merge for update type: ${UPDATE_TYPE:-unknown}"
-              echo "eligible=false" >> "$GITHUB_OUTPUT"
+              eligible=true
               ;;
           esac
 
-      - name: Require auto-merge, protected main, and configured tokens
-        if: steps.eligibility.outputs.eligible == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_READ_TOKEN }}
-          AUTOMERGE_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          if [[ -z "$GH_TOKEN" ]]; then
-            echo "FAIL: configure Dependabot secret BRANCH_PROTECTION_READ_TOKEN with repository Administration:read." >&2
-            exit 1
-          fi
-          if [[ -z "$AUTOMERGE_TOKEN" ]]; then
-            echo "FAIL: configure Dependabot secret DEPENDABOT_AUTOMERGE_TOKEN with contents:write and pull-requests:write." >&2
-            exit 1
-          fi
+          mkdir -p "$RUNNER_TEMP/dependabot-eligibility"
+          jq -n \
+            --arg eligible "$eligible" \
+            --arg pr_number "$PR_NUMBER" \
+            --arg pr_head_sha "$PR_HEAD_SHA" \
+            '{
+              eligible: ($eligible == "true"),
+              pull_request_number: ($pr_number | tonumber),
+              pull_request_head_sha: $pr_head_sha
+            }' > "$RUNNER_TEMP/dependabot-eligibility/eligibility.json"
 
-          allow_auto_merge="$(gh api "repos/$REPOSITORY" --jq '.allow_auto_merge')"
-          if [[ "$allow_auto_merge" != "true" ]]; then
-            echo "FAIL: repository auto-merge is not enabled." >&2
-            exit 1
-          fi
-
-          required_check="$(gh api "repos/$REPOSITORY/branches/main/protection" \
-            --jq '((.required_status_checks.contexts // []) + [.required_status_checks.checks[]?.context]) | any(. == "check")')"
-          if [[ "$required_check" != "true" ]]; then
-            echo "FAIL: main branch protection must require the 'check' status." >&2
-            exit 1
-          fi
-
-      - name: Enable auto-merge for Dependabot PR
-        if: steps.eligibility.outputs.eligible == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
-          PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --merge "$PR_URL"
+      - name: Upload eligibility artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: dependabot-eligibility
+          path: ${{ runner.temp }}/dependabot-eligibility/eligibility.json
+          if-no-files-found: error
+          retention-days: 1
