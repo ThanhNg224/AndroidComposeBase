@@ -36,4 +36,9 @@ For a docs-only or narrowly scoped change, use judgment and report any skipped g
 
 Library source version is maintained in `core/gradle.properties`; app version is in `app/build.gradle.kts`. A version change does not publish an artifact. Release tags and publication require a separately reviewed release action.
 
-Dependabot auto-merge requires remote setup: protect `main` with the `check` required status, enable repository auto-merge, and configure `BRANCH_PROTECTION_READ_TOKEN` with permission to read repository administration settings. The workflow fails closed when required configuration is unavailable. It does not auto-approve pull requests.
+Dependabot auto-merge requires remote setup. Protect `main` and require the `check` status, enable repository auto-merge, and add these fine-grained tokens under **Settings → Secrets and variables → Dependabot**:
+
+- `BRANCH_PROTECTION_READ_TOKEN`: repository Administration:read, used only to verify auto-merge and branch protection settings.
+- `DEPENDABOT_AUTOMERGE_TOKEN`: Contents:write and Pull requests:write, used to enable auto-merge.
+
+The workflow runs on `pull_request`, does not check out or execute PR source, and uses the read-only `GITHUB_TOKEN` only to read Dependabot metadata. Dependabot pull request workflows cannot access Actions secrets, so both configured tokens must be Dependabot secrets. It permits patch and minor updates only, never auto-approves, and fails closed when a required secret, repository setting, or `check` branch protection requirement is missing. Remote settings and workflow execution have not been verified for this repository; local YAML or shell validation cannot establish that they work remotely.

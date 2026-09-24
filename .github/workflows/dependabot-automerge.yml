@@ -1,12 +1,15 @@
 name: dependabot-automerge
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, synchronize, reopened]
+    branches: [main]
 
+# Dependabot pull_request runs receive a read-only GITHUB_TOKEN. The merge token is
+# supplied separately through the repository's Dependabot secrets store.
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 jobs:
   automerge:
@@ -37,14 +40,19 @@ jobs:
               ;;
           esac
 
-      - name: Require auto-merge and protected main branch
+      - name: Require auto-merge, protected main, and configured tokens
         if: steps.eligibility.outputs.eligible == 'true'
         env:
           GH_TOKEN: ${{ secrets.BRANCH_PROTECTION_READ_TOKEN }}
+          AUTOMERGE_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
           REPOSITORY: ${{ github.repository }}
         run: |
           if [[ -z "$GH_TOKEN" ]]; then
-            echo "FAIL: configure BRANCH_PROTECTION_READ_TOKEN with repository Administration:read." >&2
+            echo "FAIL: configure Dependabot secret BRANCH_PROTECTION_READ_TOKEN with repository Administration:read." >&2
+            exit 1
+          fi
+          if [[ -z "$AUTOMERGE_TOKEN" ]]; then
+            echo "FAIL: configure Dependabot secret DEPENDABOT_AUTOMERGE_TOKEN with contents:write and pull-requests:write." >&2
             exit 1
           fi
 
@@ -64,6 +72,6 @@ jobs:
       - name: Enable auto-merge for Dependabot PR
         if: steps.eligibility.outputs.eligible == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.DEPENDABOT_AUTOMERGE_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
         run: gh pr merge --auto --merge "$PR_URL"

@@ -43,7 +43,7 @@ python3 scripts/smoke_init_project.py --build full-clean
 
 The repository workflow runs Python checks, initializer archive smoke, Gradle checks, `:core:assembleRelease`, and an isolated publication consumer. The local app release gate is `:app:assembleRelease`. A green local run does not establish that GitHub Actions or branch protection is configured on the remote.
 
-Dependabot auto-merge is intentionally inactive until the repository has a required `check` status on `main`, repository auto-merge is enabled, and the `BRANCH_PROTECTION_READ_TOKEN` secret can read repository administration settings. The remote workflow then permits patch and minor updates after required checks; it does not auto-approve them.
+Dependabot auto-merge is inactive until remote setup is complete. Protect `main` and require the `check` status, enable repository auto-merge, then add two fine-grained tokens under **Settings → Secrets and variables → Dependabot**: `BRANCH_PROTECTION_READ_TOKEN` with repository Administration:read, and `DEPENDABOT_AUTOMERGE_TOKEN` with Contents:write and Pull requests:write. The workflow uses the read-only `GITHUB_TOKEN` only to inspect Dependabot metadata; the separate Dependabot token enables auto-merge. It accepts patch and minor updates only, does not auto-approve, and fails closed when required remote settings or secrets are missing. This repository has not enabled or verified those remote settings.
 
 ## Library publication
 
