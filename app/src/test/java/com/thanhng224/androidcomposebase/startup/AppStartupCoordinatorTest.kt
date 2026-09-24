@@ -2,7 +2,11 @@ package com.thanhng224.androidcomposebase.startup
 
 import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +18,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -63,10 +68,11 @@ class AppStartupCoordinatorTest {
     fun `applies the theme on the main dispatcher`() {
         val mainExecutor = Executors.newSingleThreadExecutor { runnable -> Thread(runnable, MAIN_THREAD_NAME) }
         Dispatchers.setMain(mainExecutor.asCoroutineDispatcher())
+        val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         try {
             val themeManager = FakeThemeManager(flowOf(AppTheme.DARK))
             runBlocking(Dispatchers.Default) {
-                AppStartupCoordinator(themeManager).initialize()
+                AppStartupCoordinator(themeManager, applicationScope).initialize()
             }
             assertEquals(AppTheme.DARK, themeManager.lastApplied)
             // Coroutine debug mode appends " @coroutine#N" to the thread name.
@@ -75,6 +81,7 @@ class AppStartupCoordinatorTest {
                 themeManager.lastAppliedOnThread.orEmpty().startsWith(MAIN_THREAD_NAME),
             )
         } finally {
+            applicationScope.coroutineContext[Job]?.cancel()
             Dispatchers.resetMain()
             mainExecutor.shutdown()
         }
@@ -100,7 +107,7 @@ class AppStartupCoordinatorTest {
     fun `IO failure applies the system default theme and marks readiness`() =
         runTest {
             val themeManager = FakeThemeManager(flow { throw IOException("disk read failed") })
-            val coordinator = AppStartupCoordinator(themeManager)
+            val coordinator = AppStartupCoordinator(themeManager, backgroundScope)
 
             coordinator.initialize()
 
@@ -112,11 +119,30 @@ class AppStartupCoordinatorTest {
     fun `a theme read that never completes cannot hold readiness past the startup timeout`() =
         runTest {
             val themeManager = FakeThemeManager(flow { awaitCancellation() })
-            val coordinator = AppStartupCoordinator(themeManager)
+            val coordinator = AppStartupCoordinator(themeManager, backgroundScope)
 
             coordinator.initialize()
 
             assertTrue(coordinator.isReady.value)
+        }
+
+    @Test
+    fun `theme arriving after timeout is still applied on main`() =
+        runTest {
+            val pendingTheme = CompletableDeferred<AppTheme>()
+            val themeManager = FakeThemeManager(flow { emit(pendingTheme.await()) })
+            val coordinator = AppStartupCoordinator(themeManager, backgroundScope)
+
+            coordinator.initialize()
+
+            assertTrue(coordinator.isReady.value)
+            assertEquals(null, themeManager.lastApplied)
+
+            pendingTheme.complete(AppTheme.DARK)
+            runCurrent()
+
+            assertEquals(AppTheme.DARK, themeManager.lastApplied)
+            assertTrue(themeManager.lastAppliedOnThread != null)
         }
 
     @Test
@@ -137,7 +163,7 @@ class AppStartupCoordinatorTest {
             )
             val secretDetail = "super-secret-disk-path"
             val themeManager = FakeThemeManager(flow { throw IOException(secretDetail) })
-            val coordinator = AppStartupCoordinator(themeManager)
+            val coordinator = AppStartupCoordinator(themeManager, backgroundScope)
 
             coordinator.initialize()
 

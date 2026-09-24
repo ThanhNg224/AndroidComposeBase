@@ -1,5 +1,6 @@
 package com.thanhng224.androidcomposebase.core.ui.theme
 
+import android.app.UiModeManager
 import com.thanhng224.androidcomposebase.core.foundation.SettingsKey
 import com.thanhng224.androidcomposebase.core.foundation.SettingsStore
 import kotlinx.coroutines.flow.Flow
@@ -82,4 +83,12 @@ class ThemeManagerTest {
 
             assertEquals(true, themeManager.isThemeApplied.value)
         }
+
+    @Test
+    fun `application night mode maps System to no app-specific override`() {
+        assertEquals(UiModeManager.MODE_NIGHT_NO, AppTheme.LIGHT.toApplicationNightMode())
+        assertEquals(UiModeManager.MODE_NIGHT_YES, AppTheme.DARK.toApplicationNightMode())
+        // For setApplicationNightMode, AOSP translates MODE_NIGHT_AUTO to UI_MODE_NIGHT_UNDEFINED.
+        assertEquals(UiModeManager.MODE_NIGHT_AUTO, AppTheme.SYSTEM.toApplicationNightMode())
+    }
 }

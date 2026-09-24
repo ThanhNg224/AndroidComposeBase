@@ -52,7 +52,10 @@ object AppCoreModule {
 
     @Provides
     @Singleton
-    fun provideThemeManager(settingsStore: SettingsStore): ThemeManager = ThemeManager.create(settingsStore)
+    fun provideThemeManager(
+        @ApplicationContext context: Context,
+        settingsStore: SettingsStore,
+    ): ThemeManager = ThemeManager.create(settingsStore, context)
 
     @Provides
     @Singleton

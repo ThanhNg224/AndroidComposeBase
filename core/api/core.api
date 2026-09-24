@@ -481,6 +481,7 @@ package com.thanhng224.androidcomposebase.core.ui.theme {
 
   public static final class ThemeManager.Companion {
     method public com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager create(com.thanhng224.androidcomposebase.core.foundation.SettingsStore settingsStore);
+    method public com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager create(com.thanhng224.androidcomposebase.core.foundation.SettingsStore settingsStore, android.content.Context context);
   }
 
 }

@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-/** Application entry point: plants logging, launches bounded theme startup, and configures WorkManager. */
+/** Application entry point: plants logging, starts persisted theme restoration, and configures WorkManager. */
 @HiltAndroidApp
 class AndroidComposeBaseApplication :
     Application(),
