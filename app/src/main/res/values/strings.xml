@@ -1,5 +1,9 @@
 <resources>
     <string name="app_name">Android Compose Base</string>
+    <string name="navigation_home">Home</string>
+    <string name="navigation_demo">Demo</string>
+    <string name="navigation_design">Design</string>
+    <string name="navigation_settings">Settings</string>
     <string name="onboarding_get_started">Get Started</string>
     <string name="onboarding_retry">Retry</string>
     <string name="onboarding_startup_read_failed">Couldn’t load your setup status. Please try again.</string>

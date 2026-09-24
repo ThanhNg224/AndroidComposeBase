@@ -15,12 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,7 +34,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
-import com.thanhng224.androidcomposebase.core.ui.components.AppDialog
 import com.thanhng224.androidcomposebase.core.ui.components.AppOutlinedButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppPrimaryButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppSecondaryButton
@@ -124,7 +124,7 @@ public fun DesignSystemScreen(modifier: Modifier = Modifier) {
 
             item {
                 Text(
-                    text = "Animated Dialog",
+                    text = "Sample Dialog",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,
@@ -141,7 +141,7 @@ public fun DesignSystemScreen(modifier: Modifier = Modifier) {
                 ) {
                     Column(modifier = Modifier.padding(Dimens.spaceMedium)) {
                         Text(
-                            text = "Interactive dialog with scale and fade animations.",
+                            text = "Interactive Material 3 dialog sample.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -156,16 +156,23 @@ public fun DesignSystemScreen(modifier: Modifier = Modifier) {
         }
     }
 
-    AppDialog(
-        visible = showDialog,
-        onDismiss = { showDialog = false },
-        icon = Icons.Default.Info,
-        title = "Design System Dialog",
-        message = "This dialog demonstrates the animated scale and fade transitions with Material 3 tokens.",
-        primaryActionText = "Got It",
-        onPrimaryAction = { showDialog = false },
-        secondaryActionText = "Dismiss",
-    )
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text("Design System Dialog") },
+            text = { Text("This dialog demonstrates a Material 3 dialog with the app's current theme.") },
+            confirmButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Got It")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("Dismiss")
+                }
+            },
+        )
+    }
 }
 
 @Composable
