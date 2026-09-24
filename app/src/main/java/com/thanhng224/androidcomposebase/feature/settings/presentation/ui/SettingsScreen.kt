@@ -85,7 +85,7 @@ public fun SettingsScreen(
             contentAlignment = Alignment.TopCenter,
         ) {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().widthIn(max = 720.dp),
+                modifier = Modifier.widthIn(max = 720.dp).fillMaxSize(),
                 contentPadding =
                     PaddingValues(
                         start = Dimens.spaceLarge,

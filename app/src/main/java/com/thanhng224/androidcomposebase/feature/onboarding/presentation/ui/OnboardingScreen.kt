@@ -60,8 +60,8 @@ public fun OnboardingScreen(
         Column(
             modifier =
                 Modifier
-                    .fillMaxWidth()
                     .widthIn(max = 560.dp)
+                    .fillMaxWidth()
                     .heightIn(min = maxHeight, max = maxHeight)
                     .verticalScroll(rememberScrollState())
                     .padding(Dimens.spaceLarge),
