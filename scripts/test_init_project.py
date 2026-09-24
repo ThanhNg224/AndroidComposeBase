@@ -15,7 +15,6 @@ from init_project import (
     InitError,
     kotlin_string_literal,
     _replacement_pairs,
-    _replace_app_branding,
     _replace_app_name,
     _move,
     escape_android_string_resource,
@@ -40,33 +39,37 @@ import androidx.compose.material.icons.filled.Palette
 import {SOURCE_APP_PACKAGE}.sample.demo.presentation.ui.DemoScreen
 import {SOURCE_APP_PACKAGE}.sample.designsystem.presentation.ui.DesignSystemScreen
 val topRoutes = listOf(
+                ScreenRoute.Home::class.qualifiedName,
                 ScreenRoute.Demo::class.qualifiedName,
+                ScreenRoute.Settings::class.qualifiedName,
                 ScreenRoute.DesignSystem::class.qualifiedName,
 )
-                    composable<ScreenRoute.Demo> {{
-                        DemoScreen()
-                    }}
-                    composable<ScreenRoute.Settings> {{
-                        SettingsScreen()
-                    }}
-                    composable<ScreenRoute.DesignSystem> {{
-                        DesignSystemScreen()
-                    }}
+NavigationSuiteScaffold(navigationSuiteItems = {{
+                item(
+                    icon = {{ Icon(Icons.Default.Cloud, contentDescription = null) }},
+                    label = {{ Text(stringResource(R.string.navigation_demo)) }},
+                    selected = false,
+                    onClick = {{ navController.navigate(ScreenRoute.Demo) }},
+                )
+                item(
+                    icon = {{ Icon(Icons.Default.Palette, contentDescription = null) }},
+                    label = {{ Text(stringResource(R.string.navigation_design)) }},
+                    selected = false,
+                    onClick = {{ navController.navigate(ScreenRoute.DesignSystem) }},
+                )
+            }}) {{
+                NavHost(navController, startDestination = ScreenRoute.Home) {{
+                composable<ScreenRoute.Demo> {{
+                    DemoScreen()
                 }}
-
-                LaunchedEffect(value) {{ }}
-                            NavItem(
-                                title = "Home",
-                            ),
-                            NavItem(
-                                title = "Demo",
-                            ),
-                            NavItem(
-                                title = "Design",
-                            ),
-                            NavItem(
-                                title = "Settings",
-                            ),
+                composable<ScreenRoute.Settings> {{
+                    SettingsScreen()
+                }}
+                composable<ScreenRoute.DesignSystem> {{
+                    DesignSystemScreen()
+                }}
+                }}
+            }}
 ''',
             encoding="utf-8",
         )
@@ -74,10 +77,10 @@ val topRoutes = listOf(
         app_source.write_text(f"package {SOURCE_APP_PACKAGE}\nclass AndroidComposeBaseApplication\n", encoding="utf-8")
         onboarding = app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt"
         onboarding.parent.mkdir(parents=True)
-        onboarding.write_text('Text(text = "AndroidComposeBase")\n', encoding="utf-8")
+        onboarding.write_text('Text(text = stringResource(R.string.onboarding_title))\n', encoding="utf-8")
         home = app_dir / "appshell/home/HomeScreen.kt"
         home.parent.mkdir(parents=True)
-        home.write_text('AppCenterTopBar(title = "AndroidComposeBase")\n', encoding="utf-8")
+        home.write_text('Text(text = stringResource(R.string.home_welcome_title))\n', encoding="utf-8")
         routes = app_dir / "navigation/ScreenRoute.kt"
         routes.parent.mkdir(parents=True)
         routes.write_text(
@@ -121,10 +124,21 @@ dependencies {{
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.kotlinx.serialization.converter)
     implementation(libs.okhttp.core)
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(libs.okhttp.mockwebserver)
 }}
 ksp {{
     arg("room.schemaLocation", "$projectDir/schemas")
+}}
+kover {{
+    reports {{
+        filters {{
+            includes {{
+                classes("*.sample.demo.*")
+            }}
+            excludes {{ classes("*.BuildConfig") }}
+        }}
+    }}
 }}
 ''',
             encoding="utf-8",
@@ -293,22 +307,30 @@ ksp {{
     def test_kotlin_display_literal_escapes_interpolation_and_quotes(self) -> None:
         self.assertEqual(kotlin_string_literal('Shop "$price"\n'), '"Shop \\"\\$price\\"\\n"')
 
-    def test_app_branding_replacement_is_scoped_to_app_screens(self) -> None:
+    def test_app_display_name_is_updated_in_both_locale_resources(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
-            app_dir = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split("."))
-            onboarding = app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt"
-            home = app_dir / "appshell/home/HomeScreen.kt"
-            unrelated = app_dir / "core/ui/theme/Theme.kt"
-            for path in (onboarding, home, unrelated):
+            resource_files = (
+                root / "app/src/main/res/values/strings.xml",
+                root / "app/src/main/res/values-vi/strings.xml",
+            )
+            for path in resource_files:
                 path.parent.mkdir(parents=True, exist_ok=True)
-            onboarding.write_text('Text(text = "AndroidComposeBase")\n', encoding="utf-8")
-            home.write_text('AppCenterTopBar(title = "AndroidComposeBase")\n', encoding="utf-8")
-            unrelated.write_text('val theme = AndroidComposeBaseTheme\n', encoding="utf-8")
-            self.assertEqual(_replace_app_branding(root, "AcmeShop", SOURCE_APP_PACKAGE, "AndroidComposeBase $Shop", "app-only", False), 2)
-            self.assertIn('"AndroidComposeBase \\$Shop"', onboarding.read_text(encoding="utf-8"))
-            self.assertIn('"AndroidComposeBase \\$Shop"', home.read_text(encoding="utf-8"))
-            self.assertEqual(unrelated.read_text(encoding="utf-8"), "val theme = AndroidComposeBaseTheme\n")
+                path.write_text('<resources><string name="app_name">Android Compose Base</string></resources>', encoding="utf-8")
+            self.assertEqual(_replace_app_name(root, '@Acme\'s "Shop"', dry_run=False), 2)
+            for path in resource_files:
+                app_name = ET.parse(path).getroot().find("string[@name='app_name']")
+                self.assertEqual(app_name.text, "\\@Acme\\'s \\\"Shop\\\"")
+
+    def test_clean_routes_rejects_unknown_adaptive_navigation_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_preflight_fixture(root)
+            app_root = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / "presentation/AppRoot.kt"
+            app_root.write_text(app_root.read_text(encoding="utf-8").replace("Icons.Default.Cloud", "Icons.Default.Water"), encoding="utf-8")
+            from init_project import _clean_sample_route_sources
+            with self.assertRaisesRegex(InitError, "AppRoot sample markers changed"):
+                _clean_sample_route_sources(root, SOURCE_APP_PACKAGE)
 
     def test_full_replacements_cover_current_compose_library_identity(self) -> None:
         pairs = dict(_replacement_pairs("AcmeShop", "com.acme.app", "com.acme.core", "full"))

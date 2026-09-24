@@ -241,41 +241,6 @@ def _validate_app_name_resources(root: Path) -> None:
             raise InitError(f"Missing app_name resource in {path.relative_to(root)}")
 
 
-def _app_branding_paths(root: Path, app_package: str) -> tuple[Path, Path]:
-    target_dir = root / "app/src/main/java" / Path(*app_package.split("."))
-    source_package = app_package if target_dir.exists() else SOURCE_APP_PACKAGE
-    app_dir = root / "app/src/main/java" / Path(*source_package.split("."))
-    return (
-        app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt",
-        app_dir / "appshell/home/HomeScreen.kt",
-    )
-
-
-def _validate_app_branding_source(root: Path) -> None:
-    for path in _app_branding_paths(root, SOURCE_APP_PACKAGE):
-        if not path.is_file() or '"AndroidComposeBase"' not in path.read_text(encoding="utf-8"):
-            raise InitError(f"Missing app branding marker in {path.relative_to(root)}")
-
-
-def _replace_app_branding(root: Path, project_name: str, app_package: str, app_name: str, scope: str, dry_run: bool) -> int:
-    source_literal = '"AndroidComposeBase"'
-    initialized_literal = kotlin_string_literal(project_name) if scope == "full" and not dry_run else source_literal
-    replacement = kotlin_string_literal(app_name)
-    changed = 0
-    for path in _app_branding_paths(root, app_package):
-        source = path.read_text(encoding="utf-8")
-        if initialized_literal not in source:
-            raise InitError(f"Missing app branding marker after rename in {path.relative_to(root)}")
-        updated = source.replace(initialized_literal, replacement)
-        if updated != source:
-            changed += 1
-            if dry_run:
-                print(f"  update app display name in {path.relative_to(root)}")
-            else:
-                path.write_text(updated, encoding="utf-8")
-    return changed
-
-
 def _replace_text(root: Path, pairs: list[tuple[str, str]], dry_run: bool, scope: str) -> int:
     changed = 0
     ignored_files = {"init_project.py", "test_init_project.py", "smoke_init_project.py"}
@@ -335,21 +300,21 @@ def _clean_sample_route_sources(root: Path, app_package: str) -> tuple[Path, str
     required = (
         "import androidx.compose.material.icons.filled.Cloud\n",
         "import androidx.compose.material.icons.filled.Palette\n",
-        "import " + source_app_package + ".sample.demo.presentation.ui.DemoScreen\n",
-        "import " + source_app_package + ".sample.designsystem.presentation.ui.DesignSystemScreen\n",
+        f"import {source_app_package}.sample.demo.presentation.ui.DemoScreen\n",
+        f"import {source_app_package}.sample.designsystem.presentation.ui.DesignSystemScreen\n",
         "                ScreenRoute.Demo::class.qualifiedName,\n",
         "                ScreenRoute.DesignSystem::class.qualifiedName,\n",
-        "                    composable<ScreenRoute.Demo> {\n",
-        "                    composable<ScreenRoute.DesignSystem> {\n",
-        '                                title = "Demo",\n',
-        '                                title = "Design",\n',
+        "                item(\n                    icon = { Icon(Icons.Default.Cloud, contentDescription = null) },\n",
+        "                item(\n                    icon = { Icon(Icons.Default.Palette, contentDescription = null) },\n",
+        "                composable<ScreenRoute.Demo> {\n",
+        "                composable<ScreenRoute.DesignSystem> {\n",
     )
     missing = [marker for marker in required if marker not in source]
     if missing:
         raise InitError("AppRoot sample markers changed; refusing partial cleanup: " + ", ".join(missing))
     route_markers = (
-        "\n    @Serializable\n    public data object Demo : ScreenRoute\n",
-        "\n    @Serializable\n    public data object DesignSystem : ScreenRoute\n",
+        "    @Serializable\n    public data object Demo : ScreenRoute\n",
+        "    @Serializable\n    public data object DesignSystem : ScreenRoute\n",
     )
     route_source = route_file.read_text(encoding="utf-8")
     missing_routes = [marker for marker in route_markers if marker not in route_source]
@@ -357,12 +322,13 @@ def _clean_sample_route_sources(root: Path, app_package: str) -> tuple[Path, str
         raise InitError("ScreenRoute sample markers changed; refusing partial cleanup: " + ", ".join(missing_routes))
     source = source.replace(required[0], "").replace(required[1], "")
     source = source.replace(required[2], "").replace(required[3], "")
-    source = source.replace("                ScreenRoute.Demo::class.qualifiedName,\n", "")
-    source = source.replace("                ScreenRoute.DesignSystem::class.qualifiedName,\n", "")
-    source = _remove_kotlin_block(source, "                    composable<ScreenRoute.Demo> {\n", "                    composable<ScreenRoute.Settings> {\n")
-    source = _remove_kotlin_block(source, "                    composable<ScreenRoute.DesignSystem> {\n", "                }\n\n                LaunchedEffect")
-    source = _remove_kotlin_block(source, '                            NavItem(\n                                title = "Demo",\n', '                            NavItem(\n                                title = "Settings",\n')
-    route_source = route_source.replace(route_markers[0], "").replace(route_markers[1], "")
+    for marker in required[4:6]:
+        source = source.replace(marker, "")
+    source = _remove_kotlin_call(source, required[6])
+    source = _remove_kotlin_call(source, required[7])
+    source = _remove_kotlin_block(source, required[8])
+    source = _remove_kotlin_block(source, required[9])
+    route_source = re.sub(r"^    @Serializable\n    public data object (?:Demo|DesignSystem) : ScreenRoute\n", "", route_source, flags=re.MULTILINE)
     if "ScreenRoute.Demo" in source or "ScreenRoute.DesignSystem" in source or "data object Demo" in route_source or "data object DesignSystem" in route_source:
         raise InitError("Sample navigation references remain after cleanup.")
     return app_root, source, route_file, route_source
@@ -382,14 +348,49 @@ def _remove_sample_routes(root: Path, app_package: str, dry_run: bool) -> int:
     return int(changed)
 
 
-def _remove_kotlin_block(source: str, start: str, end: str) -> str:
-    start_at = source.find(start)
+def _remove_delimited(source: str, marker: str, opening: str, closing: str) -> str:
+    start_at = source.find(marker)
     if start_at < 0:
-        raise InitError(f"Missing Kotlin block marker: {start.strip()}")
-    end_at = source.find(end, start_at + len(start))
-    if end_at < 0:
-        raise InitError(f"Missing Kotlin block end marker: {end.strip()}")
-    return source[:start_at] + source[end_at:]
+        raise InitError(f"Missing Kotlin sample marker: {marker.strip()}")
+    delimiter_at = source.find(opening, start_at)
+    if delimiter_at < 0:
+        raise InitError(f"Missing Kotlin sample block delimiter after: {marker.strip()}")
+    depth = 0
+    in_string = False
+    escaped = False
+    index = delimiter_at
+    while index < len(source):
+        character = source[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == '"':
+                in_string = False
+        elif character == '"':
+            in_string = True
+        elif character == opening:
+            depth += 1
+        elif character == closing:
+            depth -= 1
+            if depth == 0:
+                end_at = index + 1
+                while end_at < len(source) and source[end_at] in " \t":
+                    end_at += 1
+                if end_at < len(source) and source[end_at] == "\n":
+                    end_at += 1
+                return source[:start_at] + source[end_at:]
+        index += 1
+    raise InitError(f"Unclosed Kotlin sample block: {marker.strip()}")
+
+
+def _remove_kotlin_call(source: str, marker: str) -> str:
+    return _remove_delimited(source, marker, "(", ")")
+
+
+def _remove_kotlin_block(source: str, marker: str) -> str:
+    return _remove_delimited(source, marker, "{", "}")
 
 
 def _clean_sample_build(root: Path, dry_run: bool) -> int:
@@ -411,6 +412,7 @@ def _clean_sample_build_source(source: str) -> str:
         "    implementation(libs.retrofit.core)\n", "    implementation(libs.retrofit.kotlinx.serialization.converter)\n",
         "    implementation(libs.okhttp.core)\n",
         "    testImplementation(libs.okhttp.mockwebserver)\n",
+        "    implementation(libs.kotlinx.serialization.json)\n",
     )
     new_source = source
     for marker in dependency_markers:
@@ -420,16 +422,11 @@ def _clean_sample_build_source(source: str) -> str:
     new_source = re.sub(r'\s*buildConfigField\("(?:String|boolean)", "API_[A-Z_]+", [^\n]+\)', "", new_source)
     new_source = re.sub(r'\n    buildFeatures \{\n        buildConfig = true\n    }', "", new_source)
     new_source = re.sub(r'\nksp \{\n    arg\("room.schemaLocation", "\$projectDir/schemas"\)\n}', "", new_source)
-    kover_marker = "\nkover {"
-    if kover_marker in new_source:
-        start = new_source.index(kover_marker)
-        # The current coverage filter is sample-owned. It contains nested Kotlin blocks, so
-        # remove the complete terminal DSL block by its known end-of-file boundary.
-        if new_source[start:].rstrip().endswith("}"):
-            new_source = new_source[:start].rstrip() + "\n"
-        else:
-            raise InitError("Could not safely remove sample Kover configuration.")
-    if "Room" in new_source or "Retrofit" in new_source or "API_BASE_URL" in new_source or "sample.demo" in new_source:
+    includes_marker = "            includes {"
+    if includes_marker not in new_source:
+        raise InitError("Missing sample Kover filter marker in app/build.gradle.kts")
+    new_source = _remove_kotlin_block(new_source, includes_marker)
+    if "Room" in new_source or "Retrofit" in new_source or "API_BASE_URL" in new_source or "sample.demo" in new_source or "sample.designsystem" in new_source:
         raise InitError("Sample-only build configuration remains after cleanup.")
     return new_source
 
@@ -441,7 +438,8 @@ def _clean_sample_resources(root: Path, dry_run: bool) -> int:
             continue
         tree = ET.parse(resource_file)
         parent = tree.getroot()
-        to_remove = [node for node in list(parent) if node.attrib.get("name", "").startswith(("demo_", "design_system_"))]
+        sample_names = {"navigation_demo", "navigation_design"}
+        to_remove = [node for node in list(parent) if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in sample_names]
         if to_remove:
             changed += len(to_remove)
             for node in to_remove:
@@ -483,6 +481,9 @@ def clean_samples(root: Path, app_package: str, dry_run: bool) -> int:
     package_dir = target_dir if target_dir.exists() else root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split("."))
     logger_package = app_package if target_dir.exists() else SOURCE_APP_PACKAGE
     for sample_dir in (package_dir / "sample/demo", package_dir / "sample/designsystem"):
+        changed += _remove_tree(root, sample_dir, dry_run)
+    test_package_dir = root / "app/src/test/java" / Path(*app_package.split(".")) / "sample"
+    for sample_dir in (test_package_dir / "demo", test_package_dir / "designsystem"):
         changed += _remove_tree(root, sample_dir, dry_run)
     changed += _remove_tree(root, package_dir / "di/AppNetworkModule.kt", dry_run)
     changed += _remove_metadata_logger(root, logger_package, dry_run)
@@ -594,9 +595,11 @@ def _verify(root: Path, app_package: str, core_package: str, scope: str, clean: 
         raise InitError("Post-check failed: committed baseline profile must be regenerated for the renamed app.")
     if clean:
         package_dir = root / "app/src/main/java" / Path(*app_package.split("."))
+        test_package_dir = root / "app/src/test/java" / Path(*app_package.split(".")) / "sample"
         markers = (
             package_dir / "sample/demo", package_dir / "sample/designsystem", package_dir / "di/AppNetworkModule.kt",
             package_dir / "di/MetadataLoggingInterceptor.kt",
+            test_package_dir / "demo", test_package_dir / "designsystem",
             root / "app/src/release/generated/baselineProfiles/baseline-prof.txt",
         )
         leftovers = [path.relative_to(root) for path in markers if path.exists()]
@@ -644,7 +647,6 @@ def run(root: Path, project_name: str, app_name: str, app_package: str, core_pac
         raise InitError("Application and core packages must be different.")
     validate_source(root, scope)
     _validate_app_name_resources(root)
-    _validate_app_branding_source(root)
     if clean:
         validate_clean_sample_source(root)
     if not dry_run and not force and (root / ".git").exists():
@@ -654,7 +656,6 @@ def run(root: Path, project_name: str, app_name: str, app_package: str, core_pac
 
     moves = _move_source_tree(root, project_name, app_package, core_package, scope, dry_run)
     changes = _replace_text(root, _replacement_pairs(project_name, app_package, core_package, scope), dry_run, scope)
-    changes += _replace_app_branding(root, project_name, app_package, app_name, scope, dry_run)
     changes += _replace_app_name(root, app_name, dry_run)
     changes += _remove_tree(root, root / "app/src/release/generated/baselineProfiles/baseline-prof.txt", dry_run)
     if moves + changes == 0:

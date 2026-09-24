@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import xml.etree.ElementTree as ET
 from io import BytesIO
 from pathlib import Path
 
@@ -72,9 +73,10 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
     routes = text(app_dir / "navigation/ScreenRoute.kt")
     onboarding = text(app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt")
     home = text(app_dir / "appshell/home/HomeScreen.kt")
-    display_name_literal = '"Smoke & Demo \\"App\\""'
-    assert f"text = {display_name_literal}" in onboarding
-    assert f"title = {display_name_literal}" in home
+    for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
+        strings = ET.parse(clone / relative).getroot()
+        app_name = strings.find("string[@name='app_name']")
+        assert app_name is not None and app_name.text.replace('\\"', '"') == 'Smoke & Demo "App"'
     assert '"AndroidComposeBase"' not in onboarding
     assert '"AndroidComposeBase"' not in home
     assert not (clone / "app/src/release/generated/baselineProfiles/baseline-prof.txt").exists()
@@ -82,12 +84,19 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
     if clean:
         assert all(not path.exists() for path in sample_dirs)
         assert not (app_dir / "di/MetadataLoggingInterceptor.kt").exists()
+        test_samples = clone / "app/src/test/java" / Path(*app_package.split(".")) / "sample"
+        assert not (test_samples / "demo").exists() and not (test_samples / "designsystem").exists()
         assert "ScreenRoute.Demo" not in app_root and "ScreenRoute.DesignSystem" not in app_root
         assert "Demo" not in routes and "DesignSystem" not in routes
         assert "sample.demo" not in app_root and "sample.designsystem" not in app_root
         assert "Retrofit" not in app_build and "Room" not in app_build
+        assert "libs.retrofit" not in app_build and "libs.room" not in app_build and "libs.kotlinx.serialization.json" not in app_build
         assert "API_BASE_URL" not in app_build
         assert 'android.permission.INTERNET' not in text(clone / "app/src/main/AndroidManifest.xml")
+        for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
+            strings = ET.parse(clone / relative).getroot()
+            sample_strings = [node.attrib["name"] for node in strings if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in {"navigation_demo", "navigation_design"}]
+            assert not sample_strings, f"sample strings remain: {sample_strings}"
         journey = text(clone / "baselineprofile/src/main/java" / Path(*app_package.split(".")) / "baselineprofile/CriticalJourney.kt")
         assert "Demo" not in journey and "Design" not in journey and "weather" not in journey.lower()
     else:

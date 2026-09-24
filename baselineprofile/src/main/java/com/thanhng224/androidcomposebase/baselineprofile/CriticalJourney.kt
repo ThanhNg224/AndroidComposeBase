@@ -42,17 +42,17 @@ internal object CriticalJourney {
         // Wait for Home screen
         device.wait(Until.hasObject(By.text("Home")), WAIT_TIMEOUT_MS)
 
-        // Navigate to Demo
+        // Navigate to the offline weather example
         device.clickOrFail(By.text("Demo"), "the Demo tab")
-        check(device.wait(Until.hasObject(By.textContains("Ho Chi Minh City")), WAIT_TIMEOUT_MS)) {
+        check(device.wait(Until.hasObject(By.text("Current conditions")), WAIT_TIMEOUT_MS)) {
             "Demo tab never showed weather card"
         }
         val refreshBtn = device.findObject(By.text("Refresh weather"))
         refreshBtn?.click()
 
-        // Navigate to UI Kit (Design System)
+        // Navigate to the UI Kit
         device.clickOrFail(By.text("Design"), "the Design tab")
-        check(device.wait(Until.hasObject(By.text("Color Palette")), WAIT_TIMEOUT_MS)) {
+        check(device.wait(Until.hasObject(By.text("Color roles")), WAIT_TIMEOUT_MS)) {
             "Design system tab never rendered"
         }
 
@@ -64,7 +64,7 @@ internal object CriticalJourney {
 
         // Return to Home
         device.clickOrFail(By.text("Home"), "the Home tab")
-        check(device.wait(Until.hasObject(By.text("Android Compose Base")), WAIT_TIMEOUT_MS)) {
+        check(device.wait(Until.hasObject(By.text("Welcome to your new app")), WAIT_TIMEOUT_MS)) {
             "Never returned to Home"
         }
     }
