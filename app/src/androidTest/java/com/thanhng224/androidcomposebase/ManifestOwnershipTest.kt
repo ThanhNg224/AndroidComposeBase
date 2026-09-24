@@ -8,7 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Published library manifests are passive (see `core` and `core:ui-compose`); the starter app is
+ * Published library manifests are passive (see `:core` and `:core:ui`); the starter app is
  * the one that must declare the permissions its own network usage needs.
  */
 @RunWith(AndroidJUnit4::class)

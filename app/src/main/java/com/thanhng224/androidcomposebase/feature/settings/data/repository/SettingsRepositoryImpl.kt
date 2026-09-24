@@ -19,12 +19,18 @@ class SettingsRepositoryImpl
     ) : SettingsRepository {
         override fun observeTheme(): Flow<AppTheme> = themeManager.currentTheme
 
-        override suspend fun getCurrentLanguage(): AppLanguage? =
-            AppLanguage.findByLanguageTag(settingsStore.get(AppSettingsKeys.LANGUAGE_TAG), localeManager.supportedLanguages())
+        override suspend fun getCurrentLanguageTag(): String? =
+            AppLanguage.findByLanguageTag(settingsStore.get(AppSettingsKeys.LANGUAGE_TAG), localeManager.supportedLanguages())?.languageTag
 
-        override fun getSupportedLanguages(): List<AppLanguage> = localeManager.supportedLanguages()
+        override fun getSupportedLanguageTags(): List<String> = localeManager.supportedLanguages().map(AppLanguage::languageTag)
 
-        override suspend fun setLanguage(language: AppLanguage?) {
+        override suspend fun setLanguageTag(languageTag: String?) {
+            val language =
+                languageTag?.let { tag ->
+                    localeManager.supportedLanguages().firstOrNull { it.languageTag == tag }
+                        ?: AppLanguage.findByLanguageTag(tag, localeManager.supportedLanguages())
+                        ?: throw IllegalArgumentException("Unsupported language tag: $tag")
+                }
             settingsStore.set(AppSettingsKeys.LANGUAGE_TAG, language?.languageTag.orEmpty())
             language?.let(localeManager::setLanguage) ?: localeManager.useSystemLanguage()
         }

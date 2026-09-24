@@ -1,4 +1,8 @@
-# Baseline Profile Results
+# Historical Baseline Profile Results
+
+> Historical measurement from an earlier AndroidCoreBase tree. It does not describe or validate the current AndroidComposeBase source, app flow, or device performance. Current-tree device smoke results, if collected, must be recorded separately with their exact commit, device, OS, commands, and limits.
+
+The figures below are retained as historical evidence only. The measured journey and generated profile include screens that have since changed or been removed.
 
 ## Status
 

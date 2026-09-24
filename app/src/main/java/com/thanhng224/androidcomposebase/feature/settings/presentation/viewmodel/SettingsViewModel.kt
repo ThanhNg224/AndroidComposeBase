@@ -3,6 +3,8 @@ package com.thanhng224.androidcomposebase.feature.settings.presentation.viewmode
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thanhng224.androidcomposebase.R
+import com.thanhng224.androidcomposebase.core.localization.AppLanguage
+import com.thanhng224.androidcomposebase.core.localization.SupportedLanguages
 import com.thanhng224.androidcomposebase.core.ui.text.UiText
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetCurrentLanguageUseCase
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetSupportedLanguagesUseCase
@@ -28,6 +30,7 @@ class SettingsViewModel
     @Inject
     constructor(
         observeTheme: ObserveThemeUseCase,
+        supportedLanguages: SupportedLanguages,
         private val getCurrentLanguage: GetCurrentLanguageUseCase,
         getSupportedLanguages: GetSupportedLanguagesUseCase,
         private val setTheme: SetThemeUseCase,
@@ -35,7 +38,13 @@ class SettingsViewModel
     ) : ViewModel() {
         private var isInitialLanguageLoaded = false
         private val nextMessageId = AtomicLong(0)
-        private val mutableState = MutableStateFlow(SettingsUiState(supportedLanguages = getSupportedLanguages()))
+        private val presentationLanguages = supportedLanguages.values
+        private val mutableState =
+            MutableStateFlow(
+                SettingsUiState(
+                    supportedLanguages = getSupportedLanguages().mapNotNull(::findPresentationLanguage),
+                ),
+            )
         val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
 
         init {
@@ -43,7 +52,7 @@ class SettingsViewModel
                 observeTheme().collect { theme -> mutableState.update { it.copy(theme = theme) } }
             }
             viewModelScope.launch {
-                val language = getCurrentLanguage()
+                val language = getCurrentLanguage()?.let(::findPresentationLanguage)
                 mutableState.update { it.copy(language = language) }
                 isInitialLanguageLoaded = true
             }
@@ -70,7 +79,7 @@ class SettingsViewModel
             if (event.language == mutableState.value.language) return
             viewModelScope.launch {
                 try {
-                    setLanguage(event.language)
+                    setLanguage(event.language?.languageTag)
                     mutableState.update { it.copy(language = event.language) }
                 } catch (e: CancellationException) {
                     throw e
@@ -79,6 +88,10 @@ class SettingsViewModel
                 }
             }
         }
+
+        private fun findPresentationLanguage(languageTag: String): AppLanguage? =
+            presentationLanguages.firstOrNull { it.languageTag == languageTag }
+                ?: AppLanguage.findByLanguageTag(languageTag, presentationLanguages)
 
         private fun enqueueMessage(text: UiText) {
             val message = PendingSettingsMessage(id = nextMessageId.incrementAndGet(), text = text)

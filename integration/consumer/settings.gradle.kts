@@ -8,7 +8,7 @@ pluginManagement {
 
 @Suppress("UnstableApiUsage")
 dependencyResolutionManagement {
-    // Isolated on purpose: no mavenLocal(), no project substitution for AndroidCoreBase. The only
+    // Isolated on purpose: no mavenLocal(), no project substitution for AndroidComposeBase. The only
     // way this build can see the library under test is through the temporary repository that
     // scripts/verify-publication.sh publishes it to and passes in via -PpublishRepoUrl.
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)

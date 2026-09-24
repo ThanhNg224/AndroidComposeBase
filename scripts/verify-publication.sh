@@ -78,7 +78,7 @@ run_consumer_mode() {
     local gradle_args=(
         :app:assembleDebug
         -PpublishRepoUrl="file://$TEMP_REPO_DIR"
-        -PandroidCoreBaseVersion="$VERIFY_VERSION"
+        -PandroidComposeBaseVersion="$VERIFY_VERSION"
         -PincludeCompose="$include_compose"
     )
     if [[ "$MODE" == "--release" ]]; then

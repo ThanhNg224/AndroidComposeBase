@@ -3,16 +3,16 @@ plugins {
 }
 
 // Toggles whether this consumer build resolves and exercises the optional
-// `AndroidCoreBase-ui-compose` artifact, per -PincludeCompose=true|false (default false).
+// `AndroidComposeBase-ui` artifact, per -PincludeCompose=true|false (default false).
 val includeCompose = providers.gradleProperty("includeCompose").map(String::toBoolean).getOrElse(false)
 
 if (includeCompose) {
     apply(plugin = "org.jetbrains.kotlin.plugin.compose")
 }
 
-val androidCoreBaseVersion =
-    providers.gradleProperty("androidCoreBaseVersion").orNull
-        ?: error("-PandroidCoreBaseVersion=<version> is required")
+val androidComposeBaseVersion =
+    providers.gradleProperty("androidComposeBaseVersion").orNull
+        ?: error("-PandroidComposeBaseVersion=<version> is required")
 
 android {
     namespace = "consumer.app"
@@ -54,8 +54,8 @@ kotlin {
 }
 
 dependencies {
-    implementation("com.github.ThanhNg224:AndroidComposeBase:$androidCoreBaseVersion")
+    implementation("com.github.ThanhNg224:AndroidComposeBase:$androidComposeBaseVersion")
     if (includeCompose) {
-        implementation("com.github.ThanhNg224:AndroidComposeBase-ui:$androidCoreBaseVersion")
+        implementation("com.github.ThanhNg224:AndroidComposeBase-ui:$androidComposeBaseVersion")
     }
 }

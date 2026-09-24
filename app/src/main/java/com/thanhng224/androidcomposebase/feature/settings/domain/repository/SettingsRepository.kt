@@ -1,17 +1,16 @@
 package com.thanhng224.androidcomposebase.feature.settings.domain.repository
 
-import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
     fun observeTheme(): Flow<AppTheme>
 
-    suspend fun getCurrentLanguage(): AppLanguage?
+    suspend fun getCurrentLanguageTag(): String?
 
-    fun getSupportedLanguages(): List<AppLanguage>
+    fun getSupportedLanguageTags(): List<String>
 
-    suspend fun setLanguage(language: AppLanguage?)
+    suspend fun setLanguageTag(languageTag: String?)
 
     suspend fun setTheme(theme: AppTheme)
 }

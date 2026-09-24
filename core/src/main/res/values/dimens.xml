@@ -6,8 +6,7 @@
     <dimen name="core_dialog_screen_margin">24dp</dimen>
     <dimen name="core_dialog_max_width">360dp</dimen>
 
-    <!-- Spacing scale: margins, padding, gaps, elevation. Fixed dp — see docs/MODERNIZATION.md
-         Phase 2 (D1) for why this replaces com.intuit.sdp's @dimen/_Nsdp buckets. -->
+    <!-- Spacing tokens used by the core's Android UI helpers. -->
     <dimen name="core_space_2">2dp</dimen>
     <dimen name="core_space_4">4dp</dimen>
     <dimen name="core_space_6">6dp</dimen>

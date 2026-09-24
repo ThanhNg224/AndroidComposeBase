@@ -1,156 +1,39 @@
-# GIT_FLOW.md
+# Git Workflow
 
-## Purpose
+`main` is the repository's primary branch. Use short-lived topic branches for pull requests when working in a shared remote workflow. Local template work may use the current checkout when the task explicitly requests it.
 
-This document defines the Git workflow and collaboration rules for the project. The goal is to keep history clean, reviews efficient, and changes easy to understand.
+## Commits
 
----
+Use a conventional prefix and a concise imperative subject:
 
-## Branch Strategy
+- `feat`: user-facing capability
+- `fix`: correctness issue
+- `refactor`: behavior-preserving structure change
+- `docs`: documentation or rules
+- `test`: tests only
+- `build` / `chore` / `perf`: build, maintenance, or measured performance work
 
-Primary branches:
+Keep each commit focused. Do not include generated output, credentials, unrelated cleanup, or temporary plans.
 
-- main
-- develop
+## Pull requests
 
-Working branches:
+Keep each PR reviewable and describe behavior changes, architecture/API impact, and the checks actually run. Resolve review feedback before merging. Branch protection and required checks are configured in the repository settings; this document does not claim those remote settings are enabled.
 
-- feature/<name>
-- fix/<name>
-- hotfix/<name>
-- release/<version>
+Before requesting review, run the checks that apply:
 
-Examples:
+```bash
+./gradlew check
+./gradlew :app:assembleRelease
+./gradlew :core:apiCheck :core:ui:apiCheck
+python3 -m unittest discover -s scripts -p 'test_*.py' --verbose
+python3 scripts/smoke_init_project.py --build full-clean
+./scripts/verify-publication.sh --release
+```
 
-- feature/login
-- feature/payment-flow
-- fix/crash-home
-- hotfix/startup-crash
+For a docs-only or narrowly scoped change, use judgment and report any skipped gate with the reason. A local run cannot establish remote workflow success.
 
----
+## Release and dependency automation
 
-## Development Flow
+Library source version is maintained in `core/gradle.properties`; app version is in `app/build.gradle.kts`. A version change does not publish an artifact. Release tags and publication require a separately reviewed release action.
 
-1. Create a branch from the correct base branch.
-2. Keep commits focused.
-3. Sync with the latest changes regularly.
-4. Resolve conflicts carefully.
-5. Self-review before opening a Pull Request.
-6. Merge only after review and approval.
-
----
-
-## Commit Convention
-
-Use conventional commit prefixes:
-
-- feat
-- fix
-- refactor
-- docs
-- style
-- test
-- chore
-- perf
-- build
-
-Examples:
-
-- feat: add login validation
-- fix: prevent duplicate requests
-- refactor: simplify user mapper
-- docs: update architecture guide
-
----
-
-## Commit Rules
-
-- One logical change per commit.
-- Keep commits small.
-- Write imperative commit messages.
-- Avoid mixing unrelated changes.
-- Never commit generated files unless required.
-- Remove debug code before committing.
-
----
-
-## Pull Request Guidelines
-
-A Pull Request should:
-
-- Solve one problem.
-- Be easy to review.
-- Avoid unrelated refactoring.
-- Follow all engineering documents.
-- Include a clear description when necessary.
-
----
-
-## Before Opening a Pull Request
-
-- Build passes.
-- Run the full quality gate: `./gradlew check`.
-- For published-library changes, run `./scripts/verify-publication.sh --quick`.
-- No merge conflicts.
-- Self-review completed.
-- No duplicated logic.
-- Architecture respected.
-- Coding standards followed.
-- No temporary logs or TODOs.
-
----
-
-## Code Review Mindset
-
-When reviewing code, prioritize:
-
-1. Correctness
-2. Architecture
-3. Maintainability
-4. Readability
-5. Simplicity
-6. Performance
-
-Review code, not the developer.
-
----
-
-## Merge Rules
-
-Prefer:
-
-- Small Pull Requests.
-- Frequent integration.
-- Clean commit history.
-
-Avoid:
-
-- Large feature branches.
-- Long-lived branches.
-- Mixing multiple features in one PR.
-
----
-
-## Conflict Resolution
-
-When resolving conflicts:
-
-- Understand both changes.
-- Preserve intended behavior.
-- Follow current architecture.
-- Prefer consistency over personal preference.
-- Test affected functionality after resolving.
-
----
-
-## Final Checklist
-
-- [ ] Correct branch used.
-- [ ] Commit messages follow convention.
-- [ ] One logical change per commit.
-- [ ] No debug code.
-- [ ] No unnecessary files.
-- [ ] Architecture respected.
-- [ ] Coding standards followed.
-- [ ] Self-review completed.
-- [ ] Ready for review.
+Dependabot auto-merge requires remote setup: protect `main` with the `check` required status, enable repository auto-merge, and configure `BRANCH_PROTECTION_READ_TOKEN` with permission to read repository administration settings. The workflow fails closed when required configuration is unavailable. It does not auto-approve pull requests.

@@ -25,7 +25,7 @@ import javax.inject.Singleton
  *
  * This module is deliberately complete rather than minimal: it is the starter's worked example of
  * wiring every `:core` network capability into an app-owned Hilt graph, since `:core` itself ships
- * no DI framework (see `docs/CORE_V2_DESIGN.md`, "Dependency Injection Contract").
+ * no DI framework; consuming apps own their providers and configuration.
  *
  * Only [ApiClient] currently has a consumer ([com.thanhng224.androidcomposebase.sample.demo.data.datasource.DemoRemoteDataSource]).
  * [AuthSession], [AuthTokenProvider], [Authenticator] and [FileTransferClient] are example wiring:

@@ -7,7 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.platform.ComposeView
 import com.thanhng224.androidcomposebase.core.ui.base.setThemedContent
 
-/** Compose build (`-PincludeCompose=true`): exercises `:ui-compose`'s public `setThemedContent`. */
+/** Compose build (`-PincludeCompose=true`): exercises the UI artifact's public `setThemedContent`. */
 internal object ComposeBridge {
     fun attach(
         activity: Activity,

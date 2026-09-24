@@ -11,9 +11,9 @@ import com.thanhng224.androidcomposebase.core.storage.settings.SettingsStoreFact
 import consumer.app.databinding.ActivityConsumerBinding
 
 /**
- * Exercises the main-only public surface of the published `AndroidCoreBase` artifact: no Hilt, no
+ * Exercises the main-only public surface of the `AndroidComposeBase` core artifact: no Hilt, no
  * Compose, no dependency-injection framework -- plain public constructors and factories, wired into
- * a plain XML/ViewBinding screen. [ComposeBridge.attach] additionally exercises `:ui-compose` when
+ * a plain XML/ViewBinding screen. [ComposeBridge.attach] additionally exercises `AndroidComposeBase-ui` when
  * this module is built with `-PincludeCompose=true` (see build.gradle.kts's conditional source set).
  */
 class ConsumerActivity : Activity() {

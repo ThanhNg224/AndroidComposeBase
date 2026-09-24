@@ -22,7 +22,7 @@ android {
         minSdk = 24
         targetSdk = 37
         versionCode = 1
-        versionName = "1.0"
+        versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "API_BASE_URL", "\"https://api.open-meteo.com/\"")
@@ -51,17 +51,17 @@ android {
     }
 }
 
-// F16 workaround. Minifying activates the Compose compiler plugin's produceRelease/BenchmarkComposeMapping
+// Minifying activates the Compose compiler plugin's produceRelease/BenchmarkComposeMapping
 // tasks, which resolve org.jetbrains.kotlin:compose-group-mapping at a version the plugin hardcodes --
 // 2.2.10 as of plugin 2.4.10. That artifact only exists from 2.3.0-Beta1 onward, so the request can
 // never resolve and the build fails at configuration time. Forcing it to our Kotlin version works
-// because a matching artifact is published (verified: compose-group-mapping:2.4.10 is on Maven
-// Central). Remove this once the plugin stops hardcoding it -- see docs/MODERNIZATION.md F16.
+// because the matching artifact is published on Maven Central. Remove this after the plugin stops
+// hardcoding an unavailable version.
 configurations.configureEach {
     resolutionStrategy.eachDependency {
         if (requested.group == "org.jetbrains.kotlin" && requested.name == "compose-group-mapping") {
             useVersion(libs.versions.kotlin.get())
-            because("plugin hardcodes a nonexistent version; see F16")
+            because("plugin hardcodes an unavailable Compose compiler mapping version")
         }
     }
 }

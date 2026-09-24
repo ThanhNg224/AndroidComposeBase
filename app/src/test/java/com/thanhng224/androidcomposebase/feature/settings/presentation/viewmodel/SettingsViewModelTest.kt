@@ -1,7 +1,9 @@
 package com.thanhng224.androidcomposebase.feature.settings.presentation.viewmodel
 
 import app.cash.turbine.test
+import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
+import com.thanhng224.androidcomposebase.core.localization.SupportedLanguages
 import com.thanhng224.androidcomposebase.core.testing.MainDispatcherRule
 import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
 import com.thanhng224.androidcomposebase.feature.settings.domain.repository.SettingsRepository
@@ -26,28 +28,29 @@ class SettingsViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private class FakeSettingsRepository(
-        language: AppLanguage? = AppLanguage.ENGLISH,
+        languageTag: String? = AppLanguage.ENGLISH.languageTag,
+        private val supportedLanguageTags: List<String> = AppLanguage.BUILT_IN.map(AppLanguage::languageTag),
         theme: AppTheme = AppTheme.SYSTEM,
         private val calls: MutableList<String>? = null,
         private val failLanguagePersistence: Boolean = false,
     ) : SettingsRepository {
         private val themeFlow = MutableStateFlow(theme)
-        private var currentLanguage = language
+        private var currentLanguageTag = languageTag
         var setThemeCalls = 0
             private set
 
         override fun observeTheme(): Flow<AppTheme> = themeFlow
 
-        override suspend fun getCurrentLanguage(): AppLanguage? = currentLanguage
+        override suspend fun getCurrentLanguageTag(): String? = currentLanguageTag
 
-        override fun getSupportedLanguages(): List<AppLanguage> = AppLanguage.BUILT_IN
+        override fun getSupportedLanguageTags(): List<String> = supportedLanguageTags
 
-        override suspend fun setLanguage(language: AppLanguage?) {
-            val tag = language?.languageTag ?: "system"
+        override suspend fun setLanguageTag(languageTag: String?) {
+            val tag = languageTag ?: "system"
             calls?.add("persist:$tag")
             if (failLanguagePersistence) throw IOException("persist failed")
             calls?.add("apply:$tag")
-            currentLanguage = language
+            currentLanguageTag = languageTag
         }
 
         override suspend fun setTheme(theme: AppTheme) {
@@ -59,7 +62,7 @@ class SettingsViewModelTest {
     @Test
     fun `initial state reflects the current language and observed theme`() =
         runTest {
-            val viewModel = createViewModel(FakeSettingsRepository(AppLanguage.VIETNAMESE, AppTheme.DARK))
+            val viewModel = createViewModel(FakeSettingsRepository(AppLanguage.VIETNAMESE.languageTag, theme = AppTheme.DARK))
 
             advanceUntilIdle()
 
@@ -98,7 +101,7 @@ class SettingsViewModelTest {
     fun `selecting a language persists before applying it`() =
         runTest {
             val calls = mutableListOf<String>()
-            val viewModel = createViewModel(FakeSettingsRepository(language = AppLanguage.ENGLISH, calls = calls))
+            val viewModel = createViewModel(FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, calls = calls))
             advanceUntilIdle()
 
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
@@ -114,7 +117,7 @@ class SettingsViewModelTest {
             val calls = mutableListOf<String>()
             val viewModel =
                 createViewModel(
-                    FakeSettingsRepository(language = AppLanguage.ENGLISH, calls = calls, failLanguagePersistence = true),
+                    FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, calls = calls, failLanguagePersistence = true),
                 )
             advanceUntilIdle()
 
@@ -129,7 +132,8 @@ class SettingsViewModelTest {
     @Test
     fun `acknowledging the language error message removes it`() =
         runTest {
-            val viewModel = createViewModel(FakeSettingsRepository(language = AppLanguage.ENGLISH, failLanguagePersistence = true))
+            val viewModel =
+                createViewModel(FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, failLanguagePersistence = true))
             advanceUntilIdle()
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
             advanceUntilIdle()
@@ -146,7 +150,7 @@ class SettingsViewModelTest {
     fun `re-collecting state does not repeat the language mutation`() =
         runTest {
             val calls = mutableListOf<String>()
-            val viewModel = createViewModel(FakeSettingsRepository(language = AppLanguage.ENGLISH, calls = calls))
+            val viewModel = createViewModel(FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, calls = calls))
             advanceUntilIdle()
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
             advanceUntilIdle()
@@ -157,9 +161,30 @@ class SettingsViewModelTest {
             assertEquals(listOf("persist:vi-VN", "apply:vi-VN"), calls)
         }
 
-    private fun createViewModel(repository: SettingsRepository): SettingsViewModel =
+    @Test
+    fun `custom supported language tags map to their presentation labels`() =
+        runTest {
+            val customLanguage = AppLanguage("fr-CA", R.string.app_name)
+            val repository =
+                FakeSettingsRepository(
+                    languageTag = customLanguage.languageTag,
+                    supportedLanguageTags = listOf(customLanguage.languageTag),
+                )
+            val viewModel = createViewModel(repository, SupportedLanguages(listOf(customLanguage)))
+
+            advanceUntilIdle()
+
+            assertEquals(listOf(customLanguage), viewModel.state.value.supportedLanguages)
+            assertEquals(customLanguage, viewModel.state.value.language)
+        }
+
+    private fun createViewModel(
+        repository: SettingsRepository,
+        supportedLanguages: SupportedLanguages = SupportedLanguages(AppLanguage.BUILT_IN),
+    ): SettingsViewModel =
         SettingsViewModel(
             observeTheme = ObserveThemeUseCase(repository),
+            supportedLanguages = supportedLanguages,
             getCurrentLanguage = GetCurrentLanguageUseCase(repository),
             getSupportedLanguages = GetSupportedLanguagesUseCase(repository),
             setTheme = SetThemeUseCase(repository),

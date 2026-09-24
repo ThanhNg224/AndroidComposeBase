@@ -6,7 +6,9 @@ import com.thanhng224.androidcomposebase.core.foundation.AppDispatchers
 import com.thanhng224.androidcomposebase.core.foundation.SecureStore
 import com.thanhng224.androidcomposebase.core.foundation.SettingsStore
 import com.thanhng224.androidcomposebase.core.localization.AppCompatLocaleApplier
+import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.localization.LocaleManager
+import com.thanhng224.androidcomposebase.core.localization.SupportedLanguages
 import com.thanhng224.androidcomposebase.core.storage.secure.SecureStoreFactory
 import com.thanhng224.androidcomposebase.core.storage.settings.SettingsStoreFactory
 import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
@@ -54,9 +56,14 @@ object AppCoreModule {
 
     @Provides
     @Singleton
+    fun provideSupportedLanguages(): SupportedLanguages = SupportedLanguages(AppLanguage.BUILT_IN)
+
+    @Provides
+    @Singleton
     fun provideLocaleManager(
         @ApplicationContext context: Context,
-    ): LocaleManager = LocaleManager(localeApplier = AppCompatLocaleApplier(context))
+        supportedLanguages: SupportedLanguages,
+    ): LocaleManager = LocaleManager(localeApplier = AppCompatLocaleApplier(context), supportedLanguages = supportedLanguages.values)
 
     @Provides
     @Singleton

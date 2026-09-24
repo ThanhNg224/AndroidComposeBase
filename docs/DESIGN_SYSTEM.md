@@ -1,164 +1,29 @@
-# DESIGN_SYSTEM.md
+# Compose Design System
 
-This document specifies the Jetpack Compose Design System, design tokens, and reusable components shipped with `:core:ui`. The live, interactive showcase is `feature/designsystem/presentation/ui/DesignSystemScreen.kt`.
+The reusable Compose theme and components are in `:core:ui`, under `com.thanhng224.androidcomposebase.core.ui`. App-specific screens should use these when they fit and keep feature-specific behavior in `:app`.
 
----
+## Theme
 
-## 🎨 Color Tokens & Theming
+`AppRoot` already wraps app content with `AndroidComposeBaseTheme`. For another host, wrap its Compose content with the theme. It applies Material 3 color scheme, typography, and shapes; dynamic color is used on supported Android versions when enabled. Read semantic colors, typography, and shapes through `MaterialTheme` rather than duplicating theme values.
 
-Theme definitions live in `core/ui/src/main/java/com/thanhng224/androidcomposebase/core/ui/theme/`.
+## Tokens
 
-### 1. Color Palette
+Use `Dimens` for shared spacing, touch, corner, and elevation values. Existing names include `spaceSmall`, `spaceMedium`, `spaceLarge`, `spaceXLarge`, `minTouchTarget`, `buttonHeight`, `radiusMedium`, and `elevationLow`. The complete source of truth is [Dimens.kt](../core/ui/src/main/java/com/thanhng224/androidcomposebase/core/ui/theme/Dimens.kt).
 
-The color system is built on Material 3 dynamic and semantic color roles:
+Keep text in Android string resources, preserve a minimum 48dp touch target, and provide meaningful semantics for interactive controls. Prefer `MaterialTheme.colorScheme` and typography over hard-coded presentation values.
 
-- `Primary`: Brand accent used for high-emphasis buttons, active indicators, and links.
-- `OnPrimary`: Text/icon color drawn on top of `Primary`.
-- `Surface` & `SurfaceVariant`: Card, sheet, and background containers.
-- `OnSurface` & `OnSurfaceVariant`: Text and iconography for standard content and muted captions.
-- `Error` & `OnError`: Feedback states for network failures and validation errors.
+## Components
 
-### 2. Adaptive Theming (`AndroidComposeBaseTheme`)
+Current reusable public Compose components include:
 
-The root theme wraps Compose content with appropriate `ColorScheme` (Light, Dark, or System) and passes down `MaterialTheme`:
+- `AppDialog` for app dialogs.
+- `AsyncContent` and `AsyncState` for loading, success, and error content.
+- `AppPrimaryButton`, `AppSecondaryButton`, and `AppOutlinedButton`.
+- `AppTopBar` and `AppCenterTopBar`.
+- `FloatingNavBar(items: List<NavItem>)`; each `NavItem` owns its title, icons, selection state, badge count, and click callback.
 
-```kotlin
-@Composable
-fun AndroidComposeBaseTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit,
-) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = AppTypography,
-        shapes = AppShapes,
-        content = content,
-    )
-}
-```
+Import the component from `core.ui.components` and use its actual parameters. Add a reusable component to `:core:ui` only when its visual behavior is useful across app features and does not depend on app-specific state or resources.
 
----
+## Sample gallery
 
-## 📐 Spacing & Dimensions (`Dimens`)
-
-All dimensions follow a strict **8-point grid scale** and touch target accessibility guidelines ($\ge 48\text{dp}$). Defined in `Dimens.kt`:
-
-| Token | Value | Purpose |
-|---|---|---|
-| `Dimens.SpaceTiny` | `2.dp` | Hairline gaps, micro-offsets |
-| `Dimens.SpaceExtraSmall` | `4.dp` | Tight padding within small chips |
-| `Dimens.SpaceSmall` | `8.dp` | Standard gap between related elements |
-| `Dimens.SpaceMedium` | `16.dp` | Standard screen margin & card padding |
-| `Dimens.SpaceLarge` | `24.dp` | Spacing between distinct groups |
-| `Dimens.SpaceExtraLarge` | `32.dp` | Spacing between major sections |
-| `Dimens.SpaceSection` | `48.dp` | Large section dividers and bottom bar clearance |
-| `Dimens.MinTouchTarget` | `48.dp` | Minimum accessible touch target |
-| `Dimens.IconSmall` | `16.dp` | Inline icons |
-| `Dimens.IconMedium` | `24.dp` | Standard action and navigation icons |
-| `Dimens.IconLarge` | `32.dp` | Featured icons, headers |
-
----
-
-## 🔤 Typography
-
-Defined in `Typography.kt` using standard Material 3 roles:
-
-- **Headline Large / Medium**: Page headers and primary modal titles.
-- **Title Large / Medium / Small**: Card headers, list section headers, button labels.
-- **Body Large / Medium / Small**: Primary and secondary readable copy.
-- **Label Large / Medium / Small**: Captions, timestamps, small tags.
-
----
-
-## 🧩 Reusable UI Components (`:core:ui`)
-
-All components reside under `com.thanhng224.androidcomposebase.core.ui.component`:
-
-### 1. `FloatingNavBar`
-
-A floating, pill-shaped bottom navigation bar with expressive active pill indicators and tonal elevation:
-
-```kotlin
-FloatingNavBar(
-    items = navItems,
-    currentRoute = currentRoute,
-    onItemSelected = { item -> navController.navigate(item.route) },
-)
-```
-
-- Positioned in the comfortable bottom thumb-zone.
-- Minimum 48dp touch target for every item.
-- Accommodates window safe insets automatically.
-
-### 2. `AppButton`
-
-Standard button component supporting filled and outlined variants with built-in loading spinner:
-
-```kotlin
-AppButton(
-    text = "Submit",
-    onClick = { viewModel.submit() },
-    isLoading = state.isLoading,
-    enabled = !state.isLoading,
-    modifier = Modifier.fillMaxWidth(),
-)
-```
-
-### 3. `AppDialog`
-
-Standard Material 3 modal dialog for confirmation, alerts, or single-choice selection lists:
-
-```kotlin
-AppDialog(
-    title = "Select Theme",
-    onDismissRequest = { showDialog = false },
-    confirmButton = {
-        TextButton(onClick = { showDialog = false }) { Text("OK") }
-    },
-) {
-    // Dialog content or selection radio buttons
-}
-```
-
-### 4. `AsyncContent`
-
-A state-driven container that unifies loading indicators, empty states, and content presentation:
-
-```kotlin
-AsyncContent(
-    isLoading = state.isLoading,
-    isEmpty = state.items.isEmpty(),
-    emptyMessage = "No items found",
-    onRefresh = viewModel::refresh,
-) {
-    ItemList(state.items)
-}
-```
-
-### 5. `AppTopBar`
-
-Consistent top app bar with navigation back button, title, and action icons:
-
-```kotlin
-AppTopBar(
-    title = "Settings",
-    onNavigateBack = { navController.popBackStack() },
-)
-```
-
-### 6. `UiText`
-
-Sealed interface for passing strings from ViewModels without leaking Android `Context`:
-
-```kotlin
-val message: UiText = UiText.StringResource(R.string.error_network)
-// In Composable:
-val text = message.asString()
-```
-
----
-
-## 📱 Live Reference
-
-The complete showcase is implemented in `DesignSystemScreen.kt` (`feature/designsystem/presentation/ui/DesignSystemScreen.kt`), displaying every component, color role, typography tier, and dialog in action.
+`sample/designsystem` in `:app` is a live example gallery for the shared components and theme. It is sample code, not a dependency of the design system itself. Check the Kotlin source when an example and this summary differ.

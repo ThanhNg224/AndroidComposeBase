@@ -18,7 +18,7 @@ import java.io.File
  * `androidComponents.sdkComponents`, since the old `android.bootClasspath` accessor is gone).
  *
  * [apiFileName] is committed at `api/<apiFileName>` and lets each published module keep its own
- * name (`core.api`, `ui-compose.api`) while sharing this implementation.
+ * name (`core.api`, `ui.api`) while sharing this implementation.
  */
 fun Project.registerApiTasks(
     metalavaClasspath: Configuration,
