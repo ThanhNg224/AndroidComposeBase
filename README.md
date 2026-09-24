@@ -56,4 +56,5 @@ Dependabot auto-merge is intentionally inactive until the repository has a requi
 - [Git workflow](docs/GIT_FLOW.md)
 - [Feature template](docs/FEATURE_TEMPLATE.md)
 - [Compose design system](docs/DESIGN_SYSTEM.md)
-- [Performance evidence](docs/performance/BASELINE_PROFILE_RESULTS.md)
+- [Current Android 13 device smoke](docs/performance/ANDROID_13_SMOKE.md)
+- [Historical baseline profile results](docs/performance/BASELINE_PROFILE_RESULTS.md)
