@@ -16,7 +16,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.Authenticator
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
@@ -62,11 +61,7 @@ object AppNetworkModule {
         authTokenProvider: AuthTokenProvider,
         authenticator: Authenticator,
     ): OkHttpClient {
-        val loggingInterceptor =
-            HttpLoggingInterceptor().apply {
-                level = if (apiConfig.enableLogging) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
-                redactHeader("Authorization")
-            }
+        val loggingInterceptor = MetadataLoggingInterceptor(enabled = BuildConfig.DEBUG && apiConfig.enableLogging)
         return NetworkClientFactory.createOkHttpClient(
             config = apiConfig,
             interceptors = listOf(AuthTokenInterceptor(authTokenProvider), loggingInterceptor),
