@@ -404,7 +404,7 @@ def _clean_sample_build_source(source: str) -> str:
     dependency_markers = (
         "    implementation(libs.room.runtime)\n", "    implementation(libs.room.ktx)\n", "    ksp(libs.room.compiler)\n",
         "    implementation(libs.retrofit.core)\n", "    implementation(libs.retrofit.kotlinx.serialization.converter)\n",
-        "    implementation(libs.okhttp.core)\n", "    implementation(libs.okhttp.logging.interceptor)\n",
+        "    implementation(libs.okhttp.core)\n",
         "    testImplementation(libs.okhttp.mockwebserver)\n",
     )
     new_source = source

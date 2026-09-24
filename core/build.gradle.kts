@@ -52,7 +52,6 @@ dependencies {
     api(libs.retrofit.core)
     implementation(libs.retrofit.kotlinx.serialization.converter)
     api(libs.okhttp.core)
-    implementation(libs.okhttp.logging.interceptor)
     implementation(libs.kotlinx.serialization.json)
 
     // Test & Test Fixtures
