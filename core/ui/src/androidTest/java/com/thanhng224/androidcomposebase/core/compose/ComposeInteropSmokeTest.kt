@@ -29,34 +29,37 @@ class ComposeInteropSmokeTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<ComponentActivity>()
 
-    private val coreColorPrimary: Color
-        get() = Color(ContextCompat.getColor(composeRule.activity, CoreR.color.core_color_primary))
-
     @Test
-    fun themeBridgesCoreColorResources() {
-        var primary: Color? = null
+    fun explicitThemeChoiceUsesMatchingStaticPalette() {
+        var lightPrimary: Color? = null
+        var darkPrimary: Color? = null
         composeRule.setContent {
-            AndroidComposeBaseTheme { primary = MaterialTheme.colorScheme.primary }
+            AndroidComposeBaseTheme(darkTheme = false, dynamicColor = false) {
+                lightPrimary = MaterialTheme.colorScheme.primary
+            }
+            AndroidComposeBaseTheme(darkTheme = true, dynamicColor = false) {
+                darkPrimary = MaterialTheme.colorScheme.primary
+            }
         }
         composeRule.waitForIdle()
 
-        assertEquals(coreColorPrimary, primary)
+        val expectedLight = Color(ContextCompat.getColor(composeRule.activity, CoreR.color.core_color_primary_light))
+        val expectedDark = Color(ContextCompat.getColor(composeRule.activity, CoreR.color.core_color_primary_dark))
+        assertEquals(expectedLight, lightPrimary)
+        assertEquals(expectedDark, darkPrimary)
     }
 
     @Test
     fun setThemedContentComposesInsideAComposeView() {
-        var primary: Color? = null
         composeRule.activity.runOnUiThread {
             val composeView = ComposeView(composeRule.activity)
             composeRule.activity.setContentView(composeView)
             composeView.setThemedContent {
-                primary = MaterialTheme.colorScheme.primary
                 Text(text = "smoke", modifier = Modifier.testTag("smoke_content"))
             }
         }
         composeRule.waitForIdle()
 
         composeRule.onNodeWithTag("smoke_content").assertExists()
-        assertEquals(coreColorPrimary, primary)
     }
 }

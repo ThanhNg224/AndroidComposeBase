@@ -1,8 +1,8 @@
 package com.thanhng224.androidcomposebase.core.ui.components
 
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
@@ -38,7 +38,7 @@ public fun AppPrimaryButton(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(Dimens.buttonHeight),
+                .defaultMinSize(minHeight = Dimens.minTouchTarget),
         colors =
             ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -86,7 +86,7 @@ public fun AppSecondaryButton(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(Dimens.buttonHeight),
+                .defaultMinSize(minHeight = Dimens.minTouchTarget),
         colors =
             ButtonDefaults.filledTonalButtonColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -126,7 +126,7 @@ public fun AppOutlinedButton(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(Dimens.buttonHeight),
+                .defaultMinSize(minHeight = Dimens.minTouchTarget),
     ) {
         if (icon != null) {
             Icon(

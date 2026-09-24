@@ -6,11 +6,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 
 /**
- * Modern Material 3 Theme wrapper for AndroidComposeBase.
- * Supports Light Theme, Dark Theme, and Android 12+ Dynamic Theming.
+ * Material 3 theme wrapper for AndroidComposeBase.
+ * Uses Android 12+ dynamic colors when enabled, otherwise the static :core resource palette.
  */
 @Composable
 public fun AndroidComposeBaseTheme(
@@ -18,14 +19,15 @@ public fun AndroidComposeBaseTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
+    val context = LocalContext.current
     val colorScheme =
-        when {
-            dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                val context = LocalContext.current
-                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+        remember(context, darkTheme, dynamicColor) {
+            when {
+                dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+                    if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+                }
+                else -> staticColorScheme(context, darkTheme)
             }
-            darkTheme -> DarkColorScheme
-            else -> LightColorScheme
         }
 
     MaterialTheme(
