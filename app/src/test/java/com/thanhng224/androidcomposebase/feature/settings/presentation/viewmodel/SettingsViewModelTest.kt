@@ -13,11 +13,13 @@ import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.Observe
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.SetLanguageUseCase
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.SetThemeUseCase
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiEvent
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.io.IOException
@@ -55,6 +57,37 @@ class SettingsViewModelTest {
 
         override suspend fun setTheme(theme: AppTheme) {
             setThemeCalls += 1
+            themeFlow.value = theme
+        }
+    }
+
+    private class DelayedLanguageSettingsRepository : SettingsRepository {
+        private val themeFlow = MutableStateFlow(AppTheme.SYSTEM)
+        val englishMutationStarted = CompletableDeferred<Unit>()
+        val finishEnglishMutation = CompletableDeferred<Unit>()
+        val mutationTags = mutableListOf<String?>()
+        var persistedLanguageTag: String? = AppLanguage.VIETNAMESE.languageTag
+            private set
+        var appliedLocaleTag: String = AppLanguage.VIETNAMESE.languageTag
+            private set
+
+        override fun observeTheme(): Flow<AppTheme> = themeFlow
+
+        override suspend fun getCurrentLanguageTag(): String? = persistedLanguageTag
+
+        override fun getSupportedLanguageTags(): List<String> = AppLanguage.BUILT_IN.map(AppLanguage::languageTag)
+
+        override suspend fun setLanguageTag(languageTag: String?) {
+            mutationTags += languageTag
+            if (languageTag == AppLanguage.ENGLISH.languageTag) {
+                englishMutationStarted.complete(Unit)
+                finishEnglishMutation.await()
+            }
+            persistedLanguageTag = languageTag
+            appliedLocaleTag = languageTag.orEmpty()
+        }
+
+        override suspend fun setTheme(theme: AppTheme) {
             themeFlow.value = theme
         }
     }
@@ -176,6 +209,34 @@ class SettingsViewModelTest {
 
             assertEquals(listOf(customLanguage), viewModel.state.value.supportedLanguages)
             assertEquals(customLanguage, viewModel.state.value.language)
+        }
+
+    @Test
+    fun `language mutations are serialized so the latest selection wins across inverse completion order`() =
+        runTest {
+            val repository = DelayedLanguageSettingsRepository()
+            val viewModel = createViewModel(repository)
+            advanceUntilIdle()
+
+            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.ENGLISH))
+            repository.englishMutationStarted.await()
+            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
+            advanceUntilIdle()
+
+            assertEquals(listOf(AppLanguage.ENGLISH.languageTag), repository.mutationTags)
+            assertEquals(
+                AppLanguage.VIETNAMESE.languageTag,
+                viewModel.state.value.language
+                    ?.languageTag,
+            )
+
+            repository.finishEnglishMutation.complete(Unit)
+            advanceUntilIdle()
+
+            assertTrue(repository.mutationTags.contains(AppLanguage.VIETNAMESE.languageTag))
+            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.persistedLanguageTag)
+            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.appliedLocaleTag)
+            assertEquals(AppLanguage.VIETNAMESE, viewModel.state.value.language)
         }
 
     private fun createViewModel(

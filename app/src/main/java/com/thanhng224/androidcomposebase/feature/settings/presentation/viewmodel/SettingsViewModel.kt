@@ -21,6 +21,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
@@ -37,6 +39,8 @@ class SettingsViewModel
         private val setLanguage: SetLanguageUseCase,
     ) : ViewModel() {
         private var isInitialLanguageLoaded = false
+        private var latestRequestedLanguageTag: String? = null
+        private val languageMutationMutex = Mutex()
         private val nextMessageId = AtomicLong(0)
         private val presentationLanguages = supportedLanguages.values
         private val mutableState =
@@ -53,6 +57,7 @@ class SettingsViewModel
             }
             viewModelScope.launch {
                 val language = getCurrentLanguage()?.let(::findPresentationLanguage)
+                latestRequestedLanguageTag = language?.languageTag
                 mutableState.update { it.copy(language = language) }
                 isInitialLanguageLoaded = true
             }
@@ -76,15 +81,22 @@ class SettingsViewModel
 
         private fun selectLanguage(event: SettingsUiEvent.LanguageSelected) {
             if (!isInitialLanguageLoaded) return
-            if (event.language == mutableState.value.language) return
+            val requestedLanguageTag = event.language?.languageTag
+            if (requestedLanguageTag == latestRequestedLanguageTag) return
+            latestRequestedLanguageTag = requestedLanguageTag
             viewModelScope.launch {
-                try {
-                    setLanguage(event.language?.languageTag)
-                    mutableState.update { it.copy(language = event.language) }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (_: IOException) {
-                    enqueueMessage(UiText.StringResource(R.string.settings_language_update_failed))
+                languageMutationMutex.withLock {
+                    try {
+                        setLanguage(requestedLanguageTag)
+                        mutableState.update { it.copy(language = event.language) }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: IOException) {
+                        if (latestRequestedLanguageTag == requestedLanguageTag) {
+                            latestRequestedLanguageTag = mutableState.value.language?.languageTag
+                        }
+                        enqueueMessage(UiText.StringResource(R.string.settings_language_update_failed))
+                    }
                 }
             }
         }
