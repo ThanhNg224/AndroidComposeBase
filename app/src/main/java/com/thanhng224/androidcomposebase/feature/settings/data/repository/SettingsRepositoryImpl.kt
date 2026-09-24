@@ -1,9 +1,7 @@
 package com.thanhng224.androidcomposebase.feature.settings.data.repository
 
-import com.thanhng224.androidcomposebase.core.foundation.SettingsStore
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.localization.LocaleManager
-import com.thanhng224.androidcomposebase.core.storage.settings.AppSettingsKeys
 import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
 import com.thanhng224.androidcomposebase.feature.settings.domain.repository.SettingsRepository
@@ -15,12 +13,10 @@ class SettingsRepositoryImpl
     constructor(
         private val themeManager: ThemeManager,
         private val localeManager: LocaleManager,
-        private val settingsStore: SettingsStore,
     ) : SettingsRepository {
         override fun observeTheme(): Flow<AppTheme> = themeManager.currentTheme
 
-        override suspend fun getCurrentLanguageTag(): String? =
-            AppLanguage.findByLanguageTag(settingsStore.get(AppSettingsKeys.LANGUAGE_TAG), localeManager.supportedLanguages())?.languageTag
+        override suspend fun getCurrentLanguageTag(): String? = localeManager.currentLanguage()?.languageTag
 
         override fun getSupportedLanguageTags(): List<String> = localeManager.supportedLanguages().map(AppLanguage::languageTag)
 
@@ -31,7 +27,6 @@ class SettingsRepositoryImpl
                         ?: AppLanguage.findByLanguageTag(tag, localeManager.supportedLanguages())
                         ?: throw IllegalArgumentException("Unsupported language tag: $tag")
                 }
-            settingsStore.set(AppSettingsKeys.LANGUAGE_TAG, language?.languageTag.orEmpty())
             language?.let(localeManager::setLanguage) ?: localeManager.useSystemLanguage()
         }
 

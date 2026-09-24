@@ -4,7 +4,6 @@ import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.localization.AppLocaleApplier
 import com.thanhng224.androidcomposebase.core.localization.LocaleManager
-import com.thanhng224.androidcomposebase.core.storage.settings.AppSettingsKeys
 import com.thanhng224.androidcomposebase.core.testing.FakeSettingsStore
 import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
 import kotlinx.coroutines.test.runTest
@@ -27,18 +26,19 @@ class SettingsRepositoryImplTest {
     }
 
     @Test
-    fun `domain exposes configured custom language as a pure language tag`() =
+    fun `repository reads external locale changes from the platform locale source`() =
         runTest {
             val settingsStore = FakeSettingsStore()
-            val repository = createRepository(settingsStore)
-            settingsStore.set(AppSettingsKeys.LANGUAGE_TAG, "fr-FR")
+            val localeApplier = FakeLocaleApplier()
+            val repository = createRepository(settingsStore, localeApplier)
+            localeApplier.applyLocales("fr-FR")
 
             assertEquals(listOf("fr-CA"), repository.getSupportedLanguageTags())
             assertEquals("fr-CA", repository.getCurrentLanguageTag())
         }
 
     @Test
-    fun `setting a configured custom tag persists it then applies that locale`() =
+    fun `setting a configured custom tag applies that locale without a second persistence store`() =
         runTest {
             val settingsStore = FakeSettingsStore()
             val localeApplier = FakeLocaleApplier()
@@ -46,12 +46,12 @@ class SettingsRepositoryImplTest {
 
             repository.setLanguageTag("fr-CA")
 
-            assertEquals("fr-CA", settingsStore.get(AppSettingsKeys.LANGUAGE_TAG))
             assertEquals("fr-CA", localeApplier.appliedTags)
+            assertEquals("fr-CA", repository.getCurrentLanguageTag())
         }
 
     @Test
-    fun `null language tag persists system selection and clears locale override`() =
+    fun `null language tag clears locale override and reports system selection`() =
         runTest {
             val settingsStore = FakeSettingsStore()
             val localeApplier = FakeLocaleApplier()
@@ -60,8 +60,23 @@ class SettingsRepositoryImplTest {
 
             repository.setLanguageTag(null)
 
-            assertEquals("", settingsStore.get(AppSettingsKeys.LANGUAGE_TAG))
             assertEquals("", localeApplier.appliedTags)
+            assertEquals(null, repository.getCurrentLanguageTag())
+        }
+
+    @Test
+    fun `external system locale reset is reflected without repository writes`() =
+        runTest {
+            val settingsStore = FakeSettingsStore()
+            val localeApplier = FakeLocaleApplier()
+            val repository = createRepository(settingsStore, localeApplier)
+            localeApplier.applyLocales("fr-CA")
+
+            assertEquals("fr-CA", repository.getCurrentLanguageTag())
+
+            localeApplier.applyLocales("")
+
+            assertEquals(null, repository.getCurrentLanguageTag())
         }
 
     @Test
@@ -73,7 +88,7 @@ class SettingsRepositoryImplTest {
             assertThrows(IllegalArgumentException::class.java) {
                 kotlinx.coroutines.runBlocking { repository.setLanguageTag("de-DE") }
             }
-            assertEquals("", settingsStore.get(AppSettingsKeys.LANGUAGE_TAG))
+            assertEquals(null, repository.getCurrentLanguageTag())
         }
 
     private fun createRepository(
@@ -83,6 +98,5 @@ class SettingsRepositoryImplTest {
         SettingsRepositoryImpl(
             themeManager = ThemeManager.create(settingsStore),
             localeManager = LocaleManager(localeApplier, listOf(customLanguage)),
-            settingsStore = settingsStore,
         )
 }
