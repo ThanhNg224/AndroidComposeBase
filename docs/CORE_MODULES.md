@@ -17,7 +17,7 @@ The module does not own app configuration, Hilt bindings, feature repositories, 
 
 ## `:core:ui`
 
-`com.thanhng224.androidcomposebase.core.ui` contains the Compose design system and the `AndroidComposeBaseTheme` entry point. Reusable components include `AppDialog`, `AsyncContent`, `AppPrimaryButton`, `AppSecondaryButton`, `AppOutlinedButton`, `AppTopBar`, `AppCenterTopBar`, and `FloatingNavBar`. Tokens are in `Dimens`; navigation items use `NavItem`; resource-aware text uses `UiText` and its resolution helpers.
+`com.thanhng224.androidcomposebase.core.ui` contains the Compose design system and the `AndroidComposeBaseTheme` entry point. Its shared components are `AppPrimaryButton`, `AppSecondaryButton`, `AppOutlinedButton`, `AppTopBar`, and `AppCenterTopBar`; `Dimens`, `AppShapes`, and `AppTypography` provide common design tokens. Use Material 3 directly for dialogs and app navigation. The app owns adaptive navigation through `NavigationSuiteScaffold`.
 
 The `:core:ui` module depends on `:core` for selected foundation/theme support. It does not depend on app features. `UiText` is declared in `:core`; `:core:ui` provides Compose resolution helpers. A consuming app may depend on either module independently according to the APIs it uses.
 
@@ -27,7 +27,7 @@ The `:core:ui` module depends on `:core` for selected foundation/theme support. 
 
 ## API and compatibility
 
-Before changing a public type, inspect the current API dump and every caller. Update the dump only for an intentional public API change, then run `:core:apiCheck` or `:core:ui:apiCheck`. Keep app-only features and contracts out of published APIs.
+Before changing a public type, inspect the current API dump and every caller. Breaking API changes are allowed while there is no real downstream consumer and no API freeze has been requested. In every case, review the generated `apiDump` diff and run the matching `apiCheck`; update the snapshot only after that review. Keep app-only features and contracts out of published APIs.
 
 ## Publication checks
 

@@ -6,7 +6,7 @@ This repository is an AndroidComposeBase template. Its current modules are `:app
 
 1. Read this file and the relevant sections of [ARCHITECTURE.md](docs/ARCHITECTURE.md), [STANDARD.md](docs/STANDARD.md), and [GIT_FLOW.md](docs/GIT_FLOW.md).
 2. Inspect the implementation, its callers, tests, and similar patterns. Confirm current symbols and API behavior instead of relying on an older design document.
-3. Prefer the smallest complete change that preserves established behavior and public APIs unless a planned breaking change says otherwise.
+3. Prefer the smallest complete change that preserves established behavior. Breaking changes to `:core` or `:core:ui` public APIs are allowed while no real downstream consumer exists and no API freeze has been requested; review the `apiDump` diff and run the matching `apiCheck` for every public API change.
 
 ## Work planning
 
@@ -19,6 +19,7 @@ This repository is an AndroidComposeBase template. Its current modules are `:app
 
 - Within a feature, presentation depends on domain contracts; data implements those contracts. Dependencies do not point from domain to data or presentation.
 - `:app` is the composition root for Hilt, navigation, features, and app-specific infrastructure. `:core` and `:core:ui` remain independent of app features.
+- `presentation/AppRoot.kt` owns adaptive top-level navigation. Keep destination labels localized and let `NavigationSuiteScaffold` provide the bottom bar or rail layout.
 - Keep business rules out of Composables and Android framework types out of domain contracts.
 - Add a use case or shared abstraction when it expresses a real capability or removes repeated policy, not as a pass-through layer by default.
 - Keep app-specific code under its feature. Promote code to `:core` only when it is genuinely reusable.

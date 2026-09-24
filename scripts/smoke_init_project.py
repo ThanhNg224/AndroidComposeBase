@@ -79,13 +79,19 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
         assert app_name is not None and app_name.text.replace('\\"', '"') == 'Smoke & Demo "App"'
     assert '"AndroidComposeBase"' not in onboarding
     assert '"AndroidComposeBase"' not in home
+    assert "stringResource(R.string.app_name)" in onboarding
+    assert "stringResource(R.string.app_name)" in home
     assert not (clone / "app/src/release/generated/baselineProfiles/baseline-prof.txt").exists()
     sample_dirs = (app_dir / "sample/demo", app_dir / "sample/designsystem")
     if clean:
         assert all(not path.exists() for path in sample_dirs)
         assert not (app_dir / "di/MetadataLoggingInterceptor.kt").exists()
+        assert (app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt").is_file()
+        assert (app_dir / "feature/settings/presentation/ui/SettingsScreen.kt").is_file()
         test_samples = clone / "app/src/test/java" / Path(*app_package.split(".")) / "sample"
         assert not (test_samples / "demo").exists() and not (test_samples / "designsystem").exists()
+        assert "NavigationSuiteScaffold" in app_root
+        assert "ScreenRoute.Home" in app_root and "ScreenRoute.Settings" in app_root
         assert "ScreenRoute.Demo" not in app_root and "ScreenRoute.DesignSystem" not in app_root
         assert "Demo" not in routes and "DesignSystem" not in routes
         assert "sample.demo" not in app_root and "sample.designsystem" not in app_root
@@ -95,7 +101,12 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
         assert 'android.permission.INTERNET' not in text(clone / "app/src/main/AndroidManifest.xml")
         for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
             strings = ET.parse(clone / relative).getroot()
-            sample_strings = [node.attrib["name"] for node in strings if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in {"navigation_demo", "navigation_design"}]
+            sample_only_names = {
+                "navigation_demo", "navigation_design", "appshell_home_greeting", "appshell_home_subtitle",
+                "home_title", "home_card_eyebrow", "home_card_title", "home_card_body", "home_navigation_hint",
+                "error_network", "error_parse", "error_empty_body",
+            }
+            sample_strings = [node.attrib["name"] for node in strings if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in sample_only_names]
             assert not sample_strings, f"sample strings remain: {sample_strings}"
         journey = text(clone / "baselineprofile/src/main/java" / Path(*app_package.split(".")) / "baselineprofile/CriticalJourney.kt")
         assert "Demo" not in journey and "Design" not in journey and "weather" not in journey.lower()

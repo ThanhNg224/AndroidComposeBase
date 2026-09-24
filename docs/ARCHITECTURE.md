@@ -11,7 +11,7 @@ AndroidComposeBase uses feature-oriented Clean Architecture inside the existing 
 | `:core:ui` | Reusable Compose theme and UI components. |
 | `:baselineprofile` | The sample app's macrobenchmark and baseline-profile journey. |
 
-The app assembles implementations and dependencies. A feature may use `:core` or `:core:ui`; shared modules must not depend on `:app` or one of its features.
+The app assembles implementations and dependencies. A feature may use `:core` or `:core:ui`; shared modules must not depend on `:app` or one of its features. `AppRoot` is the composition and navigation root; its adaptive navigation suite selects a bottom bar or rail from the available window size and stays hidden during onboarding.
 
 ## Feature dependency direction
 
@@ -54,7 +54,7 @@ Keep one screen's UI, ViewModel, and state together. When multiple screens share
 - Composables render state, forward user input, and collect `StateFlow` with lifecycle awareness. They do not access repositories, Room, or APIs.
 - ViewModels own screen state and coordinate feature contracts. Keep Android resource resolution at the presentation edge.
 - Model durable screen state as immutable `UiState`. For messages that must survive recreation until acknowledged, store a small pending-message list in state and remove the matching head after display. Use a transient event mechanism only when its loss/replay behavior is intentional.
-- Navigation is declared in `navigation/ScreenRoute.kt` and assembled in `presentation/AppRoot.kt`. Keep route changes at the app boundary.
+- Navigation is declared in `navigation/ScreenRoute.kt` and assembled in `presentation/AppRoot.kt`. Keep route changes, localized destination labels, and adaptive navigation at the app boundary.
 
 ## Domain and use cases
 
@@ -72,4 +72,4 @@ Data implementations coordinate local and remote sources, map persistence/wire m
 2. Define only the boundary needed for independent policy or external data access.
 3. Bind implementations in `:app`, not in reusable `:core` modules.
 4. Test business rules, persistence ordering, failures, and races at the layer that owns them.
-5. Update API snapshots only for intentional public `:core` or `:core:ui` API changes.
+5. Review API dumps and update snapshots for intentional public `:core` or `:core:ui` API changes. Breaking changes are allowed before real downstream consumers exist when no API freeze was requested; always inspect the `apiDump` diff and run the corresponding `apiCheck`.

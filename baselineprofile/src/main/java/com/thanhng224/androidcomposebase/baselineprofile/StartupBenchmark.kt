@@ -30,7 +30,7 @@ private const val MEASURED_ITERATIONS = 10
  * numbers would need a separate scroll/interaction benchmark; this class does not pretend to
  * provide them.
  *
- * See `docs/performance/BASELINE_PROFILE_RESULTS.md` for recorded runs.
+ * See `docs/archive/performance/BASELINE_PROFILE_RESULTS_ANDROID_CORE_BASE.md` for historical runs.
  */
 @RunWith(AndroidJUnit4::class)
 class StartupBenchmark {

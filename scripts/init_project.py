@@ -56,13 +56,6 @@ def valid_package(value: str) -> bool:
     return not any(part in keywords or part == "_" for part in value.split("."))
 
 
-def kotlin_string_literal(value: str) -> str:
-    """Return a Kotlin quoted string literal without interpolation or control chars."""
-    escapes = {"\\": "\\\\", '"': '\\"', "$": "\\$", "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\u000c", "\r": "\\r"}
-    encoded = "".join(escapes.get(character, f"\\u{ord(character):04x}" if ord(character) < 0x20 else character) for character in value)
-    return f'"{encoded}"'
-
-
 def escape_android_string_resource(value: str) -> str:
     """Escape Android string syntax; ElementTree separately escapes XML markup."""
     escaped = value.replace("\\", "\\\\").replace("'", "\\'").replace('"', '\\"')
@@ -422,10 +415,10 @@ def _clean_sample_build_source(source: str) -> str:
     new_source = re.sub(r'\s*buildConfigField\("(?:String|boolean)", "API_[A-Z_]+", [^\n]+\)', "", new_source)
     new_source = re.sub(r'\n    buildFeatures \{\n        buildConfig = true\n    }', "", new_source)
     new_source = re.sub(r'\nksp \{\n    arg\("room.schemaLocation", "\$projectDir/schemas"\)\n}', "", new_source)
-    includes_marker = "            includes {"
-    if includes_marker not in new_source:
-        raise InitError("Missing sample Kover filter marker in app/build.gradle.kts")
-    new_source = _remove_kotlin_block(new_source, includes_marker)
+    kover_marker = "\nkover {"
+    if kover_marker not in new_source:
+        raise InitError("Missing sample Kover configuration marker in app/build.gradle.kts")
+    new_source = _remove_kotlin_block(new_source, kover_marker)
     if "Room" in new_source or "Retrofit" in new_source or "API_BASE_URL" in new_source or "sample.demo" in new_source or "sample.designsystem" in new_source:
         raise InitError("Sample-only build configuration remains after cleanup.")
     return new_source
@@ -438,7 +431,11 @@ def _clean_sample_resources(root: Path, dry_run: bool) -> int:
             continue
         tree = ET.parse(resource_file)
         parent = tree.getroot()
-        sample_names = {"navigation_demo", "navigation_design"}
+        sample_names = {
+            "navigation_demo", "navigation_design", "appshell_home_greeting", "appshell_home_subtitle",
+            "home_title", "home_card_eyebrow", "home_card_title", "home_card_body", "home_navigation_hint",
+            "error_network", "error_parse", "error_empty_body",
+        }
         to_remove = [node for node in list(parent) if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in sample_names]
         if to_remove:
             changed += len(to_remove)
@@ -541,21 +538,27 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.BySelector
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
+import java.util.regex.Pattern
 
 private const val WAIT_TIMEOUT_MS = 15_000L
 
 internal object CriticalJourney {{
+    private fun textSelector(vararg labels: String): BySelector {{
+        val regex = labels.joinToString("|") {{ Pattern.quote(it) }}
+        return By.text(Pattern.compile(regex))
+    }}
+
     private fun UiDevice.clickOrFail(selector: BySelector, what: String) {{
         checkNotNull(findObject(selector)) {{ "Could not find $what" }}.click()
     }}
 
     fun execute(device: UiDevice, packageName: String) {{
-        device.findObject(By.text("Get Started"))?.click()
-        check(device.wait(Until.hasObject(By.text("Home")), WAIT_TIMEOUT_MS)) {{ "Home did not appear" }}
-        device.clickOrFail(By.text("Settings"), "the Settings tab")
-        check(device.wait(Until.hasObject(By.text("Appearance")), WAIT_TIMEOUT_MS)) {{ "Settings did not appear" }}
-        device.clickOrFail(By.text("Home"), "the Home tab")
-        check(device.wait(Until.hasObject(By.text("Home")), WAIT_TIMEOUT_MS)) {{ "Home did not reappear" }}
+        device.findObject(textSelector("Get Started", "Bắt đầu"))?.click()
+        check(device.wait(Until.hasObject(textSelector("Home", "Trang chủ")), WAIT_TIMEOUT_MS)) {{ "Home did not appear" }}
+        device.clickOrFail(textSelector("Settings", "Cài đặt"), "the Settings tab")
+        check(device.wait(Until.hasObject(textSelector("Appearance", "Giao diện")), WAIT_TIMEOUT_MS)) {{ "Settings did not appear" }}
+        device.clickOrFail(textSelector("Home", "Trang chủ"), "the Home tab")
+        check(device.wait(Until.hasObject(textSelector("Home", "Trang chủ")), WAIT_TIMEOUT_MS)) {{ "Home did not reappear" }}
     }}
 }}
 '''
@@ -604,8 +607,27 @@ def _verify(root: Path, app_package: str, core_package: str, scope: str, clean: 
         )
         leftovers = [path.relative_to(root) for path in markers if path.exists()]
         app_root = (package_dir / "presentation/AppRoot.kt").read_text(encoding="utf-8")
+        routes = (package_dir / "navigation/ScreenRoute.kt").read_text(encoding="utf-8")
+        app_build = (root / "app/build.gradle.kts").read_text(encoding="utf-8")
+        manifest = (root / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
         if "ScreenRoute.Demo" in app_root or "ScreenRoute.DesignSystem" in app_root:
             leftovers.append(Path("app/src/main/java") / Path(*app_package.split(".")) / "presentation/AppRoot.kt")
+        if "data object Demo" in routes or "data object DesignSystem" in routes:
+            leftovers.append(Path("app/src/main/java") / Path(*app_package.split(".")) / "navigation/ScreenRoute.kt")
+        if any(marker in app_build for marker in ("libs.room.", "libs.retrofit.", "libs.okhttp.", "API_BASE_URL", "sample.demo", "sample.designsystem")):
+            leftovers.append(Path("app/build.gradle.kts"))
+        if "android.permission.INTERNET" in manifest:
+            leftovers.append(Path("app/src/main/AndroidManifest.xml"))
+        sample_resource_names = {
+            "navigation_demo", "navigation_design", "appshell_home_greeting", "appshell_home_subtitle",
+            "home_title", "home_card_eyebrow", "home_card_title", "home_card_body", "home_navigation_hint",
+            "error_network", "error_parse", "error_empty_body",
+        }
+        for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
+            resources = ET.parse(root / relative).getroot()
+            stale_strings = [node.attrib.get("name", "") for node in resources if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in sample_resource_names]
+            if stale_strings:
+                leftovers.append(Path(relative))
         if leftovers:
             raise InitError("Post-check failed: cleaned sample remnants: " + ", ".join(map(str, leftovers)))
 

@@ -6,7 +6,7 @@ These standards apply to Kotlin code in `:app`, `:core`, and `:core:ui`. Follow 
 
 - Prefer `val`, immutable state, explicit names, and small cohesive functions.
 - Use sealed types for finite state/results when they make invalid states harder to express.
-- Keep visibility as narrow as possible. The `:core` and `:core:ui` public APIs are tracked; update their API dumps only for intentional changes.
+- Keep visibility as narrow as possible. The `:core` and `:core:ui` public APIs are tracked. Breaking changes are allowed while there is no real downstream consumer and no API freeze was requested; inspect each `apiDump` diff and run its matching `apiCheck` before updating the snapshot.
 - Use constructor injection. Do not add a service locator or a global coroutine scope.
 - Re-throw `CancellationException`; handle expected failures explicitly and preserve their useful context.
 - Avoid pass-through use cases, catch-all utilities, and abstractions without demonstrated reuse.
@@ -23,7 +23,7 @@ These standards apply to Kotlin code in `:app`, `:core`, and `:core:ui`. Follow 
 - Composables render state and emit user actions; they do not own business rules or call data sources.
 - Hoist reusable component state and expose a `Modifier` on public composables where appropriate.
 - Keep strings and dimensions in resources/tokens. Preserve accessibility semantics and Android touch targets of at least 48dp.
-- Handle lifecycle and window insets through the existing AndroidX/Compose APIs used by the project.
+- Handle lifecycle and window insets through the existing AndroidX/Compose APIs used by the project. Consume scaffold-provided content padding; do not reserve fixed space for adaptive app navigation.
 - Keep platform types at presentation or data boundaries; domain contracts should use Kotlin values.
 
 ## Persistence and networking

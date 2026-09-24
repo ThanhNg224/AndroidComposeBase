@@ -1,6 +1,6 @@
 # Git Workflow
 
-`main` is the repository's primary branch. Use short-lived topic branches for pull requests when working in a shared remote workflow. Local template work may use the current checkout when the task explicitly requests it.
+`main` is the repository's primary branch. Use a short-lived topic branch when the task is intended for a shared remote pull request; local template work may use the current checkout when the task requests it. Do not create a worktree or temporary branch unless requested.
 
 ## Commits
 
@@ -31,6 +31,8 @@ python3 scripts/smoke_init_project.py --build full-clean
 ```
 
 For a docs-only or narrowly scoped change, use judgment and report any skipped gate with the reason. A local run cannot establish remote workflow success.
+
+Changes to `:core` or `:core:ui` APIs require review of the generated `apiDump` diff and the matching `apiCheck`. An intentional breaking change is allowed while there is no real downstream consumer and no API freeze has been requested; record the API impact in the change summary.
 
 ## Release and dependency automation
 

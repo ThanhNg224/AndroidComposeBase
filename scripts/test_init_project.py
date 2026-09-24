@@ -13,9 +13,9 @@ from init_project import (
     SOURCE_CORE_PACKAGE,
     SOURCE_NAME,
     InitError,
-    kotlin_string_literal,
     _replacement_pairs,
     _replace_app_name,
+    _clean_critical_journey,
     _move,
     escape_android_string_resource,
     valid_package,
@@ -92,6 +92,9 @@ NavigationSuiteScaffold(navigationSuiteItems = {{
             sample_file = app_dir / f"sample/{sample}/Sample.kt"
             sample_file.parent.mkdir(parents=True)
             sample_file.write_text("sample\n", encoding="utf-8")
+            sample_test = root / "app/src/test/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / f"sample/{sample}/SampleTest.kt"
+            sample_test.parent.mkdir(parents=True)
+            sample_test.write_text("sample test\n", encoding="utf-8")
         di = app_dir / "di/AppNetworkModule.kt"
         di.parent.mkdir(parents=True)
         di.write_text("network sample\n", encoding="utf-8")
@@ -146,7 +149,10 @@ kover {{
         for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
             path = root / relative
             path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text('<resources><string name="app_name">Starter</string></resources>', encoding="utf-8")
+            path.write_text(
+                '<resources><string name="app_name">Starter</string><string name="navigation_demo">Demo</string><string name="navigation_design">Design</string><string name="demo_title">Demo</string><string name="design_system_title">UI Kit</string></resources>',
+                encoding="utf-8",
+            )
         manifest = root / "app/src/main/AndroidManifest.xml"
         manifest.parent.mkdir(parents=True, exist_ok=True)
         manifest.write_text('<manifest />\n', encoding="utf-8")
@@ -220,6 +226,11 @@ kover {{
                 )
 
                 self.assertFalse(root.joinpath("app/src/main/java/com/acme/shop/di/MetadataLoggingInterceptor.kt").exists())
+                self.assertFalse(root.joinpath("app/src/test/java/com/acme/shop/sample/demo").exists())
+                self.assertFalse(root.joinpath("app/src/test/java/com/acme/shop/sample/designsystem").exists())
+                for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
+                    names = {node.attrib.get("name") for node in ET.parse(root / relative).getroot()}
+                    self.assertTrue(names.isdisjoint({"navigation_demo", "navigation_design", "demo_title", "design_system_title"}))
 
     def test_unrecognized_metadata_logger_fails_before_renaming_checkout(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -304,9 +315,6 @@ kover {{
     def test_android_string_escaping_handles_resource_prefix_and_quotes(self) -> None:
         self.assertEqual(escape_android_string_resource("@New's \"Shop\""), "\\@New\\'s \\\"Shop\\\"")
 
-    def test_kotlin_display_literal_escapes_interpolation_and_quotes(self) -> None:
-        self.assertEqual(kotlin_string_literal('Shop "$price"\n'), '"Shop \\"\\$price\\"\\n"')
-
     def test_app_display_name_is_updated_in_both_locale_resources(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -331,6 +339,16 @@ kover {{
             from init_project import _clean_sample_route_sources
             with self.assertRaisesRegex(InitError, "AppRoot sample markers changed"):
                 _clean_sample_route_sources(root, SOURCE_APP_PACKAGE)
+
+    def test_clean_profile_journey_uses_bilingual_retained_shell_labels(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_preflight_fixture(root)
+            self.assertEqual(_clean_critical_journey(root, "com.acme.shop", dry_run=False, journey_source_package=SOURCE_APP_PACKAGE), 1)
+            journey = root / "baselineprofile/src/main/java/com/thanhng224/androidcomposebase/baselineprofile/CriticalJourney.kt"
+            source = journey.read_text(encoding="utf-8")
+            for label in ("Get Started", "Bắt đầu", "Home", "Trang chủ", "Settings", "Cài đặt", "Appearance", "Giao diện"):
+                self.assertIn(label, source)
 
     def test_full_replacements_cover_current_compose_library_identity(self) -> None:
         pairs = dict(_replacement_pairs("AcmeShop", "com.acme.app", "com.acme.core", "full"))

@@ -39,6 +39,8 @@ Keep single-screen features flat. If multiple screens share one capability, grou
 
 1. Search for an existing contract, component, route, and similar feature before adding one.
 2. Add only the state and boundaries needed by the feature.
-3. Register app navigation in `navigation/ScreenRoute.kt` and `presentation/AppRoot.kt` when the screen is navigable.
+3. Register a route in `navigation/ScreenRoute.kt` and add it to the app's `NavigationSuiteScaffold` and `NavHost` in `presentation/AppRoot.kt` when the screen is a top-level destination. Keep labels in string resources for every supported locale.
 4. Add behavior tests for business rules, state transitions, error cases, and asynchronous ordering. Do not add tests that only restate static Compose layout.
 5. Run the affected tests, formatting/lint, and `./gradlew check` when appropriate.
+
+Screens should use the padding supplied by their `Scaffold`, handle safe drawing insets where content draws edge-to-edge, and remain usable with system font scaling. Avoid fixed bottom padding to account for app navigation; adaptive navigation owns that layout space.

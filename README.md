@@ -17,7 +17,7 @@ python3 scripts/init_project.py \
 
 Omit `--clean-samples` to keep the offline weather and design-system examples. Choose `--scope app-only` if the reusable core namespace should remain `com.thanhng224.androidcomposebase.core`. The initializer validates recognized source markers and builds the result unless `--skip-build-check` is supplied. See `python3 scripts/init_project.py --help` for every option.
 
-Open the initialized directory in Android Studio with JDK 21, sync Gradle, then run the `:app` configuration on an emulator or device. Add product capabilities under `app/src/main/java/<package>/feature/`; see [the feature guide](docs/FEATURE_TEMPLATE.md) and [architecture](docs/ARCHITECTURE.md).
+Open the initialized directory in Android Studio with JDK 21, sync Gradle, then run the `:app` configuration on an emulator or device. The app shell adapts navigation between a bottom bar and navigation rail; feature screens should use Compose insets and scrollable content instead of reserving fixed space for navigation. Add product capabilities under `app/src/main/java/<package>/feature/`; see [the feature guide](docs/FEATURE_TEMPLATE.md) and [architecture](docs/ARCHITECTURE.md).
 
 ## Modules
 
@@ -47,7 +47,7 @@ Dependabot auto-merge is inactive until remote setup is complete. Protect `main`
 
 ## Library publication
 
-`:core` and `:core:ui` are configured for Maven publication and have isolated local consumer checks. Version `0.1.0` is the current source version; no matching release tag or published JitPack artifact is claimed here. See the [publication guide](docs/CORE_MODULES.md#publication-checks) before consuming these modules outside this repository.
+`:core` and `:core:ui` are configured for Maven publication and have isolated local consumer checks. Version `0.1.0` is the current source version; no matching release tag or published JitPack artifact is claimed here. Before changing a public API, inspect the API dump and its callers. Breaking changes are allowed while no real downstream consumer exists and no API freeze has been requested; still review the generated `apiDump` diff and run the matching `apiCheck`. See the [publication guide](docs/CORE_MODULES.md#api-and-compatibility) before consuming these modules outside this repository.
 
 ## Further reading
 
@@ -57,4 +57,3 @@ Dependabot auto-merge is inactive until remote setup is complete. Protect `main`
 - [Feature template](docs/FEATURE_TEMPLATE.md)
 - [Compose design system](docs/DESIGN_SYSTEM.md)
 - [Current Android 13 device smoke](docs/performance/ANDROID_13_SMOKE.md)
-- [Historical baseline profile results](docs/performance/BASELINE_PROFILE_RESULTS.md)
