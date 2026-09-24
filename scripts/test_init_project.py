@@ -92,6 +92,18 @@ val topRoutes = listOf(
         di = app_dir / "di/AppNetworkModule.kt"
         di.parent.mkdir(parents=True)
         di.write_text("network sample\n", encoding="utf-8")
+        (di.parent / "MetadataLoggingInterceptor.kt").write_text(
+            f'''package {SOURCE_APP_PACKAGE}.di
+import android.util.Log
+internal class MetadataLoggingInterceptor(
+    private companion object {{
+        const val TAG = "NetworkMetadata"
+        val log = {{ Log.d(TAG, it) }}
+    }}
+}}
+''',
+            encoding="utf-8",
+        )
 
         profile = profile_dir / "CriticalJourney.kt"
         profile.parent.mkdir(parents=True)
@@ -149,6 +161,57 @@ ksp {{
                     force=True,
                     skip_build_check=True,
                 )
+            after = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+            self.assertEqual(after, before)
+
+    def test_clean_samples_removes_metadata_logger_for_full_and_app_only_scope(self) -> None:
+        for scope in ("full", "app-only"):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as temp_dir:
+                root = Path(temp_dir)
+                self.write_preflight_fixture(root)
+                manifest = root / "app/src/main/AndroidManifest.xml"
+                manifest.write_text(
+                    '<manifest>\n    <uses-permission android:name="android.permission.INTERNET" />\n</manifest>\n',
+                    encoding="utf-8",
+                )
+
+                run(
+                    root=root,
+                    project_name="AcmeShop",
+                    app_name="Acme Shop",
+                    app_package="com.acme.shop",
+                    core_package="com.acme.shop.core",
+                    scope=scope,
+                    clean=True,
+                    dry_run=False,
+                    force=True,
+                    skip_build_check=True,
+                )
+
+                self.assertFalse(root.joinpath("app/src/main/java/com/acme/shop/di/MetadataLoggingInterceptor.kt").exists())
+
+    def test_unrecognized_metadata_logger_fails_before_renaming_checkout(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_preflight_fixture(root)
+            logger = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / "di/MetadataLoggingInterceptor.kt"
+            logger.write_text("package custom.networking\nclass CustomLogger\n", encoding="utf-8")
+            before = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
+
+            with self.assertRaisesRegex(InitError, "Unrecognized sample metadata logging interceptor"):
+                run(
+                    root=root,
+                    project_name="AcmeShop",
+                    app_name="Acme Shop",
+                    app_package="com.acme.shop",
+                    core_package="com.acme.shop.core",
+                    scope="app-only",
+                    clean=True,
+                    dry_run=False,
+                    force=True,
+                    skip_build_check=True,
+                )
+
             after = {path.relative_to(root): path.read_bytes() for path in root.rglob("*") if path.is_file()}
             self.assertEqual(after, before)
 

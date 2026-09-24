@@ -81,6 +81,7 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
     sample_dirs = (app_dir / "sample/demo", app_dir / "sample/designsystem")
     if clean:
         assert all(not path.exists() for path in sample_dirs)
+        assert not (app_dir / "di/MetadataLoggingInterceptor.kt").exists()
         assert "ScreenRoute.Demo" not in app_root and "ScreenRoute.DesignSystem" not in app_root
         assert "Demo" not in routes and "DesignSystem" not in routes
         assert "sample.demo" not in app_root and "sample.designsystem" not in app_root
@@ -91,6 +92,7 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
         assert "Demo" not in journey and "Design" not in journey and "weather" not in journey.lower()
     else:
         assert all(path.is_dir() for path in sample_dirs)
+        assert (app_dir / "di/MetadataLoggingInterceptor.kt").is_file()
         assert "ScreenRoute.Demo" in app_root and "ScreenRoute.DesignSystem" in app_root
 
     if scope == "full":

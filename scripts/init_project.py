@@ -21,6 +21,11 @@ SOURCE_NAME = "AndroidComposeBase"
 SOURCE_APP_PACKAGE = "com.thanhng224.androidcomposebase"
 SOURCE_CORE_PACKAGE = f"{SOURCE_APP_PACKAGE}.core"
 SOURCE_PLUGIN_PACKAGE = "androidcomposebase.buildlogic"
+METADATA_LOGGER_MARKERS = (
+    "internal class MetadataLoggingInterceptor(",
+    'const val TAG = "NetworkMetadata"',
+    "Log.d(TAG, it)",
+)
 IGNORED_PARTS = {
     ".git", ".gradle", ".idea", ".kotlin", "build", "generated", "intermediates",
     "outputs", "reports", "test-results", "__pycache__",
@@ -448,6 +453,30 @@ def _clean_sample_resources(root: Path, dry_run: bool) -> int:
     return changed
 
 
+def _metadata_logger_path(root: Path, app_package: str) -> Path:
+    return root / "app/src/main/java" / Path(*app_package.split(".")) / "di/MetadataLoggingInterceptor.kt"
+
+
+def _validate_metadata_logger(root: Path, app_package: str) -> Path:
+    path = _metadata_logger_path(root, app_package)
+    if not path.is_file():
+        raise InitError(f"Missing sample metadata logging interceptor: {path.relative_to(root)}")
+    try:
+        source = path.read_text(encoding="utf-8")
+    except (UnicodeDecodeError, OSError) as error:
+        raise InitError(f"Cannot read sample metadata logging interceptor: {path.relative_to(root)}") from error
+    required = (f"package {app_package}.di\n", *METADATA_LOGGER_MARKERS)
+    missing = [marker for marker in required if marker not in source]
+    if missing:
+        raise InitError(f"Unrecognized sample metadata logging interceptor: {path.relative_to(root)}")
+    return path
+
+
+def _remove_metadata_logger(root: Path, app_package: str, dry_run: bool) -> int:
+    path = _validate_metadata_logger(root, app_package)
+    return _remove_tree(root, path, dry_run)
+
+
 def clean_samples(root: Path, app_package: str, dry_run: bool) -> int:
     changed = _remove_sample_routes(root, app_package, dry_run)
     target_dir = root / "app/src/main/java" / Path(*app_package.split("."))
@@ -455,6 +484,7 @@ def clean_samples(root: Path, app_package: str, dry_run: bool) -> int:
     for sample_dir in (package_dir / "sample/demo", package_dir / "sample/designsystem"):
         changed += _remove_tree(root, sample_dir, dry_run)
     changed += _remove_tree(root, package_dir / "di/AppNetworkModule.kt", dry_run)
+    changed += _remove_metadata_logger(root, app_package, dry_run)
     changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_demo.xml", dry_run)
     changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_ui_kit.xml", dry_run)
     changed += _remove_tree(root, root / "app/schemas", dry_run)
@@ -482,6 +512,7 @@ def clean_samples(root: Path, app_package: str, dry_run: bool) -> int:
 def validate_clean_sample_source(root: Path) -> None:
     """Validate every marker cleanup needs while the checkout is still untouched."""
     _clean_sample_route_sources(root, SOURCE_APP_PACKAGE)
+    _validate_metadata_logger(root, SOURCE_APP_PACKAGE)
     build_file = root / "app/build.gradle.kts"
     _clean_sample_build_source(build_file.read_text(encoding="utf-8"))
     for resource_file in (root / "app/src/main/res/values/strings.xml", root / "app/src/main/res/values-vi/strings.xml"):
@@ -564,6 +595,7 @@ def _verify(root: Path, app_package: str, core_package: str, scope: str, clean: 
         package_dir = root / "app/src/main/java" / Path(*app_package.split("."))
         markers = (
             package_dir / "sample/demo", package_dir / "sample/designsystem", package_dir / "di/AppNetworkModule.kt",
+            package_dir / "di/MetadataLoggingInterceptor.kt",
             root / "app/src/release/generated/baselineProfiles/baseline-prof.txt",
         )
         leftovers = [path.relative_to(root) for path in markers if path.exists()]
