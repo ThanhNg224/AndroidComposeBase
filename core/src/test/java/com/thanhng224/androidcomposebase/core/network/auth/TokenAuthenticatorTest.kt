@@ -10,6 +10,7 @@ import okhttp3.Response
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.util.concurrent.CountDownLatch
 
 class TokenAuthenticatorTest {
     private class FakeAuthTokenRefresher(
@@ -108,6 +109,42 @@ class TokenAuthenticatorTest {
                 assertEquals(Unit, awaitItem())
                 assertNull(authSession.getAccessToken())
                 assertNull(authSession.getRefreshToken())
+            }
+        }
+
+    @Test
+    fun `authenticate for two concurrent 401s on the same stale token refreshes and clears exactly once`() =
+        runBlocking {
+            // Real threads (not just sequential calls) so the mutex genuinely has to arbitrate:
+            // both requests failed with the same now-stale header before either one reached the
+            // authenticator, so whichever thread loses the race must see the session the winner
+            // already cleared and back off instead of refreshing/clearing/emitting again.
+            val store = FakeSecureStore()
+            store.putString(SecureStoreKeys.AUTH_TOKEN, "expired-token")
+            val authSession = AuthSession(store)
+            val refresher = FakeAuthTokenRefresher(newToken = null)
+            val sut = authenticator(authSession, refresher)
+            val failedResponse = response(authorizationHeader = "Bearer expired-token")
+
+            authSession.sessionExpired.test {
+                val startLatch = CountDownLatch(2)
+                val results = arrayOfNulls<Request?>(2)
+                val threads =
+                    List(2) { index ->
+                        Thread {
+                            startLatch.countDown()
+                            startLatch.await()
+                            results[index] = sut.authenticate(null, failedResponse)
+                        }
+                    }
+                threads.forEach { it.start() }
+                threads.forEach { it.join() }
+
+                assertNull(results[0])
+                assertNull(results[1])
+                assertEquals(1, refresher.callCount)
+                assertEquals(Unit, awaitItem())
+                expectNoEvents()
             }
         }
 

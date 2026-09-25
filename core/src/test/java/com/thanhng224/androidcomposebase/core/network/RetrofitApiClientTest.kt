@@ -4,10 +4,13 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
+import okio.BufferedSource
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
@@ -18,6 +21,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.http.GET
+import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 @Serializable
@@ -91,6 +95,32 @@ class RetrofitApiClientTest {
             val result = apiClient.execute { service.get() }
 
             assertEquals(ApiResult.Failure(ApiFailure.Http(500, "Internal Server Error")), result)
+        }
+
+    @Test
+    fun `500 whose error body throws while being read falls back to the HTTP status message`() =
+        runTest {
+            // A network-level reproduction (MockWebServer + SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY)
+            // does not reach errorServerMessage()'s try/catch at all: Retrofit's OkHttpCall#parseResponse
+            // eagerly buffers a non-2xx response's body (Utils.buffer(rawResponse.body())) before ever
+            // handing back a Response, so a body that disconnects mid-transfer throws inside call() itself
+            // and is caught by execute()'s own outer `catch (e: IOException)`, becoming ApiFailure.Network
+            // -- there is no Response for errorServerMessage() to even run against. A ResponseBody built
+            // directly (bypassing the network and Retrofit's buffering) is what actually exercises the
+            // errorBody()-read try/catch.
+            val throwingBody =
+                object : ResponseBody() {
+                    override fun contentType(): MediaType? = null
+
+                    override fun contentLength(): Long = -1
+
+                    override fun source(): BufferedSource = throw IOException("body read failed")
+                }
+            val response = Response.error<TestDto>(500, throwingBody)
+
+            val result = apiClient.execute { response }
+
+            assertEquals(ApiResult.Failure(ApiFailure.Http(500, "Response.error()")), result)
         }
 
     @Test

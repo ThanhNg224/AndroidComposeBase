@@ -1,10 +1,14 @@
 package com.thanhng224.androidcomposebase.core.network
 
+import com.thanhng224.androidcomposebase.core.foundation.SecureStoreKeys
 import com.thanhng224.androidcomposebase.core.network.auth.AuthSession
-import com.thanhng224.androidcomposebase.core.network.auth.DEFAULT_AUTH_SCHEME
+import com.thanhng224.androidcomposebase.core.network.auth.AuthTokenRefresher
 import com.thanhng224.androidcomposebase.core.testing.FakeSecureStore
-import okhttp3.Authenticator
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
+import okhttp3.Protocol
+import okhttp3.Request
+import okhttp3.Response
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -86,11 +90,33 @@ class NetworkClientFactoryTest {
     }
 
     @Test
-    fun `createAuthenticator wires the given scheme into a TokenAuthenticator`() {
-        val authSession = AuthSession(FakeSecureStore())
+    fun `createAuthenticator forwards the given scheme into the retry header`() =
+        runBlocking {
+            val store = FakeSecureStore()
+            store.putString(SecureStoreKeys.AUTH_TOKEN, "old-token")
+            val authSession = AuthSession(store)
+            val refresher =
+                object : AuthTokenRefresher {
+                    override suspend fun refresh(refreshToken: String?): String? = "new"
+                }
+            val authenticator = NetworkClientFactory.createAuthenticator(authSession, tokenRefresher = { refresher }, scheme = "Token")
+            val failedRequest =
+                Request
+                    .Builder()
+                    .url("https://example.com/")
+                    .header("Authorization", "Token old-token")
+                    .build()
+            val failedResponse =
+                Response
+                    .Builder()
+                    .request(failedRequest)
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(401)
+                    .message("Unauthorized")
+                    .build()
 
-        val authenticator = NetworkClientFactory.createAuthenticator(authSession, scheme = DEFAULT_AUTH_SCHEME)
+            val retryRequest = authenticator.authenticate(null, failedResponse)
 
-        assertTrue(authenticator !== Authenticator.NONE)
-    }
+            assertEquals("Token new", retryRequest?.header("Authorization"))
+        }
 }

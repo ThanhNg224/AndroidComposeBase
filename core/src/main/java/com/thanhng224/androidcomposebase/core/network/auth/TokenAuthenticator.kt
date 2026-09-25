@@ -31,10 +31,16 @@ internal class TokenAuthenticator
                 runBlocking {
                     refreshMutex.withLock {
                         val cached = authSession.getAccessToken()
-                        if (cached != null && authorizationValue(scheme, cached) != failedAuthHeader) {
-                            cached
-                        } else {
-                            refreshAndPersist()
+                        when {
+                            cached != null && authorizationValue(scheme, cached) != failedAuthHeader -> cached
+                            // A concurrent request that failed with the same header already took this
+                            // mutex, refreshed, had the refresh fail, and cleared the session -- by the
+                            // time this call arrives, there is nothing left to refresh. Returning null
+                            // here (instead of falling through to refreshAndPersist) avoids invoking the
+                            // refresher, clearing, and emitting sessionExpired a second time for what is
+                            // really the same failure.
+                            failedAuthHeader != null && cached == null -> null
+                            else -> refreshAndPersist()
                         }
                     }
                 }
