@@ -185,7 +185,11 @@ private fun DemoContent(
                                 is DemoWeatherState.Error ->
                                     AppErrorState(
                                         title = stringResource(weather.reason.toStringResource()),
-                                        modifier = Modifier.fillMaxWidth().height(190.dp),
+                                        modifier =
+                                            Modifier
+                                                .fillMaxWidth()
+                                                .height(190.dp)
+                                                .semantics { liveRegion = LiveRegionMode.Assertive },
                                         onRetry = { onEvent(DemoUiEvent.RefreshWeatherClicked) },
                                     )
 
