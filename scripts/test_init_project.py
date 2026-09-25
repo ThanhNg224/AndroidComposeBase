@@ -34,31 +34,19 @@ class InitializerUnitTests(unittest.TestCase):
         app_root.parent.mkdir(parents=True)
         app_root.write_text(
             f'''package {SOURCE_APP_PACKAGE}.presentation
-import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.Palette
 import {SOURCE_APP_PACKAGE}.sample.demo.presentation.ui.DemoScreen
 import {SOURCE_APP_PACKAGE}.sample.designsystem.presentation.ui.DesignSystemScreen
-val topRoutes = listOf(
+val topLevelRoutes =
+            listOf(
                 ScreenRoute.Home::class.qualifiedName,
                 ScreenRoute.Demo::class.qualifiedName,
                 ScreenRoute.Settings::class.qualifiedName,
                 ScreenRoute.DesignSystem::class.qualifiedName,
-)
-NavigationSuiteScaffold(navigationSuiteItems = {{
-                item(
-                    icon = {{ Icon(Icons.Default.Cloud, contentDescription = null) }},
-                    label = {{ Text(stringResource(R.string.navigation_demo)) }},
-                    selected = false,
-                    onClick = {{ navController.navigate(ScreenRoute.Demo) }},
-                )
-                item(
-                    icon = {{ Icon(Icons.Default.Palette, contentDescription = null) }},
-                    label = {{ Text(stringResource(R.string.navigation_design)) }},
-                    selected = false,
-                    onClick = {{ navController.navigate(ScreenRoute.DesignSystem) }},
-                )
-            }}) {{
-                NavHost(navController, startDestination = ScreenRoute.Home) {{
+            )
+NavHost(navController, startDestination = ScreenRoute.Home) {{
+                composable<ScreenRoute.Home> {{
+                    HomeScreen()
+                }}
                 composable<ScreenRoute.Demo> {{
                     DemoScreen()
                 }}
@@ -68,8 +56,31 @@ NavigationSuiteScaffold(navigationSuiteItems = {{
                 composable<ScreenRoute.DesignSystem> {{
                     DesignSystemScreen()
                 }}
-                }}
             }}
+val navItems =
+                    listOf(
+                        AppNavItem(
+                            selected = isSelectedRoute(currentDestination, ScreenRoute.Home::class.qualifiedName),
+                            onClick = {{ navController.navigate(ScreenRoute.Home) }},
+                            label = stringResource(R.string.navigation_home),
+                        ),
+                        AppNavItem(
+                            selected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),
+                            onClick = {{ navController.navigate(ScreenRoute.Demo) }},
+                            label = stringResource(R.string.navigation_demo),
+                        ),
+                        AppNavItem(
+                            selected = isSelectedRoute(currentDestination, ScreenRoute.DesignSystem::class.qualifiedName),
+                            onClick = {{ navController.navigate(ScreenRoute.DesignSystem) }},
+                            label = stringResource(R.string.navigation_design),
+                        ),
+                        AppNavItem(
+                            selected = isSelectedRoute(currentDestination, ScreenRoute.Settings::class.qualifiedName),
+                            onClick = {{ navController.navigate(ScreenRoute.Settings) }},
+                            label = stringResource(R.string.navigation_settings),
+                        ),
+                    )
+AppFloatingNavBar(items = navItems)
 ''',
             encoding="utf-8",
         )
@@ -370,7 +381,13 @@ kover {{
             root = Path(temp_dir)
             self.write_preflight_fixture(root)
             app_root = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / "presentation/AppRoot.kt"
-            app_root.write_text(app_root.read_text(encoding="utf-8").replace("Icons.Default.Cloud", "Icons.Default.Water"), encoding="utf-8")
+            app_root.write_text(
+                app_root.read_text(encoding="utf-8").replace(
+                    "selected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),",
+                    "selected = isSelectedRoute(currentDestination, ScreenRoute.Weather::class.qualifiedName),",
+                ),
+                encoding="utf-8",
+            )
             from init_project import _clean_sample_route_sources
             with self.assertRaisesRegex(InitError, "AppRoot sample markers changed"):
                 _clean_sample_route_sources(root, SOURCE_APP_PACKAGE)

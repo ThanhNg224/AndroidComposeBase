@@ -90,7 +90,7 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
         assert (app_dir / "feature/settings/presentation/ui/SettingsScreen.kt").is_file()
         test_samples = clone / "app/src/test/java" / Path(*app_package.split(".")) / "sample"
         assert not (test_samples / "demo").exists() and not (test_samples / "designsystem").exists()
-        assert "NavigationSuiteScaffold" in app_root
+        assert "AppFloatingNavBar" in app_root
         assert "ScreenRoute.Home" in app_root and "ScreenRoute.Settings" in app_root
         assert "ScreenRoute.Demo" not in app_root and "ScreenRoute.DesignSystem" not in app_root
         assert "Demo" not in routes and "DesignSystem" not in routes

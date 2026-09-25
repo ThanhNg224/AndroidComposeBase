@@ -9,7 +9,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.feature.onboarding.presentation.state.OnboardingUiState
-import com.thanhng224.androidcomposebase.feature.onboarding.presentation.ui.OnboardingScreen
+import com.thanhng224.androidcomposebase.feature.onboarding.presentation.ui.OnboardingContent
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -29,10 +29,9 @@ class OnboardingScreenSemanticsTest {
                 .targetContext
         composeRule.setContent {
             MaterialTheme {
-                OnboardingScreen(
+                OnboardingContent(
                     state = OnboardingUiState(),
                     onContinue = { continued = true },
-                    onRetryStartup = {},
                 )
             }
         }

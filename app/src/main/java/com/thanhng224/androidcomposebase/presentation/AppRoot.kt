@@ -9,10 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,28 +41,38 @@ import com.thanhng224.androidcomposebase.sample.designsystem.presentation.ui.Des
 
 @Composable
 public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
-    val startDestination by viewModel.startDestination.collectAsStateWithLifecycle()
-    val currentTheme by viewModel.currentTheme.collectAsStateWithLifecycle()
-    val onboardingState by viewModel.onboardingState.collectAsStateWithLifecycle()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
+    when (val current = state) {
+        AppUiState.Loading -> {
+            AndroidComposeBaseTheme(darkTheme = isSystemInDarkTheme()) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.background),
+                )
+            }
+        }
+
+        is AppUiState.Ready -> {
+            AppReadyContent(state = current)
+        }
+    }
+}
+
+@Composable
+private fun AppReadyContent(state: AppUiState.Ready) {
     val isDark =
-        when (currentTheme) {
+        when (state.theme) {
             AppTheme.LIGHT -> false
             AppTheme.DARK -> true
             AppTheme.SYSTEM -> isSystemInDarkTheme()
         }
 
     AndroidComposeBaseTheme(darkTheme = isDark) {
-        if (startDestination == null) {
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
+        if (state.showOnboarding) {
+            OnboardingScreen(modifier = Modifier.fillMaxSize())
             return@AndroidComposeBaseTheme
         }
 
@@ -88,7 +96,7 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
         ) {
             NavHost(
                 navController = navController,
-                startDestination = checkNotNull(startDestination),
+                startDestination = ScreenRoute.Home,
                 enterTransition = { EnterTransition.None },
                 exitTransition = { ExitTransition.None },
                 popEnterTransition = { EnterTransition.None },
@@ -100,14 +108,6 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                         Modifier
                     },
             ) {
-                composable<ScreenRoute.Onboarding> {
-                    OnboardingScreen(
-                        state = onboardingState,
-                        onContinue = viewModel::completeOnboarding,
-                        onRetryStartup = viewModel::retryStartup,
-                    )
-                }
-
                 composable<ScreenRoute.Home> {
                     HomeScreen()
                 }
@@ -199,16 +199,6 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                             .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
                             .widthIn(max = 600.dp),
                 )
-            }
-        }
-
-        LaunchedEffect(onboardingState.shouldNavigateHome) {
-            if (onboardingState.shouldNavigateHome) {
-                navController.navigate(ScreenRoute.Home) {
-                    popUpTo(ScreenRoute.Onboarding) { inclusive = true }
-                    launchSingleTop = true
-                }
-                viewModel.onOnboardingNavigationHandled()
             }
         }
     }

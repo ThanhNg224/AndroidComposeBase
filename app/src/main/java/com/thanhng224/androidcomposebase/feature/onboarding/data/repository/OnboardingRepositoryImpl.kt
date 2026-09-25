@@ -3,6 +3,7 @@ package com.thanhng224.androidcomposebase.feature.onboarding.data.repository
 import com.thanhng224.androidcomposebase.core.foundation.SettingsKey
 import com.thanhng224.androidcomposebase.core.foundation.SettingsStore
 import com.thanhng224.androidcomposebase.feature.onboarding.domain.repository.OnboardingRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 internal class OnboardingRepositoryImpl
@@ -10,7 +11,7 @@ internal class OnboardingRepositoryImpl
     constructor(
         private val settingsStore: SettingsStore,
     ) : OnboardingRepository {
-        override suspend fun isCompleted(): Boolean = settingsStore.get(ONBOARDING_COMPLETED)
+        override fun observeCompleted(): Flow<Boolean> = settingsStore.observe(ONBOARDING_COMPLETED)
 
         override suspend fun complete() {
             settingsStore.set(ONBOARDING_COMPLETED, true)

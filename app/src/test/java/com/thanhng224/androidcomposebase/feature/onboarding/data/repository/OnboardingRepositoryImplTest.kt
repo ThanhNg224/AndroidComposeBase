@@ -3,6 +3,7 @@ package com.thanhng224.androidcomposebase.feature.onboarding.data.repository
 import com.thanhng224.androidcomposebase.core.foundation.SettingsKey
 import com.thanhng224.androidcomposebase.core.foundation.SettingsStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -17,10 +18,10 @@ class OnboardingRepositoryImplTest {
             val store = RecordingSettingsStore()
             val repository = OnboardingRepositoryImpl(store)
 
-            assertFalse(repository.isCompleted())
+            assertFalse(repository.observeCompleted().first())
             repository.complete()
 
-            assertTrue(repository.isCompleted())
+            assertTrue(repository.observeCompleted().first())
             assertEquals(listOf("onboarding_completed"), store.writes)
         }
 

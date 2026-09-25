@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -34,18 +35,34 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.ui.components.AppPrimaryButton
+import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
-import com.thanhng224.androidcomposebase.feature.onboarding.presentation.state.OnboardingError
 import com.thanhng224.androidcomposebase.feature.onboarding.presentation.state.OnboardingUiState
+import com.thanhng224.androidcomposebase.feature.onboarding.presentation.viewmodel.OnboardingViewModel
 
 @Composable
 public fun OnboardingScreen(
+    modifier: Modifier = Modifier,
+    viewModel: OnboardingViewModel = hiltViewModel(),
+) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    OnboardingContent(
+        state = state,
+        onContinue = viewModel::onContinue,
+        modifier = modifier,
+    )
+}
+
+@Composable
+public fun OnboardingContent(
     state: OnboardingUiState,
     onContinue: () -> Unit,
-    onRetryStartup: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(
@@ -95,16 +112,10 @@ public fun OnboardingScreen(
                 modifier = Modifier.semantics { heading() },
             )
 
-            state.error?.let { error ->
+            if (state.saveFailed) {
                 Spacer(modifier = Modifier.height(Dimens.spaceMedium))
                 Text(
-                    text =
-                        stringResource(
-                            when (error) {
-                                OnboardingError.STARTUP_READ_FAILED -> R.string.onboarding_startup_read_failed
-                                OnboardingError.SAVE_FAILED -> R.string.onboarding_save_failed
-                            },
-                        ),
+                    text = stringResource(R.string.onboarding_save_failed),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                     textAlign = TextAlign.Center,
@@ -125,20 +136,23 @@ public fun OnboardingScreen(
             Spacer(modifier = Modifier.height(Dimens.spaceXXLarge))
 
             AppPrimaryButton(
-                text =
-                    stringResource(
-                        if (state.error == OnboardingError.STARTUP_READ_FAILED) {
-                            R.string.onboarding_retry
-                        } else {
-                            R.string.onboarding_get_started
-                        },
-                    ),
-                onClick =
-                    if (state.error == OnboardingError.STARTUP_READ_FAILED) onRetryStartup else onContinue,
+                text = stringResource(R.string.onboarding_get_started),
+                onClick = onContinue,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isSaving,
                 isLoading = state.isSaving,
             )
         }
+    }
+}
+
+@Preview
+@Composable
+private fun OnboardingContentPreview() {
+    AndroidComposeBaseTheme {
+        OnboardingContent(
+            state = OnboardingUiState(),
+            onContinue = {},
+        )
     }
 }

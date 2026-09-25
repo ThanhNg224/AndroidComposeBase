@@ -184,7 +184,7 @@ def _planned_moves(root: Path, project_name: str, app_package: str, core_package
         root / "build-logic/src/main/kotlin/androidcomposebase",
         root / "build-logic/src/main/kotlin" / plugin_prefix,
     ))
-    for name in ("android-library", "published-library", "quality"):
+    for name in ("android-application", "android-library", "published-library", "quality"):
         moves.append((
             root / f"build-logic/src/main/kotlin/androidcomposebase.{name}.gradle.kts",
             root / f"build-logic/src/main/kotlin/{plugin_prefix}.{name}.gradle.kts",
@@ -291,18 +291,22 @@ def _clean_sample_route_sources(root: Path, app_package: str) -> tuple[Path, str
             raise InitError(f"Cannot clean sample routes: missing {path.relative_to(root)}")
     source = app_root.read_text(encoding="utf-8")
     required = (
-        "import androidx.compose.material.icons.filled.Cloud\n",
-        "import androidx.compose.material.icons.filled.Palette\n",
         f"import {source_app_package}.sample.demo.presentation.ui.DemoScreen\n",
         f"import {source_app_package}.sample.designsystem.presentation.ui.DesignSystemScreen\n",
         "                ScreenRoute.Demo::class.qualifiedName,\n",
         "                ScreenRoute.DesignSystem::class.qualifiedName,\n",
-        "                item(\n                    icon = { Icon(Icons.Default.Cloud, contentDescription = null) },\n",
-        "                item(\n                    icon = { Icon(Icons.Default.Palette, contentDescription = null) },\n",
         "                composable<ScreenRoute.Demo> {\n",
         "                composable<ScreenRoute.DesignSystem> {\n",
     )
-    missing = [marker for marker in required if marker not in source]
+    # AppNavItem entries live in a plain list (not a per-item lambda), so each is located by its
+    # own `selected = isSelectedRoute(..., ScreenRoute.<X>::class.qualifiedName)` line, unique per route.
+    nav_item_markers = (
+        "                        AppNavItem(\n"
+        "                            selected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),\n",
+        "                        AppNavItem(\n"
+        "                            selected = isSelectedRoute(currentDestination, ScreenRoute.DesignSystem::class.qualifiedName),\n",
+    )
+    missing = [marker for marker in required + nav_item_markers if marker not in source]
     if missing:
         raise InitError("AppRoot sample markers changed; refusing partial cleanup: " + ", ".join(missing))
     route_markers = (
@@ -314,13 +318,12 @@ def _clean_sample_route_sources(root: Path, app_package: str) -> tuple[Path, str
     if missing_routes:
         raise InitError("ScreenRoute sample markers changed; refusing partial cleanup: " + ", ".join(missing_routes))
     source = source.replace(required[0], "").replace(required[1], "")
-    source = source.replace(required[2], "").replace(required[3], "")
-    for marker in required[4:6]:
+    for marker in required[2:4]:
         source = source.replace(marker, "")
-    source = _remove_kotlin_call(source, required[6])
-    source = _remove_kotlin_call(source, required[7])
-    source = _remove_kotlin_block(source, required[8])
-    source = _remove_kotlin_block(source, required[9])
+    source = _remove_kotlin_block(source, required[4])
+    source = _remove_kotlin_block(source, required[5])
+    source = _remove_kotlin_list_item(source, nav_item_markers[0])
+    source = _remove_kotlin_list_item(source, nav_item_markers[1])
     route_source = re.sub(r"^    @Serializable\n    public data object (?:Demo|DesignSystem) : ScreenRoute\n", "", route_source, flags=re.MULTILINE)
     if "ScreenRoute.Demo" in source or "ScreenRoute.DesignSystem" in source or "data object Demo" in route_source or "data object DesignSystem" in route_source:
         raise InitError("Sample navigation references remain after cleanup.")
@@ -393,6 +396,18 @@ def _remove_kotlin_call(source: str, marker: str) -> str:
 
 def _remove_kotlin_block(source: str, marker: str) -> str:
     return _remove_delimited(source, marker, "{", "}")
+
+
+def _remove_kotlin_list_item(source: str, marker: str) -> str:
+    """Removes a `Marker(...)` call plus its trailing list-item comma, e.g. an `AppNavItem(...),` entry."""
+    start_at, end_at = _find_block_span(source, marker, "(", ")")
+    if end_at < len(source) and source[end_at] == ",":
+        end_at += 1
+    while end_at < len(source) and source[end_at] in " \t":
+        end_at += 1
+    if end_at < len(source) and source[end_at] == "\n":
+        end_at += 1
+    return source[:start_at] + source[end_at:]
 
 
 def _remove_sample_kover_includes(source: str, marker: str) -> str:
@@ -672,7 +687,7 @@ def _find_marker(root: Path, marker: str) -> bool:
 def _rename_plugin_files(root: Path, project_name: str, dry_run: bool) -> int:
     count = 0
     prefix = re.sub(r"[^a-zA-Z0-9]", "", project_name).lower()
-    for name in ("android-library", "published-library", "quality"):
+    for name in ("android-application", "android-library", "published-library", "quality"):
         source = root / f"build-logic/src/main/kotlin/androidcomposebase.{name}.gradle.kts"
         destination = root / f"build-logic/src/main/kotlin/{prefix}.{name}.gradle.kts"
         count += _move(root, source, destination, dry_run)
