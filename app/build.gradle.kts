@@ -1,11 +1,9 @@
 plugins {
-    alias(libs.plugins.android.application)
+    id("androidcomposebase.android-application")
+    id("androidcomposebase.quality")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.ktlint)
-    alias(libs.plugins.detekt)
-    alias(libs.plugins.kover)
     alias(libs.plugins.baselineprofile)
     // Jetpack Compose compiler plugin for Compose UI compilation.
     alias(libs.plugins.compose.compiler)
@@ -13,14 +11,9 @@ plugins {
 
 android {
     namespace = "com.thanhng224.androidcomposebase"
-    compileSdk {
-        version = release(37)
-    }
 
     defaultConfig {
         applicationId = "com.thanhng224.androidcomposebase"
-        minSdk = 24
-        targetSdk = 37
         versionCode = 1
         versionName = "0.1.0"
 
@@ -36,18 +29,9 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
     buildFeatures {
         buildConfig = true
         compose = true
-    }
-    lint {
-        abortOnError = true
-        checkReleaseBuilds = true
-        warningsAsErrors = false
     }
 }
 
@@ -63,12 +47,6 @@ configurations.configureEach {
             useVersion(libs.versions.kotlin.get())
             because("plugin hardcodes an unavailable Compose compiler mapping version")
         }
-    }
-}
-
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
     }
 }
 
@@ -127,32 +105,22 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
-detekt {
-    buildUponDefaultConfig = true
-    allRules = false
-    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
-}
-
-ktlint {
-    android = true
-    outputToConsole = true
-    filter {
-        exclude("**/generated/**")
-    }
-}
-
 kover {
     reports {
         filters {
             includes {
                 classes(
+                    "*.feature.*.presentation.viewmodel.*",
+                    "*.feature.*.data.*",
+                    "*.feature.*.domain.*",
+                    "*.presentation.AppViewModel",
+                    "*.navigation.*",
+                    "*.startup.*",
                     "*.sample.demo.data.mapper.*",
-                    "*.sample.demo.domain.usecase.FetchDemoWeatherUseCase",
-                    "*.sample.demo.domain.usecase.IncrementCounterUseCase",
-                    "*.sample.demo.domain.usecase.ObserveDemoCountUseCase",
-                    "*.sample.demo.domain.usecase.SaveDemoCountUseCase",
-                    "*.sample.demo.presentation.viewmodel.DemoViewModel",
-                    "*.sample.designsystem.presentation.viewmodel.DesignSystemViewModel",
+                    "*.sample.demo.data.repository.*",
+                    "*.sample.demo.domain.*",
+                    "*.sample.demo.presentation.viewmodel.*",
+                    "*.sample.designsystem.presentation.viewmodel.*",
                 )
             }
             excludes {
@@ -165,13 +133,17 @@ kover {
                     "*_HiltModules*",
                     "*_MembersInjector*",
                     "*Hilt_*",
+                    "*_Impl*",
                     "dagger.hilt.*",
                     "hilt_aggregated_deps.*",
+                    "*.di.*",
                     "*.AndroidComposeBaseApplication",
                     "*.MainActivity",
                     "*Activity",
                     "*Fragment",
                     "*DialogFragment",
+                    "*\$\$serializer",
+                    "*\$Companion",
                 )
             }
         }

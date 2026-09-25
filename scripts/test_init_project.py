@@ -137,9 +137,17 @@ kover {{
     reports {{
         filters {{
             includes {{
-                classes("*.sample.demo.*")
+                classes(
+                    "*.startup.*",
+                    "*.sample.demo.*",
+                )
             }}
             excludes {{ classes("*.BuildConfig") }}
+        }}
+        verify {{
+            rule {{
+                minBound(80)
+            }}
         }}
     }}
 }}
@@ -231,6 +239,33 @@ kover {{
                 for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
                     names = {node.attrib.get("name") for node in ET.parse(root / relative).getroot()}
                     self.assertTrue(names.isdisjoint({"navigation_demo", "navigation_design", "demo_title", "design_system_title"}))
+
+                cleaned_build = root.joinpath("app/build.gradle.kts").read_text(encoding="utf-8")
+                self.assertIn("kover {", cleaned_build)
+                self.assertIn('"*.startup.*"', cleaned_build)
+                self.assertIn("minBound(80)", cleaned_build)
+                self.assertNotIn("sample.demo", cleaned_build)
+
+    def test_clean_samples_keeps_kover_coverage_gate_and_only_drops_sample_includes(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_preflight_fixture(root)
+            manifest = root / "app/src/main/AndroidManifest.xml"
+            manifest.write_text(
+                '<manifest>\n    <uses-permission android:name="android.permission.INTERNET" />\n</manifest>\n',
+                encoding="utf-8",
+            )
+
+            from init_project import _clean_sample_build_source
+
+            cleaned = _clean_sample_build_source((root / "app/build.gradle.kts").read_text(encoding="utf-8"))
+
+            self.assertIn("kover {", cleaned)
+            self.assertIn('"*.startup.*"', cleaned)
+            self.assertIn("verify {", cleaned)
+            self.assertIn("minBound(80)", cleaned)
+            self.assertNotIn("sample.demo", cleaned)
+            self.assertNotIn("sample.designsystem", cleaned)
 
     def test_unrecognized_metadata_logger_fails_before_renaming_checkout(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

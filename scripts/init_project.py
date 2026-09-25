@@ -341,7 +341,12 @@ def _remove_sample_routes(root: Path, app_package: str, dry_run: bool) -> int:
     return int(changed)
 
 
-def _remove_delimited(source: str, marker: str, opening: str, closing: str) -> str:
+def _find_block_span(source: str, marker: str, opening: str, closing: str) -> tuple[int, int]:
+    """Returns the (start, end) span of the balanced `opening`/`closing` block that follows `marker`.
+
+    `start` is the index of `marker` itself; `end` is exclusive and points just past the
+    matching `closing` character, before any trailing whitespace/newline.
+    """
     start_at = source.find(marker)
     if start_at < 0:
         raise InitError(f"Missing Kotlin sample marker: {marker.strip()}")
@@ -368,14 +373,18 @@ def _remove_delimited(source: str, marker: str, opening: str, closing: str) -> s
         elif character == closing:
             depth -= 1
             if depth == 0:
-                end_at = index + 1
-                while end_at < len(source) and source[end_at] in " \t":
-                    end_at += 1
-                if end_at < len(source) and source[end_at] == "\n":
-                    end_at += 1
-                return source[:start_at] + source[end_at:]
+                return start_at, index + 1
         index += 1
     raise InitError(f"Unclosed Kotlin sample block: {marker.strip()}")
+
+
+def _remove_delimited(source: str, marker: str, opening: str, closing: str) -> str:
+    start_at, end_at = _find_block_span(source, marker, opening, closing)
+    while end_at < len(source) and source[end_at] in " \t":
+        end_at += 1
+    if end_at < len(source) and source[end_at] == "\n":
+        end_at += 1
+    return source[:start_at] + source[end_at:]
 
 
 def _remove_kotlin_call(source: str, marker: str) -> str:
@@ -384,6 +393,21 @@ def _remove_kotlin_call(source: str, marker: str) -> str:
 
 def _remove_kotlin_block(source: str, marker: str) -> str:
     return _remove_delimited(source, marker, "{", "}")
+
+
+def _remove_sample_kover_includes(source: str, marker: str) -> str:
+    """Strips only the `*.sample.*` include lines out of the Kover block that follows `marker`.
+
+    Unlike `_remove_kotlin_block`, this keeps the rest of the block (real-feature includes,
+    excludes, and any `verify` rule) intact, so an initialized app keeps its coverage gate.
+    """
+    start_at, end_at = _find_block_span(source, marker, "{", "}")
+    block = source[start_at:end_at]
+    kept_lines = [line for line in block.splitlines(keepends=True) if not re.search(r'"[^"]*\.sample\.[^"]*"', line)]
+    new_block = "".join(kept_lines)
+    if new_block == block:
+        raise InitError(f"No sample Kover include lines found to remove after: {marker.strip()}")
+    return source[:start_at] + new_block + source[end_at:]
 
 
 def _clean_sample_build(root: Path, dry_run: bool) -> int:
@@ -415,10 +439,7 @@ def _clean_sample_build_source(source: str) -> str:
     new_source = re.sub(r'\s*buildConfigField\("(?:String|boolean)", "API_[A-Z_]+", [^\n]+\)', "", new_source)
     new_source = re.sub(r'\n    buildFeatures \{\n        buildConfig = true\n    }', "", new_source)
     new_source = re.sub(r'\nksp \{\n    arg\("room.schemaLocation", "\$projectDir/schemas"\)\n}', "", new_source)
-    kover_marker = "\nkover {"
-    if kover_marker not in new_source:
-        raise InitError("Missing sample Kover configuration marker in app/build.gradle.kts")
-    new_source = _remove_kotlin_block(new_source, kover_marker)
+    new_source = _remove_sample_kover_includes(new_source, "\nkover {")
     if "Room" in new_source or "Retrofit" in new_source or "API_BASE_URL" in new_source or "sample.demo" in new_source or "sample.designsystem" in new_source:
         raise InitError("Sample-only build configuration remains after cleanup.")
     return new_source

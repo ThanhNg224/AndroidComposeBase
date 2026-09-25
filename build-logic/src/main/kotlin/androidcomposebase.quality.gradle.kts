@@ -35,25 +35,32 @@ val verifyDeterministicCoreCoverage =
     }
 tasks.named("check") { dependsOn(verifyDeterministicCoreCoverage) }
 
-val verifyFrameworkIndependentSources =
-    tasks.register<VerifySourceBoundaryTask>("verifyFrameworkIndependentSources") {
-        group = "verification"
-        description = "Fails when core.foundation imports a framework/transport type."
-        sourceRoot.set(
-            layout.projectDirectory.dir("src/main/java/com/thanhng224/androidcomposebase/core/foundation"),
-        )
-        forbiddenImportPrefixes.set(
-            listOf(
-                "android.",
-                "androidx.",
-                "retrofit2.",
-                "okhttp3.",
-                "dagger.",
-                "javax.inject.",
-                "com.google.android.material.",
-                "com.thanhng224.androidcomposebase.core.R",
-            ),
-        )
-    }
+// The framework-independence boundary only applies to :core's foundation package. It is
+// project-relative (so a differently-shaped module could point it elsewhere) and only registered
+// when that source root actually exists, so applying this convention to a module without it --
+// such as :app -- does not try to verify a directory that was never meant to exist there.
+val frameworkIndependentSourceRoot =
+    layout.projectDirectory.dir("src/main/java/com/thanhng224/androidcomposebase/core/foundation")
 
-tasks.named("check") { dependsOn(verifyFrameworkIndependentSources) }
+if (frameworkIndependentSourceRoot.asFile.isDirectory) {
+    val verifyFrameworkIndependentSources =
+        tasks.register<VerifySourceBoundaryTask>("verifyFrameworkIndependentSources") {
+            group = "verification"
+            description = "Fails when core.foundation imports a framework/transport type."
+            sourceRoot.set(frameworkIndependentSourceRoot)
+            forbiddenImportPrefixes.set(
+                listOf(
+                    "android.",
+                    "androidx.",
+                    "retrofit2.",
+                    "okhttp3.",
+                    "dagger.",
+                    "javax.inject.",
+                    "com.google.android.material.",
+                    "com.thanhng224.androidcomposebase.core.R",
+                ),
+            )
+        }
+
+    tasks.named("check") { dependsOn(verifyFrameworkIndependentSources) }
+}
