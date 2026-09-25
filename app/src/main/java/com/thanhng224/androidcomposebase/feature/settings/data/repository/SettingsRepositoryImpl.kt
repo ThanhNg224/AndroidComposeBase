@@ -16,11 +16,9 @@ class SettingsRepositoryImpl
     ) : SettingsRepository {
         override fun observeTheme(): Flow<AppTheme> = themeManager.currentTheme
 
-        override suspend fun getCurrentLanguageTag(): String? = localeManager.currentLanguage()?.languageTag
+        override fun currentLanguageTag(): String? = localeManager.currentLanguage()?.languageTag
 
-        override fun getSupportedLanguageTags(): List<String> = localeManager.supportedLanguages().map(AppLanguage::languageTag)
-
-        override suspend fun setLanguageTag(languageTag: String?) {
+        override fun setLanguageTag(languageTag: String?) {
             val language =
                 languageTag?.let { tag ->
                     localeManager.supportedLanguages().firstOrNull { it.languageTag == tag }

@@ -7,185 +7,107 @@ import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.localization.SupportedLanguages
 import com.thanhng224.androidcomposebase.core.text.UiText
 import com.thanhng224.androidcomposebase.core.theme.AppTheme
-import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetCurrentLanguageUseCase
-import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetSupportedLanguagesUseCase
-import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.ObserveThemeUseCase
-import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.SetLanguageUseCase
-import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.SetThemeUseCase
+import com.thanhng224.androidcomposebase.feature.settings.domain.repository.SettingsRepository
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.PendingSettingsMessage
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiEvent
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.io.IOException
-import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel
     @Inject
     constructor(
-        observeTheme: ObserveThemeUseCase,
+        private val repository: SettingsRepository,
         supportedLanguages: SupportedLanguages,
-        private val getCurrentLanguage: GetCurrentLanguageUseCase,
-        getSupportedLanguages: GetSupportedLanguagesUseCase,
-        private val setTheme: SetThemeUseCase,
-        private val setLanguage: SetLanguageUseCase,
     ) : ViewModel() {
-        private var isInitialLanguageLoaded = false
-        private var latestRequestedLanguageTag: String? = null
-        private var languageRequestVersion = 0L
-        private val languageMutationMutex = Mutex()
-        private var latestRequestedTheme: AppTheme? = null
-        private var persistedTheme: AppTheme? = null
-        private var themeRequestVersion = 0L
-        private var completedThemeRequestVersion = 0L
+        private val languages = supportedLanguages.values
+        private val selectedLanguage = MutableStateFlow(languageFor(repository.currentLanguageTag()))
+        private val pendingMessages = MutableStateFlow(emptyList<PendingSettingsMessage>())
         private val themeMutationMutex = Mutex()
-        private val nextMessageId = AtomicLong(0)
-        private val presentationLanguages = supportedLanguages.values
-        private val mutableState =
-            MutableStateFlow(
-                SettingsUiState(
-                    supportedLanguages = getSupportedLanguages().mapNotNull(::findPresentationLanguage),
-                ),
-            )
-        val state: StateFlow<SettingsUiState> = mutableState.asStateFlow()
+        private var requestedTheme: AppTheme? = null
+        private var nextMessageId = 0L
 
-        init {
-            viewModelScope.launch {
-                observeTheme().collect { theme ->
-                    persistedTheme = theme
-                    if (themeRequestVersion == completedThemeRequestVersion) {
-                        latestRequestedTheme = theme
-                        mutableState.update { it.copy(theme = theme) }
-                    }
-                }
-            }
-            viewModelScope.launch {
-                val language = getCurrentLanguage()?.let(::findPresentationLanguage)
-                latestRequestedLanguageTag = language?.languageTag
-                mutableState.update { it.copy(language = language) }
-                isInitialLanguageLoaded = true
-            }
-        }
+        val state: StateFlow<SettingsUiState> =
+            combine(repository.observeTheme(), selectedLanguage, pendingMessages) { theme, language, messages ->
+                SettingsUiState(
+                    theme = theme,
+                    language = language,
+                    supportedLanguages = languages,
+                    pendingMessages = messages,
+                )
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = SettingsUiState(supportedLanguages = languages),
+            )
 
         fun onEvent(event: SettingsUiEvent) {
             when (event) {
-                is SettingsUiEvent.ThemeSelected -> selectTheme(event)
-                is SettingsUiEvent.LanguageSelected -> selectLanguage(event)
+                is SettingsUiEvent.ThemeSelected -> selectTheme(event.theme)
+                is SettingsUiEvent.LanguageSelected -> selectLanguage(event.language)
             }
         }
 
-        fun onMessageHandled(id: Long) {
-            removeHeadIfMatching(id)
+        fun refreshLanguage() {
+            selectedLanguage.value = languageFor(repository.currentLanguageTag())
         }
 
-        /** Reconciles the selected language after returning from system per-app language settings. */
-        fun refreshCurrentLanguage() {
-            if (!isInitialLanguageLoaded) return
-            val requestVersion = languageRequestVersion
-            viewModelScope.launch {
-                languageMutationMutex.withLock {
-                    if (requestVersion != languageRequestVersion) return@withLock
-                    val language = getCurrentLanguage()?.let(::findPresentationLanguage)
-                    if (requestVersion != languageRequestVersion) return@withLock
-                    latestRequestedLanguageTag = language?.languageTag
-                    mutableState.update { it.copy(language = language) }
-                }
+        fun onMessageShown(id: Long) {
+            pendingMessages.update { messages ->
+                if (messages.firstOrNull()?.id == id) messages.drop(1) else messages
             }
         }
 
-        private fun selectTheme(event: SettingsUiEvent.ThemeSelected) {
-            if (event.theme == (latestRequestedTheme ?: mutableState.value.theme)) return
-            latestRequestedTheme = event.theme
-            val requestVersion = ++themeRequestVersion
+        private fun selectTheme(theme: AppTheme) {
+            if (theme == (requestedTheme ?: state.value.theme)) return
+            requestedTheme = theme
             viewModelScope.launch {
                 themeMutationMutex.withLock {
-                    if (requestVersion != themeRequestVersion) return@withLock
                     try {
-                        setTheme(event.theme)
-                        persistedTheme = event.theme
-                        completedThemeRequestVersion = requestVersion
-                        if (requestVersion == themeRequestVersion) {
-                            mutableState.update { it.copy(theme = event.theme) }
-                        }
-                    } catch (e: CancellationException) {
-                        throw e
+                        repository.setTheme(theme)
+                    } catch (exception: CancellationException) {
+                        throw exception
                     } catch (_: IOException) {
-                        completedThemeRequestVersion = requestVersion
-                        if (requestVersion == themeRequestVersion) {
-                            latestRequestedTheme = persistedTheme ?: mutableState.value.theme
-                            mutableState.update {
-                                it.copy(
-                                    theme = latestRequestedTheme ?: it.theme,
-                                    pendingMessages =
-                                        it.pendingMessages +
-                                            PendingSettingsMessage(
-                                                id = nextMessageId.incrementAndGet(),
-                                                text = UiText.StringResource(R.string.settings_theme_update_failed),
-                                            ),
-                                )
-                            }
+                        if (requestedTheme == theme) {
+                            requestedTheme = null
+                            enqueue(R.string.settings_theme_update_failed)
                         }
                     }
                 }
             }
         }
 
-        private fun selectLanguage(event: SettingsUiEvent.LanguageSelected) {
-            if (!isInitialLanguageLoaded) return
-            val requestedLanguageTag = event.language?.languageTag
-            if (requestedLanguageTag == latestRequestedLanguageTag) return
-            latestRequestedLanguageTag = requestedLanguageTag
-            val requestVersion = ++languageRequestVersion
-            viewModelScope.launch {
-                languageMutationMutex.withLock {
-                    if (requestVersion != languageRequestVersion) return@withLock
-                    try {
-                        setLanguage(requestedLanguageTag)
-                        if (requestVersion == languageRequestVersion) {
-                            mutableState.update { it.copy(language = event.language) }
-                        }
-                    } catch (e: CancellationException) {
-                        throw e
-                    } catch (_: IOException) {
-                        if (requestVersion == languageRequestVersion) {
-                            latestRequestedLanguageTag = mutableState.value.language?.languageTag
-                            enqueueMessage(UiText.StringResource(R.string.settings_language_update_failed))
-                        }
-                    }
-                }
+        private fun selectLanguage(language: AppLanguage?) {
+            if (language?.languageTag == selectedLanguage.value?.languageTag) return
+            try {
+                repository.setLanguageTag(language?.languageTag)
+            } catch (_: IllegalArgumentException) {
+                enqueue(R.string.settings_language_update_failed)
+            } catch (_: IOException) {
+                enqueue(R.string.settings_language_update_failed)
+            } finally {
+                refreshLanguage()
             }
         }
 
-        private fun findPresentationLanguage(languageTag: String): AppLanguage? =
-            presentationLanguages.firstOrNull { it.languageTag == languageTag }
-                ?: AppLanguage.findByLanguageTag(languageTag, presentationLanguages)
+        private fun languageFor(languageTag: String?): AppLanguage? =
+            languageTag?.let { AppLanguage.findByLanguageTag(it, languages) }
 
-        private fun enqueueMessage(text: UiText) {
-            val message = PendingSettingsMessage(id = nextMessageId.incrementAndGet(), text = text)
-            mutableState.update { it.copy(pendingMessages = it.pendingMessages + message) }
-        }
-
-        /** Returns whether [id] matched the current head and was removed. */
-        private fun removeHeadIfMatching(id: Long): Boolean {
-            var removed = false
-            mutableState.update { current ->
-                val head = current.pendingMessages.firstOrNull()
-                if (head?.id != id) {
-                    current
-                } else {
-                    removed = true
-                    current.copy(pendingMessages = current.pendingMessages.drop(1))
-                }
+        private fun enqueue(messageResId: Int) {
+            pendingMessages.update { messages ->
+                messages + PendingSettingsMessage(++nextMessageId, UiText.StringResource(messageResId))
             }
-            return removed
         }
     }

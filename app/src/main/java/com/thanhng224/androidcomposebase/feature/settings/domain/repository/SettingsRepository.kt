@@ -6,11 +6,9 @@ import kotlinx.coroutines.flow.Flow
 interface SettingsRepository {
     fun observeTheme(): Flow<AppTheme>
 
-    suspend fun getCurrentLanguageTag(): String?
+    fun currentLanguageTag(): String?
 
-    fun getSupportedLanguageTags(): List<String>
-
-    suspend fun setLanguageTag(languageTag: String?)
+    fun setLanguageTag(languageTag: String?)
 
     suspend fun setTheme(theme: AppTheme)
 }

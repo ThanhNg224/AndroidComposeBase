@@ -33,8 +33,7 @@ class SettingsRepositoryImplTest {
             val repository = createRepository(settingsStore, localeApplier)
             localeApplier.applyLocales("fr-FR")
 
-            assertEquals(listOf("fr-CA"), repository.getSupportedLanguageTags())
-            assertEquals("fr-CA", repository.getCurrentLanguageTag())
+            assertEquals("fr-CA", repository.currentLanguageTag())
         }
 
     @Test
@@ -47,7 +46,7 @@ class SettingsRepositoryImplTest {
             repository.setLanguageTag("fr-CA")
 
             assertEquals("fr-CA", localeApplier.appliedTags)
-            assertEquals("fr-CA", repository.getCurrentLanguageTag())
+            assertEquals("fr-CA", repository.currentLanguageTag())
         }
 
     @Test
@@ -61,7 +60,7 @@ class SettingsRepositoryImplTest {
             repository.setLanguageTag(null)
 
             assertEquals("", localeApplier.appliedTags)
-            assertEquals(null, repository.getCurrentLanguageTag())
+            assertEquals(null, repository.currentLanguageTag())
         }
 
     @Test
@@ -72,11 +71,11 @@ class SettingsRepositoryImplTest {
             val repository = createRepository(settingsStore, localeApplier)
             localeApplier.applyLocales("fr-CA")
 
-            assertEquals("fr-CA", repository.getCurrentLanguageTag())
+            assertEquals("fr-CA", repository.currentLanguageTag())
 
             localeApplier.applyLocales("")
 
-            assertEquals(null, repository.getCurrentLanguageTag())
+            assertEquals(null, repository.currentLanguageTag())
         }
 
     @Test
@@ -85,10 +84,8 @@ class SettingsRepositoryImplTest {
             val settingsStore = FakeSettingsStore()
             val repository = createRepository(settingsStore)
 
-            assertThrows(IllegalArgumentException::class.java) {
-                kotlinx.coroutines.runBlocking { repository.setLanguageTag("de-DE") }
-            }
-            assertEquals(null, repository.getCurrentLanguageTag())
+            assertThrows(IllegalArgumentException::class.java) { repository.setLanguageTag("de-DE") }
+            assertEquals(null, repository.currentLanguageTag())
         }
 
     private fun createRepository(

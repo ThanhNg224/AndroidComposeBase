@@ -27,7 +27,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -40,19 +39,20 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.text.resolve
 import com.thanhng224.androidcomposebase.core.theme.AppTheme
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
+import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiEvent
+import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiState
 import com.thanhng224.androidcomposebase.feature.settings.presentation.viewmodel.SettingsViewModel
 
 @Composable
@@ -61,25 +61,36 @@ public fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshLanguage()
+        onPauseOrDispose { }
+    }
+
+    SettingsContent(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onMessageShown = viewModel::onMessageShown,
+        modifier = modifier,
+    )
+}
+
+@Composable
+public fun SettingsContent(
+    state: SettingsUiState,
+    onEvent: (SettingsUiEvent) -> Unit,
+    onMessageShown: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-
-    DisposableEffect(lifecycleOwner, viewModel) {
-        val observer =
-            LifecycleEventObserver { _, event ->
-                if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshCurrentLanguage()
-            }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
 
     LaunchedEffect(state.pendingMessages) {
         val message = state.pendingMessages.firstOrNull()
         if (message != null) {
             val text = message.text.resolve(context)
             snackbarHostState.showSnackbar(message = text)
-            viewModel.onMessageHandled(message.id)
+            onMessageShown(message.id)
         }
     }
 
@@ -148,17 +159,17 @@ public fun SettingsScreen(
                             ) {
                                 FilterChip(
                                     selected = state.theme == AppTheme.SYSTEM,
-                                    onClick = { viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.SYSTEM)) },
+                                    onClick = { onEvent(SettingsUiEvent.ThemeSelected(AppTheme.SYSTEM)) },
                                     label = { Text(stringResource(R.string.settings_theme_system)) },
                                 )
                                 FilterChip(
                                     selected = state.theme == AppTheme.LIGHT,
-                                    onClick = { viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.LIGHT)) },
+                                    onClick = { onEvent(SettingsUiEvent.ThemeSelected(AppTheme.LIGHT)) },
                                     label = { Text(stringResource(R.string.settings_theme_light)) },
                                 )
                                 FilterChip(
                                     selected = state.theme == AppTheme.DARK,
-                                    onClick = { viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK)) },
+                                    onClick = { onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK)) },
                                     label = { Text(stringResource(R.string.settings_theme_dark)) },
                                 )
                             }
@@ -204,7 +215,7 @@ public fun SettingsScreen(
                                 languages = state.supportedLanguages,
                                 selectedLanguage = state.language,
                                 onLanguageSelected = { language ->
-                                    viewModel.onEvent(SettingsUiEvent.LanguageSelected(language))
+                                    onEvent(SettingsUiEvent.LanguageSelected(language))
                                 },
                             )
                         }
@@ -212,6 +223,30 @@ public fun SettingsScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Settings light")
+@Composable
+private fun SettingsContentLightPreview() {
+    AndroidComposeBaseTheme(darkTheme = false) {
+        SettingsContent(
+            state = SettingsUiState(supportedLanguages = AppLanguage.BUILT_IN),
+            onEvent = {},
+            onMessageShown = {},
+        )
+    }
+}
+
+@Preview(name = "Settings dark", uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SettingsContentDarkPreview() {
+    AndroidComposeBaseTheme(darkTheme = true) {
+        SettingsContent(
+            state = SettingsUiState(supportedLanguages = AppLanguage.BUILT_IN),
+            onEvent = {},
+            onMessageShown = {},
+        )
     }
 }
 
