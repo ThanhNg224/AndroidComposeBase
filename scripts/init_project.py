@@ -302,7 +302,7 @@ def _clean_sample_route_sources(root: Path, app_package: str) -> tuple[Path, str
         raise InitError("MainShell sample markers changed; refusing partial cleanup: " + ", ".join(marker.strip() for marker in missing))
     for marker in markers:
         source = source.replace(marker, "")
-    if ".sample." in source or "sampleEntries" in source or "sampleTopLevelDestinations" in source:
+    if f"{source_app_package}.sample." in source or "sampleEntries" in source or "sampleTopLevelDestinations" in source:
         raise InitError("Sample navigation references remain after cleanup.")
     return main_shell, source
 
@@ -601,7 +601,7 @@ def _verify(root: Path, app_package: str, core_package: str, scope: str, clean: 
         main_shell = (package_dir / "presentation/MainShell.kt").read_text(encoding="utf-8")
         app_build = (root / "app/build.gradle.kts").read_text(encoding="utf-8")
         manifest = (root / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
-        if ".sample." in main_shell or "sampleEntries" in main_shell or "sampleTopLevelDestinations" in main_shell:
+        if f"{app_package}.sample." in main_shell or "sampleEntries" in main_shell or "sampleTopLevelDestinations" in main_shell:
             leftovers.append(Path("app/src/main/java") / Path(*app_package.split(".")) / "presentation/MainShell.kt")
         if any(marker in app_build for marker in ("libs.room.", "libs.retrofit.", "libs.okhttp.", "API_BASE_URL", "sample.demo", "sample.designsystem")):
             leftovers.append(Path("app/build.gradle.kts"))

@@ -227,6 +227,40 @@ kover {{
                 self.assertIn("minBound(80)", cleaned_build)
                 self.assertNotIn("sample.demo", cleaned_build)
 
+    def test_clean_samples_accepts_app_package_with_sample_segment(self) -> None:
+        for scope in ("full", "app-only"):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as temp_dir:
+                root = Path(temp_dir)
+                self.write_preflight_fixture(root)
+                manifest = root / "app/src/main/AndroidManifest.xml"
+                manifest.write_text(
+                    '<manifest>\n    <uses-permission android:name="android.permission.INTERNET" />\n</manifest>\n',
+                    encoding="utf-8",
+                )
+
+                run(
+                    root=root,
+                    project_name="AcmeShop",
+                    app_name="Acme Shop",
+                    app_package="com.acme.sample.shop",
+                    core_package="com.acme.sample.shop.core",
+                    scope=scope,
+                    clean=True,
+                    dry_run=False,
+                    force=True,
+                    skip_build_check=True,
+                )
+
+                app_dir = root / "app/src/main/java/com/acme/sample/shop"
+                self.assertFalse((app_dir / "sample").exists())
+                self.assertFalse(root.joinpath("app/src/test/java/com/acme/sample/shop/sample").exists())
+                main_shell = (app_dir / "presentation/MainShell.kt").read_text(encoding="utf-8")
+                self.assertIn("package com.acme.sample.shop.presentation\n", main_shell)
+                self.assertIn("import com.acme.sample.shop.appshell.home.homeEntry\n", main_shell)
+                self.assertNotIn("com.acme.sample.shop.sample.", main_shell)
+                self.assertNotIn("sampleEntries", main_shell)
+                self.assertNotIn("sampleTopLevelDestinations", main_shell)
+
     def test_clean_samples_keeps_kover_coverage_gate_and_only_drops_sample_includes(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
