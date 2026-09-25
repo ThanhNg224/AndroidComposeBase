@@ -294,6 +294,20 @@ class SettingsViewModelTest {
         }
 
     @Test
+    fun `system language selection clears the app locale override`() =
+        runTest {
+            val calls = mutableListOf<String>()
+            val viewModel = createViewModel(FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, calls = calls))
+            advanceUntilIdle()
+
+            viewModel.onEvent(SettingsUiEvent.LanguageSelected(null))
+            advanceUntilIdle()
+
+            assertEquals(listOf("persist:system", "apply:system"), calls)
+            assertEquals(null, viewModel.state.value.language)
+        }
+
+    @Test
     fun `a failed language persistence keeps the previous language and queues an error message`() =
         runTest {
             val calls = mutableListOf<String>()

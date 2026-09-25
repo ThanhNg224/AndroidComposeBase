@@ -221,9 +221,27 @@ public fun SettingsScreen(
 internal fun LanguageOptions(
     languages: List<AppLanguage>,
     selectedLanguage: AppLanguage?,
-    onLanguageSelected: (AppLanguage) -> Unit,
+    onLanguageSelected: (AppLanguage?) -> Unit,
 ) {
     Column(modifier = Modifier.fillMaxWidth().selectableGroup()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = selectedLanguage == null,
+                        role = Role.RadioButton,
+                        onClick = { onLanguageSelected(null) },
+                    ).padding(vertical = Dimens.spaceXXSmall),
+        ) {
+            RadioButton(selected = selectedLanguage == null, onClick = null)
+            Spacer(modifier = Modifier.size(Dimens.spaceSmall))
+            Text(
+                text = stringResource(R.string.settings_language_system),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
         languages.forEach { language ->
             val selected = selectedLanguage?.languageTag == language.languageTag
             Row(
