@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -37,10 +38,15 @@ class SettingsViewModel
         private val pendingMessages = MutableStateFlow(emptyList<PendingSettingsMessage>())
         private val themeMutationMutex = Mutex()
         private var requestedTheme: AppTheme? = null
+        private var hasObservedTheme = false
         private var nextMessageId = 0L
 
         val state: StateFlow<SettingsUiState> =
-            combine(repository.observeTheme(), selectedLanguage, pendingMessages) { theme, language, messages ->
+            combine(
+                repository.observeTheme().onEach { hasObservedTheme = true },
+                selectedLanguage,
+                pendingMessages,
+            ) { theme, language, messages ->
                 SettingsUiState(
                     theme = theme,
                     language = language,
@@ -71,7 +77,9 @@ class SettingsViewModel
         }
 
         private fun selectTheme(theme: AppTheme) {
-            if (theme == (requestedTheme ?: state.value.theme)) return
+            if (theme == requestedTheme) return
+            val themeAlreadyObserved = hasObservedTheme && theme == state.value.theme
+            if (requestedTheme == null && themeAlreadyObserved) return
             requestedTheme = theme
             viewModelScope.launch {
                 themeMutationMutex.withLock {
