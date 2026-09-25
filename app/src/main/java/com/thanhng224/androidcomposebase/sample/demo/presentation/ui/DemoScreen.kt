@@ -19,13 +19,13 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,16 +41,22 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.text.resolve
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
+import com.thanhng224.androidcomposebase.core.ui.components.AppErrorState
+import com.thanhng224.androidcomposebase.core.ui.components.AppLoadingState
 import com.thanhng224.androidcomposebase.core.ui.components.AppOutlinedButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppPrimaryButton
+import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
+import com.thanhng224.androidcomposebase.sample.demo.domain.model.DemoWeather
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoUiEvent
+import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoUiState
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherError
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherState
 import com.thanhng224.androidcomposebase.sample.demo.presentation.viewmodel.DemoViewModel
@@ -61,15 +67,34 @@ public fun DemoScreen(
     viewModel: DemoViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    DemoContent(
+        state = state,
+        onEvent = viewModel::onEvent,
+        onMessageHandled = viewModel::onMessageHandled,
+        onMessageAction = viewModel::onMessageAction,
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun DemoContent(
+    state: DemoUiState,
+    onEvent: (DemoUiEvent) -> Unit,
+    onMessageHandled: (Long) -> Unit,
+    onMessageAction: (Long) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
 
     LaunchedEffect(state.pendingMessages) {
-        val message = state.pendingMessages.firstOrNull()
-        if (message != null) {
-            snackbarHostState.showSnackbar(message = message.text.resolve(context))
-            viewModel.onMessageHandled(message.id)
-        }
+        val message = state.pendingMessages.firstOrNull() ?: return@LaunchedEffect
+        val result =
+            snackbarHostState.showSnackbar(
+                message = message.text.resolve(context),
+                actionLabel = message.actionLabel?.resolve(context),
+            )
+        if (result == SnackbarResult.ActionPerformed) onMessageAction(message.id) else onMessageHandled(message.id)
     }
 
     Scaffold(
@@ -101,7 +126,6 @@ public fun DemoScreen(
                         modifier = Modifier.semantics { heading() },
                     )
                 }
-
                 item {
                     Card(
                         shape = MaterialTheme.shapes.medium,
@@ -129,12 +153,11 @@ public fun DemoScreen(
                             AppPrimaryButton(
                                 text = stringResource(R.string.demo_increment),
                                 icon = Icons.Default.Add,
-                                onClick = { viewModel.onEvent(DemoUiEvent.IncrementClicked) },
+                                onClick = { onEvent(DemoUiEvent.IncrementClicked) },
                             )
                         }
                     }
                 }
-
                 item {
                     Text(
                         text = stringResource(R.string.demo_weather_section_title),
@@ -144,7 +167,6 @@ public fun DemoScreen(
                         modifier = Modifier.padding(top = Dimens.spaceSmall).semantics { heading() },
                     )
                 }
-
                 item {
                     Card(
                         shape = MaterialTheme.shapes.medium,
@@ -154,126 +176,20 @@ public fun DemoScreen(
                     ) {
                         Column(modifier = Modifier.padding(Dimens.spaceLarge)) {
                             when (val weather = state.weather) {
-                                is DemoWeatherState.Loading -> {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth().padding(Dimens.spaceMedium),
-                                        horizontalArrangement = Arrangement.Center,
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                                        Spacer(modifier = Modifier.size(Dimens.spaceMedium))
-                                        Text(
-                                            text = stringResource(R.string.demo_weather_loading),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                        )
-                                    }
-                                }
-
-                                is DemoWeatherState.Error -> {
-                                    Text(
-                                        text = stringResource(weather.reason.toStringResource()),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
+                                DemoWeatherState.Loading ->
+                                    AppLoadingState(
+                                        modifier = Modifier.fillMaxWidth().height(112.dp),
+                                        message = stringResource(R.string.demo_weather_loading),
                                     )
-                                    Spacer(modifier = Modifier.height(Dimens.spaceMedium))
-                                    AppOutlinedButton(
-                                        text = stringResource(R.string.demo_weather_retry),
-                                        icon = Icons.Default.Refresh,
-                                        onClick = { viewModel.onEvent(DemoUiEvent.RefreshWeatherClicked) },
+
+                                is DemoWeatherState.Error ->
+                                    AppErrorState(
+                                        title = stringResource(weather.reason.toStringResource()),
+                                        modifier = Modifier.fillMaxWidth().height(190.dp),
+                                        onRetry = { onEvent(DemoUiEvent.RefreshWeatherClicked) },
                                     )
-                                }
 
-                                is DemoWeatherState.Success -> {
-                                    if (weather.isRefreshing) {
-                                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                                        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
-                                    }
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            painter = painterResource(R.drawable.ic_wb_sunny),
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(36.dp),
-                                        )
-                                        Spacer(modifier = Modifier.size(Dimens.spaceMedium))
-                                        Column {
-                                            Text(
-                                                text = stringResource(R.string.demo_weather_conditions_title),
-                                                style = MaterialTheme.typography.titleSmall,
-                                                fontWeight = FontWeight.SemiBold,
-                                            )
-                                            Text(
-                                                text = stringResource(R.string.demo_weather_conditions_subtitle),
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(Dimens.spaceLarge))
-                                    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-                                        val temperature =
-                                            stringResource(
-                                                R.string.demo_weather_temperature_value,
-                                                weather.weather.temperatureCelsius,
-                                            )
-                                        val windSpeed =
-                                            stringResource(
-                                                R.string.demo_weather_wind_value,
-                                                weather.weather.windSpeedKph,
-                                            )
-                                        val temperatureLabel = stringResource(R.string.demo_weather_temperature_label)
-                                        val windLabel = stringResource(R.string.demo_weather_wind_label)
-                                        if (maxWidth < 360.dp) {
-                                            Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
-                                                WeatherMetric(
-                                                    icon = { Icon(painterResource(R.drawable.ic_thermostat), contentDescription = null) },
-                                                    value = temperature,
-                                                    label = temperatureLabel,
-                                                )
-                                                WeatherMetric(
-                                                    icon = { Icon(painterResource(R.drawable.ic_air), contentDescription = null) },
-                                                    value = windSpeed,
-                                                    label = windLabel,
-                                                )
-                                            }
-                                        } else {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceAround,
-                                            ) {
-                                                WeatherMetric(
-                                                    icon = { Icon(painterResource(R.drawable.ic_thermostat), contentDescription = null) },
-                                                    value = temperature,
-                                                    label = temperatureLabel,
-                                                )
-                                                WeatherMetric(
-                                                    icon = { Icon(painterResource(R.drawable.ic_air), contentDescription = null) },
-                                                    value = windSpeed,
-                                                    label = windLabel,
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.height(Dimens.spaceLarge))
-                                    weather.refreshError?.let { error ->
-                                        Text(
-                                            text = stringResource(error.toStringResource()),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.error,
-                                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
-                                        )
-                                        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
-                                    }
-
-                                    AppOutlinedButton(
-                                        text = stringResource(R.string.demo_weather_refresh),
-                                        icon = Icons.Default.Refresh,
-                                        onClick = { viewModel.onEvent(DemoUiEvent.RefreshWeatherClicked) },
-                                    )
-                                }
+                                is DemoWeatherState.Success -> WeatherContent(weather, onEvent)
                             }
                         }
                     }
@@ -281,6 +197,89 @@ public fun DemoScreen(
             }
         }
     }
+}
+
+@Composable
+private fun WeatherContent(
+    weather: DemoWeatherState.Success,
+    onEvent: (DemoUiEvent) -> Unit,
+) {
+    if (weather.isRefreshing) {
+        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+            painter = painterResource(R.drawable.ic_wb_sunny),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(36.dp),
+        )
+        Spacer(modifier = Modifier.size(Dimens.spaceMedium))
+        Column {
+            Text(
+                text = stringResource(R.string.demo_weather_conditions_title),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = stringResource(R.string.demo_weather_conditions_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(Dimens.spaceLarge))
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val temperature = stringResource(R.string.demo_weather_temperature_value, weather.weather.temperatureCelsius)
+        val windSpeed = stringResource(R.string.demo_weather_wind_value, weather.weather.windSpeedKph)
+        val temperatureLabel = stringResource(R.string.demo_weather_temperature_label)
+        val windLabel = stringResource(R.string.demo_weather_wind_label)
+        if (maxWidth < 360.dp) {
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
+                WeatherMetric(
+                    icon = { Icon(painterResource(R.drawable.ic_thermostat), contentDescription = null) },
+                    value = temperature,
+                    label = temperatureLabel,
+                )
+                WeatherMetric(
+                    icon = { Icon(painterResource(R.drawable.ic_air), contentDescription = null) },
+                    value = windSpeed,
+                    label = windLabel,
+                )
+            }
+        } else {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
+                WeatherMetric(
+                    icon = { Icon(painterResource(R.drawable.ic_thermostat), contentDescription = null) },
+                    value = temperature,
+                    label = temperatureLabel,
+                )
+                WeatherMetric(
+                    icon = { Icon(painterResource(R.drawable.ic_air), contentDescription = null) },
+                    value = windSpeed,
+                    label = windLabel,
+                )
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(Dimens.spaceLarge))
+    weather.refreshError?.let { error ->
+        Text(
+            text = stringResource(error.toStringResource()),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
+        )
+        Spacer(modifier = Modifier.height(Dimens.spaceMedium))
+    }
+    AppOutlinedButton(
+        text = stringResource(R.string.demo_weather_refresh),
+        icon = Icons.Default.Refresh,
+        onClick = { onEvent(DemoUiEvent.RefreshWeatherClicked) },
+    )
 }
 
 @Composable
@@ -292,11 +291,7 @@ private fun WeatherMetric(
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         icon()
         Spacer(modifier = Modifier.height(Dimens.spaceXXSmall))
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-        )
+        Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
@@ -313,3 +308,24 @@ private fun DemoWeatherError.toStringResource(): Int =
         DemoWeatherError.EMPTY_RESPONSE -> R.string.demo_weather_error_empty_response
         DemoWeatherError.STORAGE_FAILURE -> R.string.demo_weather_error_storage
     }
+
+@Preview(showBackground = true)
+@Composable
+private fun DemoContentPreview() {
+    AndroidComposeBaseTheme {
+        DemoContent(
+            state = DemoUiState(count = 7, weather = DemoWeatherState.Success(DEMO_WEATHER)),
+            onEvent = {},
+            onMessageHandled = {},
+            onMessageAction = {},
+        )
+    }
+}
+
+private val DEMO_WEATHER =
+    DemoWeather(
+        temperatureCelsius = 31.8,
+        apparentTemperatureCelsius = 37.0,
+        weatherCode = 2,
+        windSpeedKph = 11.0,
+    )

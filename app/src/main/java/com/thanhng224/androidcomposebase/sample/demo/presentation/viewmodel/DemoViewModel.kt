@@ -1,6 +1,5 @@
 package com.thanhng224.androidcomposebase.sample.demo.presentation.viewmodel
 
-import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thanhng224.androidcomposebase.R
@@ -8,11 +7,8 @@ import com.thanhng224.androidcomposebase.core.text.UiText
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.DemoWeather
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherError
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherResult
-import com.thanhng224.androidcomposebase.sample.demo.domain.usecase.FetchDemoWeatherUseCase
+import com.thanhng224.androidcomposebase.sample.demo.domain.repository.DemoRepository
 import com.thanhng224.androidcomposebase.sample.demo.domain.usecase.IncrementCounterUseCase
-import com.thanhng224.androidcomposebase.sample.demo.domain.usecase.ObserveDemoCountUseCase
-import com.thanhng224.androidcomposebase.sample.demo.domain.usecase.ObserveDemoWeatherUseCase
-import com.thanhng224.androidcomposebase.sample.demo.domain.usecase.SaveDemoCountUseCase
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoMessageAction
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoUiEvent
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoUiState
@@ -20,60 +16,56 @@ import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeat
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherState
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.PendingDemoMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import java.io.IOException
-import java.util.concurrent.atomic.AtomicLong
 import javax.inject.Inject
 
 @HiltViewModel
 class DemoViewModel
     @Inject
     constructor(
+        private val repository: DemoRepository,
         private val incrementCounter: IncrementCounterUseCase,
-        private val observeDemoCount: ObserveDemoCountUseCase,
-        private val observeDemoWeather: ObserveDemoWeatherUseCase,
-        private val saveDemoCount: SaveDemoCountUseCase,
-        private val fetchDemoWeather: FetchDemoWeatherUseCase,
     ) : ViewModel() {
-        private var isInitialCountLoaded = false
+        private val countWrites = Channel<Int>(Channel.UNLIMITED)
+        private val mutableState = MutableStateFlow(DemoUiState())
+        private var initialCountLoaded = false
         private var persistedCount = 0
-        private var pendingCountWrites = 0
+        private var countWriteActive = false
         private var countWriteFailed = false
-        private var cachedWeather: DemoWeather? = null
         private var refreshInFlight = false
         private var refreshError: DemoWeatherError? = null
-        private val countWriteMutex = Mutex()
-        private val nextMessageId = AtomicLong(0)
-        private val weatherRefreshId = AtomicLong(0)
-        private val mutableState = MutableStateFlow(DemoUiState())
+        private var cachedWeather: DemoWeather? = null
+        private var nextMessageId = 0L
         val state: StateFlow<DemoUiState> = mutableState.asStateFlow()
 
         init {
             viewModelScope.launch {
-                observeDemoCount().collect { count ->
+                repository.observeCount().collect { count ->
                     persistedCount = count
-                    isInitialCountLoaded = true
-                    if (pendingCountWrites == 0) mutableState.update { it.copy(count = count) }
+                    initialCountLoaded = true
+                    if (!countWriteActive) mutableState.update { it.copy(count = count) }
                 }
             }
             viewModelScope.launch {
-                observeDemoWeather().collect { weather ->
+                repository.observeWeather().collect { weather ->
                     cachedWeather = weather
                     updateWeatherState()
                 }
+            }
+            viewModelScope.launch {
+                for (count in countWrites) saveQueuedCounts(count)
             }
             refreshWeather()
         }
 
         fun onEvent(event: DemoUiEvent) {
             when (event) {
-                is DemoUiEvent.IncrementClicked -> onIncrementClicked()
+                DemoUiEvent.IncrementClicked -> incrementCount()
                 DemoUiEvent.RefreshWeatherClicked -> refreshWeather()
             }
         }
@@ -83,42 +75,17 @@ class DemoViewModel
         }
 
         fun onMessageAction(id: Long) {
-            val action =
-                mutableState.value.pendingMessages
-                    .firstOrNull { it.id == id }
-                    ?.action
+            val action = mutableState.value.pendingMessages.firstOrNull { it.id == id }?.action
             if (!removeHeadIfMatching(id)) return
-            when (action) {
-                DemoMessageAction.ResetCounter -> resetCounter()
-                null -> Unit
+            if (action == DemoMessageAction.ResetCounter) {
+                updateAndQueueCount(0)
             }
         }
 
-        /** Returns whether [id] matched the current head and was removed. */
-        private fun removeHeadIfMatching(id: Long): Boolean {
-            var removed = false
-            mutableState.update { current ->
-                val head = current.pendingMessages.firstOrNull()
-                if (head?.id != id) {
-                    current
-                } else {
-                    removed = true
-                    current.copy(pendingMessages = current.pendingMessages.drop(1))
-                }
-            }
-            return removed
-        }
-
-        private fun resetCounter() {
-            mutableState.update { it.copy(count = 0) }
-            persistCount(0)
-        }
-
-        private fun onIncrementClicked() {
-            if (!isInitialCountLoaded) return
+        private fun incrementCount() {
+            if (!initialCountLoaded) return
             val result = incrementCounter(mutableState.value.count)
-            mutableState.update { it.copy(count = result.count) }
-            persistCount(result.count)
+            updateAndQueueCount(result.count)
             if (result.capped) {
                 enqueueMessage(
                     text = UiText.StringResource(R.string.demo_max_count_reached),
@@ -128,67 +95,81 @@ class DemoViewModel
             }
         }
 
+        private fun updateAndQueueCount(count: Int) {
+            countWriteActive = true
+            mutableState.update { it.copy(count = count) }
+            check(countWrites.trySend(count).isSuccess)
+        }
+
+        private fun removeHeadIfMatching(id: Long): Boolean {
+            var removed = false
+            mutableState.update { current ->
+                if (current.pendingMessages.firstOrNull()?.id != id) {
+                    current
+                } else {
+                    removed = true
+                    current.copy(pendingMessages = current.pendingMessages.drop(1))
+                }
+            }
+            return removed
+        }
+
         private fun enqueueMessage(
             text: UiText,
             actionLabel: UiText? = null,
             action: DemoMessageAction? = null,
         ) {
-            val message =
-                PendingDemoMessage(
-                    id = nextMessageId.incrementAndGet(),
-                    text = text,
-                    actionLabel = actionLabel,
-                    action = action,
-                )
+            val message = PendingDemoMessage(++nextMessageId, text, actionLabel, action)
             mutableState.update { it.copy(pendingMessages = it.pendingMessages + message) }
         }
 
-        @VisibleForTesting
-        fun enqueueForTest(action: DemoMessageAction?) {
-            enqueueMessage(text = UiText.DynamicString("test"), action = action)
+        private suspend fun saveQueuedCounts(firstCount: Int) {
+            countWriteActive = true
+            var count: Int? = firstCount
+            while (count != null) {
+                try {
+                    repository.saveCount(count)
+                } catch (_: java.io.IOException) {
+                    countWriteFailed = true
+                }
+                count = countWrites.tryReceive().getOrNull()
+            }
+            countWriteActive = false
+            if (countWriteFailed) {
+                countWriteFailed = false
+                mutableState.update { it.copy(count = persistedCount) }
+                enqueueMessage(UiText.StringResource(R.string.demo_counter_save_failed))
+            }
         }
 
         private fun refreshWeather() {
-            val refreshId = weatherRefreshId.incrementAndGet()
+            if (refreshInFlight) return
             refreshInFlight = true
             refreshError = null
             updateWeatherState()
             viewModelScope.launch {
-                val result = fetchDemoWeather()
-                if (refreshId != weatherRefreshId.get()) return@launch
-                refreshInFlight = false
-                refreshError = (result as? WeatherResult.Failure)?.error?.toWeatherError()
-                updateWeatherState()
-            }
-        }
-
-        private fun updateWeatherState() {
-            val weatherState =
-                cachedWeather?.let { DemoWeatherState.Success(it, refreshInFlight, refreshError) }
-                    ?: refreshError?.let(DemoWeatherState::Error)
-                    ?: DemoWeatherState.Loading
-            mutableState.update { it.copy(weather = weatherState) }
-        }
-
-        private fun persistCount(count: Int) {
-            pendingCountWrites += 1
-            viewModelScope.launch {
                 try {
-                    countWriteMutex.withLock { saveDemoCount(count) }
-                } catch (_: IOException) {
-                    countWriteFailed = true
+                    val result = repository.refreshWeather()
+                    refreshError = (result as? WeatherResult.Failure)?.error?.toDemoWeatherError()
                 } finally {
-                    pendingCountWrites -= 1
-                    if (pendingCountWrites == 0 && countWriteFailed) {
-                        countWriteFailed = false
-                        mutableState.update { it.copy(count = persistedCount) }
-                        enqueueMessage(text = UiText.StringResource(R.string.demo_counter_save_failed))
-                    }
+                    refreshInFlight = false
+                    updateWeatherState()
                 }
             }
         }
 
-        private fun WeatherError.toWeatherError(): DemoWeatherError =
+        private fun updateWeatherState() {
+            val weather = cachedWeather
+            val weatherState =
+                when {
+                    weather != null -> DemoWeatherState.Success(weather, refreshInFlight, refreshError)
+                    refreshError != null -> DemoWeatherState.Error(refreshError!!)
+                    else -> DemoWeatherState.Loading
+                }
+            mutableState.update { it.copy(weather = weatherState) }
+        }
+
+        private fun WeatherError.toDemoWeatherError(): DemoWeatherError =
             when (this) {
                 is WeatherError.Server -> DemoWeatherError.SERVER
                 is WeatherError.Network -> DemoWeatherError.NO_CONNECTION
