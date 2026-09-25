@@ -19,7 +19,7 @@ This repository is an AndroidComposeBase template. Its current modules are `:app
 
 - Within a feature, presentation depends on domain contracts; data implements those contracts. Dependencies do not point from domain to data or presentation.
 - `:app` is the composition root for Hilt, navigation, features, and app-specific infrastructure. `:core` and `:core:ui` remain independent of app features.
-- `presentation/AppRoot.kt` owns adaptive top-level navigation. Keep destination labels localized and let `NavigationSuiteScaffold` provide the bottom bar or rail layout.
+- `presentation/AppRoot.kt` gates startup and onboarding; `presentation/MainShell.kt` assembles Navigation 3 entries and owns the floating top-level navigation. Features declare their own routes, entries, and top-level destination metadata. Keep destination labels localized.
 - Keep business rules out of Composables and Android framework types out of domain contracts.
 - Add a use case or shared abstraction when it expresses a real capability or removes repeated policy, not as a pass-through layer by default.
 - Keep app-specific code under its feature. Promote code to `:core` only when it is genuinely reusable.

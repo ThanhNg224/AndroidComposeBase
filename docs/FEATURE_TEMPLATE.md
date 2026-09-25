@@ -39,8 +39,8 @@ Keep single-screen features flat. If multiple screens share one capability, grou
 
 1. Search for an existing contract, component, route, and similar feature before adding one.
 2. Add only the state and boundaries needed by the feature.
-3. Register a route in `navigation/ScreenRoute.kt` and add it to the app's `NavigationSuiteScaffold` and `NavHost` in `presentation/AppRoot.kt` when the screen is a top-level destination. Keep labels in string resources for every supported locale.
+3. Declare the Navigation 3 route key and entry in the feature's `navigation/` package. For a top-level destination, also declare its `TopLevelDestination` metadata there with a stable, unique `id` that remains unchanged across releases; saved tab restoration depends on it. Then register the feature entry and add the destination to `presentation/MainShell.kt` in display order. Keep labels in string resources for every supported locale. `AppRoot` handles startup and onboarding; `MainShell` assembles navigation after the app is ready.
 4. Add behavior tests for business rules, state transitions, error cases, and asynchronous ordering. Do not add tests that only restate static Compose layout.
 5. Run the affected tests, formatting/lint, and `./gradlew check` when appropriate.
 
-Screens should use the padding supplied by their `Scaffold`, handle safe drawing insets where content draws edge-to-edge, and remain usable with system font scaling. Avoid fixed bottom padding to account for app navigation; adaptive navigation owns that layout space.
+Screens should use the padding supplied by their `Scaffold`, handle safe drawing insets where content draws edge-to-edge, and remain usable with system font scaling. Avoid fixed bottom padding to account for app navigation; `MainShell` reserves space for its floating navigation bar while showing a tab root.

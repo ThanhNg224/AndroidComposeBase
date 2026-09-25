@@ -28,7 +28,7 @@ Import the component from `core.ui.components` and use its actual parameters. Ad
 
 `AppButton`, `AppTopBar`, and `AppStates` each carry private `@Preview` functions (light and dark, via `uiMode`) so Android Studio's preview pane renders them without running the app. Extend that pattern for new components instead of relying only on the sample gallery.
 
-Use Material 3 components directly for dialogs and adaptive app navigation. The app shell uses `NavigationSuiteScaffold`, which selects a bottom navigation bar or rail based on available window size. Screens should consume scaffold padding and safe drawing insets instead of adding a fixed navigation-bar spacer.
+Use Material 3 components directly for dialogs. The app shell uses the reusable `AppFloatingNavBar` for top-level tabs and shows it while the selected tab is at its root. Screens should consume scaffold padding and safe drawing insets instead of adding a fixed navigation-bar spacer.
 
 ## Sample gallery
 

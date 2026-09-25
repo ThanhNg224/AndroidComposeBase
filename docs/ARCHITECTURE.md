@@ -11,7 +11,7 @@ AndroidComposeBase uses feature-oriented Clean Architecture inside the existing 
 | `:core:ui` | Reusable Compose theme and UI components. |
 | `:baselineprofile` | The sample app's macrobenchmark and baseline-profile journey. |
 
-The app assembles implementations and dependencies. A feature may use `:core` or `:core:ui`; shared modules must not depend on `:app` or one of its features. `AppRoot` is the composition and navigation root; its adaptive navigation suite selects a bottom bar or rail from the available window size and stays hidden during onboarding.
+The app assembles implementations and dependencies. A feature may use `:core` or `:core:ui`; shared modules must not depend on `:app` or one of its features. `AppRoot` applies the ready-state theme and gates onboarding before showing `MainShell`. `MainShell` assembles feature-owned Navigation 3 entries and top-level destinations, displays them with a floating navigation bar, and keeps a separate back stack for each tab so returning to a tab preserves its navigation state.
 
 ## Feature dependency direction
 
@@ -54,7 +54,7 @@ Keep one screen's UI, ViewModel, and state together. When multiple screens share
 - Composables render state, forward user input, and collect `StateFlow` with lifecycle awareness. They do not access repositories, Room, or APIs.
 - ViewModels own screen state and coordinate feature contracts. Keep Android resource resolution at the presentation edge.
 - Model durable screen state as immutable `UiState`. For messages that must survive recreation until acknowledged, store a small pending-message list in state and remove the matching head after display. Use a transient event mechanism only when its loss/replay behavior is intentional.
-- Navigation is declared in `navigation/ScreenRoute.kt` and assembled in `presentation/AppRoot.kt`. Keep route changes, localized destination labels, and adaptive navigation at the app boundary.
+- Each feature declares its Navigation 3 route key and entry alongside its screen; top-level features also declare their `TopLevelDestination` metadata. `presentation/MainShell.kt` lists top-level destinations in display order and assembles feature entry registrations. Keep cross-feature navigation assembly and localized destination labels at the app boundary.
 
 ## Domain and use cases
 

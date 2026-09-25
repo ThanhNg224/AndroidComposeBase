@@ -30,7 +30,7 @@ Startup waits up to two seconds for the persisted theme read before releasing th
 
 ## `:core:ui`
 
-`com.thanhng224.androidcomposebase.core.ui` contains the Compose design system and the `AndroidComposeBaseTheme` entry point. Its shared components are `AppPrimaryButton`, `AppSecondaryButton`, `AppOutlinedButton`, `AppTopBar`, and `AppCenterTopBar`; `Dimens`, `AppShapes`, and `AppTypography` provide common design tokens. Use Material 3 directly for dialogs and app navigation. The app owns adaptive navigation through `NavigationSuiteScaffold`.
+`com.thanhng224.androidcomposebase.core.ui` contains the Compose design system and the `AndroidComposeBaseTheme` entry point. Its shared components are `AppPrimaryButton`, `AppSecondaryButton`, `AppOutlinedButton`, `AppTopBar`, `AppCenterTopBar`, and `AppFloatingNavBar`; `Dimens`, `AppShapes`, and `AppTypography` provide common design tokens. Use Material 3 directly for dialogs. `:app` owns Navigation 3 assembly and uses `AppFloatingNavBar` for its top-level tabs.
 
 The `:core:ui` module depends on `:core` for selected foundation/theme support. It does not depend on app features. `UiText` is declared in `:core`; `:core:ui` provides Compose resolution helpers. A consuming app may depend on either module independently according to the APIs it uses.
 
