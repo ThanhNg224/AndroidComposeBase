@@ -34,8 +34,8 @@ class SettingsViewModelTest {
         languageTag: String? = AppLanguage.ENGLISH.languageTag,
         private val supportedLanguageTags: List<String> = AppLanguage.BUILT_IN.map(AppLanguage::languageTag),
         theme: AppTheme = AppTheme.SYSTEM,
-        private val calls: MutableList<String>? = null,
-        private val failLanguagePersistence: Boolean = false,
+        private val localeChanges: MutableList<String?>? = null,
+        private val failLocaleChange: Boolean = false,
         failThemePersistence: Boolean = false,
     ) : SettingsRepository {
         private val themeFlow = MutableStateFlow(theme)
@@ -55,10 +55,8 @@ class SettingsViewModelTest {
         override fun getSupportedLanguageTags(): List<String> = supportedLanguageTags
 
         override suspend fun setLanguageTag(languageTag: String?) {
-            val tag = languageTag ?: "system"
-            calls?.add("persist:$tag")
-            if (failLanguagePersistence) throw IOException("persist failed")
-            calls?.add("apply:$tag")
+            localeChanges?.add(languageTag)
+            if (failLocaleChange) throw IOException("locale apply failed")
             currentLanguageTag = languageTag
         }
 
@@ -73,32 +71,29 @@ class SettingsViewModelTest {
     }
 
     private class DelayedLanguageSettingsRepository(
-        private val failEnglishMutation: Boolean = false,
+        private val failEnglishChange: Boolean = false,
     ) : SettingsRepository {
         private val themeFlow = MutableStateFlow(AppTheme.SYSTEM)
-        val englishMutationStarted = CompletableDeferred<Unit>()
-        val finishEnglishMutation = CompletableDeferred<Unit>()
-        val mutationTags = mutableListOf<String?>()
-        var persistedLanguageTag: String? = AppLanguage.VIETNAMESE.languageTag
-            private set
-        var appliedLocaleTag: String = AppLanguage.VIETNAMESE.languageTag
+        val englishChangeStarted = CompletableDeferred<Unit>()
+        val finishEnglishChange = CompletableDeferred<Unit>()
+        val localeChanges = mutableListOf<String?>()
+        var currentLanguageTag: String? = AppLanguage.VIETNAMESE.languageTag
             private set
 
         override fun observeTheme(): Flow<AppTheme> = themeFlow
 
-        override suspend fun getCurrentLanguageTag(): String? = persistedLanguageTag
+        override suspend fun getCurrentLanguageTag(): String? = currentLanguageTag
 
         override fun getSupportedLanguageTags(): List<String> = AppLanguage.BUILT_IN.map(AppLanguage::languageTag)
 
         override suspend fun setLanguageTag(languageTag: String?) {
-            mutationTags += languageTag
+            localeChanges += languageTag
             if (languageTag == AppLanguage.ENGLISH.languageTag) {
-                englishMutationStarted.complete(Unit)
-                finishEnglishMutation.await()
-                if (failEnglishMutation) throw IOException("persist failed")
+                englishChangeStarted.complete(Unit)
+                finishEnglishChange.await()
+                if (failEnglishChange) throw IOException("locale apply failed")
             }
-            persistedLanguageTag = languageTag
-            appliedLocaleTag = languageTag.orEmpty()
+            currentLanguageTag = languageTag
         }
 
         override suspend fun setTheme(theme: AppTheme) {
@@ -280,47 +275,57 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `selecting a language persists before applying it`() =
+    fun `selecting a language applies the platform locale once`() =
         runTest {
-            val calls = mutableListOf<String>()
-            val viewModel = createViewModel(FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, calls = calls))
-            advanceUntilIdle()
-
-            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
-            advanceUntilIdle()
-
-            assertEquals(listOf("persist:vi-VN", "apply:vi-VN"), calls)
-            assertEquals(AppLanguage.VIETNAMESE, viewModel.state.value.language)
-        }
-
-    @Test
-    fun `system language selection clears the app locale override`() =
-        runTest {
-            val calls = mutableListOf<String>()
-            val viewModel = createViewModel(FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, calls = calls))
-            advanceUntilIdle()
-
-            viewModel.onEvent(SettingsUiEvent.LanguageSelected(null))
-            advanceUntilIdle()
-
-            assertEquals(listOf("persist:system", "apply:system"), calls)
-            assertEquals(null, viewModel.state.value.language)
-        }
-
-    @Test
-    fun `a failed language persistence keeps the previous language and queues an error message`() =
-        runTest {
-            val calls = mutableListOf<String>()
+            val localeChanges = mutableListOf<String?>()
             val viewModel =
                 createViewModel(
-                    FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, calls = calls, failLanguagePersistence = true),
+                    FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, localeChanges = localeChanges),
                 )
             advanceUntilIdle()
 
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
             advanceUntilIdle()
 
-            assertEquals(listOf("persist:vi-VN"), calls)
+            assertEquals(listOf(AppLanguage.VIETNAMESE.languageTag), localeChanges)
+            assertEquals(AppLanguage.VIETNAMESE, viewModel.state.value.language)
+        }
+
+    @Test
+    fun `system language selection clears the app locale override`() =
+        runTest {
+            val localeChanges = mutableListOf<String?>()
+            val viewModel =
+                createViewModel(
+                    FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, localeChanges = localeChanges),
+                )
+            advanceUntilIdle()
+
+            viewModel.onEvent(SettingsUiEvent.LanguageSelected(null))
+            advanceUntilIdle()
+
+            assertEquals(listOf(null), localeChanges)
+            assertEquals(null, viewModel.state.value.language)
+        }
+
+    @Test
+    fun `a failed platform locale change keeps the previous language and queues an error message`() =
+        runTest {
+            val localeChanges = mutableListOf<String?>()
+            val viewModel =
+                createViewModel(
+                    FakeSettingsRepository(
+                        languageTag = AppLanguage.ENGLISH.languageTag,
+                        localeChanges = localeChanges,
+                        failLocaleChange = true,
+                    ),
+                )
+            advanceUntilIdle()
+
+            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
+            advanceUntilIdle()
+
+            assertEquals(listOf(AppLanguage.VIETNAMESE.languageTag), localeChanges)
             assertEquals(AppLanguage.ENGLISH, viewModel.state.value.language)
             assertEquals(1, viewModel.state.value.pendingMessages.size)
         }
@@ -329,7 +334,7 @@ class SettingsViewModelTest {
     fun `acknowledging the language error message removes it`() =
         runTest {
             val viewModel =
-                createViewModel(FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, failLanguagePersistence = true))
+                createViewModel(FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, failLocaleChange = true))
             advanceUntilIdle()
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
             advanceUntilIdle()
@@ -343,10 +348,13 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `re-collecting state does not repeat the language mutation`() =
+    fun `re-collecting state does not repeat the platform locale change`() =
         runTest {
-            val calls = mutableListOf<String>()
-            val viewModel = createViewModel(FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, calls = calls))
+            val localeChanges = mutableListOf<String?>()
+            val viewModel =
+                createViewModel(
+                    FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag, localeChanges = localeChanges),
+                )
             advanceUntilIdle()
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
             advanceUntilIdle()
@@ -354,7 +362,7 @@ class SettingsViewModelTest {
             viewModel.state.test { awaitItem() }
             viewModel.state.test { awaitItem() }
 
-            assertEquals(listOf("persist:vi-VN", "apply:vi-VN"), calls)
+            assertEquals(listOf(AppLanguage.VIETNAMESE.languageTag), localeChanges)
         }
 
     @Test
@@ -375,50 +383,48 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `language mutations are serialized so the latest selection wins across inverse completion order`() =
+    fun `platform locale changes are serialized so the latest selection wins across inverse completion order`() =
         runTest {
             val repository = DelayedLanguageSettingsRepository()
             val viewModel = createViewModel(repository)
             advanceUntilIdle()
 
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.ENGLISH))
-            repository.englishMutationStarted.await()
+            repository.englishChangeStarted.await()
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
             advanceUntilIdle()
 
-            assertEquals(listOf(AppLanguage.ENGLISH.languageTag), repository.mutationTags)
+            assertEquals(listOf(AppLanguage.ENGLISH.languageTag), repository.localeChanges)
             assertEquals(
                 AppLanguage.VIETNAMESE.languageTag,
                 viewModel.state.value.language
                     ?.languageTag,
             )
 
-            repository.finishEnglishMutation.complete(Unit)
+            repository.finishEnglishChange.complete(Unit)
             advanceUntilIdle()
 
-            assertTrue(repository.mutationTags.contains(AppLanguage.VIETNAMESE.languageTag))
-            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.persistedLanguageTag)
-            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.appliedLocaleTag)
+            assertTrue(repository.localeChanges.contains(AppLanguage.VIETNAMESE.languageTag))
+            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.currentLanguageTag)
             assertEquals(AppLanguage.VIETNAMESE, viewModel.state.value.language)
         }
 
     @Test
     fun `superseded language failure does not enqueue a stale error after latest selection succeeds`() =
         runTest {
-            val repository = DelayedLanguageSettingsRepository(failEnglishMutation = true)
+            val repository = DelayedLanguageSettingsRepository(failEnglishChange = true)
             val viewModel = createViewModel(repository)
             advanceUntilIdle()
 
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.ENGLISH))
-            repository.englishMutationStarted.await()
+            repository.englishChangeStarted.await()
             viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.VIETNAMESE))
             advanceUntilIdle()
 
-            repository.finishEnglishMutation.complete(Unit)
+            repository.finishEnglishChange.complete(Unit)
             advanceUntilIdle()
 
-            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.persistedLanguageTag)
-            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.appliedLocaleTag)
+            assertEquals(AppLanguage.VIETNAMESE.languageTag, repository.currentLanguageTag)
             assertEquals(AppLanguage.VIETNAMESE, viewModel.state.value.language)
             assertTrue(
                 viewModel.state.value.pendingMessages
