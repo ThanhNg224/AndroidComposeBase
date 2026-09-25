@@ -30,57 +30,30 @@ class InitializerUnitTests(unittest.TestCase):
     def write_preflight_fixture(root: Path) -> None:
         app_dir = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split("."))
         profile_dir = root / "baselineprofile/src/main/java" / Path(*f"{SOURCE_APP_PACKAGE}.baselineprofile".split("."))
-        app_root = app_dir / "presentation/AppRoot.kt"
-        app_root.parent.mkdir(parents=True)
-        app_root.write_text(
+        main_shell = app_dir / "presentation/MainShell.kt"
+        main_shell.parent.mkdir(parents=True)
+        main_shell.write_text(
             f'''package {SOURCE_APP_PACKAGE}.presentation
-import {SOURCE_APP_PACKAGE}.sample.demo.presentation.ui.DemoScreen
-import {SOURCE_APP_PACKAGE}.sample.designsystem.presentation.ui.DesignSystemScreen
-val topLevelRoutes =
-            listOf(
-                ScreenRoute.Home::class.qualifiedName,
-                ScreenRoute.Demo::class.qualifiedName,
-                ScreenRoute.Settings::class.qualifiedName,
-                ScreenRoute.DesignSystem::class.qualifiedName,
-            )
-NavHost(navController, startDestination = ScreenRoute.Home) {{
-                composable<ScreenRoute.Home> {{
-                    HomeScreen()
-                }}
-                composable<ScreenRoute.Demo> {{
-                    DemoScreen()
-                }}
-                composable<ScreenRoute.Settings> {{
-                    SettingsScreen()
-                }}
-                composable<ScreenRoute.DesignSystem> {{
-                    DesignSystemScreen()
-                }}
+import {SOURCE_APP_PACKAGE}.appshell.home.homeEntry
+import {SOURCE_APP_PACKAGE}.sample.sampleEntries
+import {SOURCE_APP_PACKAGE}.sample.sampleTopLevelDestinations
+private val topLevelDestinations: List<TopLevelDestination> =
+    buildList {{
+        add(HomeDestination)
+        addAll(sampleTopLevelDestinations)
+        add(SettingsDestination)
+    }}
+fun MainShell() {{
+    val entryProvider =
+        remember {{
+            entryProvider<NavKey> {{
+                homeEntry()
+                sampleEntries()
+                settingsEntry()
             }}
-val navItems =
-                    listOf(
-                        AppNavItem(
-                            selected = isSelectedRoute(currentDestination, ScreenRoute.Home::class.qualifiedName),
-                            onClick = {{ navController.navigate(ScreenRoute.Home) }},
-                            label = stringResource(R.string.navigation_home),
-                        ),
-                        AppNavItem(
-                            selected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),
-                            onClick = {{ navController.navigate(ScreenRoute.Demo) }},
-                            label = stringResource(R.string.navigation_demo),
-                        ),
-                        AppNavItem(
-                            selected = isSelectedRoute(currentDestination, ScreenRoute.DesignSystem::class.qualifiedName),
-                            onClick = {{ navController.navigate(ScreenRoute.DesignSystem) }},
-                            label = stringResource(R.string.navigation_design),
-                        ),
-                        AppNavItem(
-                            selected = isSelectedRoute(currentDestination, ScreenRoute.Settings::class.qualifiedName),
-                            onClick = {{ navController.navigate(ScreenRoute.Settings) }},
-                            label = stringResource(R.string.navigation_settings),
-                        ),
-                    )
-AppFloatingNavBar(items = navItems)
+        }}
+    AppFloatingNavBar(items = topLevelDestinations.map {{ it.toItem() }})
+}}
 ''',
             encoding="utf-8",
         )
@@ -92,13 +65,9 @@ AppFloatingNavBar(items = navItems)
         home = app_dir / "appshell/home/HomeScreen.kt"
         home.parent.mkdir(parents=True)
         home.write_text('Text(text = stringResource(R.string.home_welcome_title))\n', encoding="utf-8")
-        routes = app_dir / "navigation/ScreenRoute.kt"
-        routes.parent.mkdir(parents=True)
-        routes.write_text(
-            "\n    @Serializable\n    public data object Demo : ScreenRoute\n"
-            "\n    @Serializable\n    public data object DesignSystem : ScreenRoute\n",
-            encoding="utf-8",
-        )
+        sample_navigation = app_dir / "sample/SampleNavigation.kt"
+        sample_navigation.parent.mkdir(parents=True)
+        sample_navigation.write_text(f"package {SOURCE_APP_PACKAGE}.sample\n", encoding="utf-8")
         for sample in ("demo", "designsystem"):
             sample_file = app_dir / f"sample/{sample}/Sample.kt"
             sample_file.parent.mkdir(parents=True)
@@ -245,8 +214,9 @@ kover {{
                 )
 
                 self.assertFalse(root.joinpath("app/src/main/java/com/acme/shop/di/MetadataLoggingInterceptor.kt").exists())
-                self.assertFalse(root.joinpath("app/src/test/java/com/acme/shop/sample/demo").exists())
-                self.assertFalse(root.joinpath("app/src/test/java/com/acme/shop/sample/designsystem").exists())
+                self.assertFalse(root.joinpath("app/src/main/java/com/acme/shop/sample").exists())
+                self.assertFalse(root.joinpath("app/src/test/java/com/acme/shop/sample").exists())
+                self.assertNotIn("sample", root.joinpath("app/src/main/java/com/acme/shop/presentation/MainShell.kt").read_text(encoding="utf-8"))
                 for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
                     names = {node.attrib.get("name") for node in ET.parse(root / relative).getroot()}
                     self.assertTrue(names.isdisjoint({"navigation_demo", "navigation_design", "demo_title", "design_system_title"}))
@@ -376,21 +346,31 @@ kover {{
                 app_name = ET.parse(path).getroot().find("string[@name='app_name']")
                 self.assertEqual(app_name.text, "\\@Acme\\'s \\\"Shop\\\"")
 
-    def test_clean_routes_rejects_unknown_adaptive_navigation_markers(self) -> None:
+    def test_clean_routes_rejects_changed_main_shell_markers(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             self.write_preflight_fixture(root)
-            app_root = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / "presentation/AppRoot.kt"
-            app_root.write_text(
-                app_root.read_text(encoding="utf-8").replace(
-                    "selected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),",
-                    "selected = isSelectedRoute(currentDestination, ScreenRoute.Weather::class.qualifiedName),",
-                ),
+            main_shell = root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split(".")) / "presentation/MainShell.kt"
+            main_shell.write_text(
+                main_shell.read_text(encoding="utf-8").replace("                sampleEntries()\n", "                sampleEntries(); weatherEntry()\n"),
                 encoding="utf-8",
             )
+            before = main_shell.read_bytes()
+            from init_project import _remove_sample_routes
+            with self.assertRaisesRegex(InitError, "MainShell sample markers changed"):
+                _remove_sample_routes(root, SOURCE_APP_PACKAGE, dry_run=False)
+            self.assertEqual(main_shell.read_bytes(), before)
+
+    def test_clean_routes_removes_only_sample_lines_from_main_shell(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            self.write_preflight_fixture(root)
             from init_project import _clean_sample_route_sources
-            with self.assertRaisesRegex(InitError, "AppRoot sample markers changed"):
-                _clean_sample_route_sources(root, SOURCE_APP_PACKAGE)
+            _, cleaned = _clean_sample_route_sources(root, SOURCE_APP_PACKAGE)
+            self.assertNotIn("sample", cleaned)
+            self.assertIn(f"import {SOURCE_APP_PACKAGE}.appshell.home.homeEntry\n", cleaned)
+            self.assertIn("        add(HomeDestination)\n        add(SettingsDestination)\n", cleaned)
+            self.assertIn("                homeEntry()\n                settingsEntry()\n", cleaned)
 
     def test_clean_profile_journey_uses_bilingual_retained_shell_labels(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

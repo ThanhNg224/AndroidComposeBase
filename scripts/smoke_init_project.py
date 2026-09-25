@@ -70,7 +70,7 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
     app_dir = clone / "app/src/main/java" / Path(*app_package.split("."))
     assert (app_dir / f"{name}Application.kt").is_file()
     app_root = text(app_dir / "presentation/AppRoot.kt")
-    routes = text(app_dir / "navigation/ScreenRoute.kt")
+    main_shell = text(app_dir / "presentation/MainShell.kt")
     onboarding = text(app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt")
     home = text(app_dir / "appshell/home/HomeScreen.kt")
     for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
@@ -84,17 +84,16 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
     assert not (clone / "app/src/release/generated/baselineProfiles/baseline-prof.txt").exists()
     sample_dirs = (app_dir / "sample/demo", app_dir / "sample/designsystem")
     if clean:
-        assert all(not path.exists() for path in sample_dirs)
+        assert not (app_dir / "sample").exists()
         assert not (app_dir / "di/MetadataLoggingInterceptor.kt").exists()
         assert (app_dir / "feature/onboarding/presentation/ui/OnboardingScreen.kt").is_file()
         assert (app_dir / "feature/settings/presentation/ui/SettingsScreen.kt").is_file()
-        test_samples = clone / "app/src/test/java" / Path(*app_package.split(".")) / "sample"
-        assert not (test_samples / "demo").exists() and not (test_samples / "designsystem").exists()
-        assert "AppFloatingNavBar" in app_root
-        assert "ScreenRoute.Home" in app_root and "ScreenRoute.Settings" in app_root
-        assert "ScreenRoute.Demo" not in app_root and "ScreenRoute.DesignSystem" not in app_root
-        assert "Demo" not in routes and "DesignSystem" not in routes
-        assert "sample.demo" not in app_root and "sample.designsystem" not in app_root
+        assert not (clone / "app/src/test/java" / Path(*app_package.split(".")) / "sample").exists()
+        assert "MainShell()" in app_root
+        assert "AppFloatingNavBar" in main_shell
+        assert "HomeRoute" in main_shell and "homeEntry()" in main_shell and "settingsEntry()" in main_shell
+        assert "HomeDestination" in main_shell and "SettingsDestination" in main_shell
+        assert "sample" not in main_shell
         assert "Retrofit" not in app_build and "Room" not in app_build
         assert "libs.retrofit" not in app_build and "libs.room" not in app_build and "libs.kotlinx.serialization.json" not in app_build
         assert "API_BASE_URL" not in app_build
@@ -113,7 +112,8 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
     else:
         assert all(path.is_dir() for path in sample_dirs)
         assert (app_dir / "di/MetadataLoggingInterceptor.kt").is_file()
-        assert "ScreenRoute.Demo" in app_root and "ScreenRoute.DesignSystem" in app_root
+        assert (app_dir / "sample/SampleNavigation.kt").is_file()
+        assert "sampleEntries()" in main_shell and "addAll(sampleTopLevelDestinations)" in main_shell
 
     if scope == "full":
         core_package = f"{app_package}.core"

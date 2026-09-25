@@ -25,6 +25,9 @@ public object Dimens {
     public val buttonHeight: Dp = 48.dp
     public val inputHeight: Dp = 56.dp
 
+    /** Bottom clearance for content laid out beneath `AppFloatingNavBar`, so the bar never covers it. */
+    public val floatingNavBarClearance: Dp = 80.dp
+
     // Corner radiuses
     public val radiusSmall: Dp = 8.dp
     public val radiusMedium: Dp = 16.dp

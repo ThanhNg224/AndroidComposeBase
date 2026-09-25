@@ -280,67 +280,41 @@ def _remove_tree(root: Path, path: Path, dry_run: bool) -> int:
     return 1
 
 
-def _clean_sample_route_sources(root: Path, app_package: str) -> tuple[Path, str, Path, str]:
+def _clean_sample_route_sources(root: Path, app_package: str) -> tuple[Path, str]:
+    """Returns MainShell.kt and its source with every reference to the `sample` package removed."""
     target_dir = root / "app/src/main/java" / Path(*app_package.split("."))
     package_dir = target_dir if target_dir.exists() else root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split("."))
     source_app_package = app_package if target_dir.exists() else SOURCE_APP_PACKAGE
-    app_root = package_dir / "presentation/AppRoot.kt"
-    route_file = package_dir / "navigation/ScreenRoute.kt"
-    for path in (app_root, route_file):
-        if not path.is_file():
-            raise InitError(f"Cannot clean sample routes: missing {path.relative_to(root)}")
-    source = app_root.read_text(encoding="utf-8")
-    required = (
-        f"import {source_app_package}.sample.demo.presentation.ui.DemoScreen\n",
-        f"import {source_app_package}.sample.designsystem.presentation.ui.DesignSystemScreen\n",
-        "                ScreenRoute.Demo::class.qualifiedName,\n",
-        "                ScreenRoute.DesignSystem::class.qualifiedName,\n",
-        "                composable<ScreenRoute.Demo> {\n",
-        "                composable<ScreenRoute.DesignSystem> {\n",
+    main_shell = package_dir / "presentation/MainShell.kt"
+    if not main_shell.is_file():
+        raise InitError(f"Cannot clean sample routes: missing {main_shell.relative_to(root)}")
+    source = main_shell.read_text(encoding="utf-8")
+    # Each marker is a whole line: the two imports of sample/SampleNavigation.kt, the tab list
+    # entry, and the entry-provider registration.
+    markers = (
+        f"import {source_app_package}.sample.sampleEntries\n",
+        f"import {source_app_package}.sample.sampleTopLevelDestinations\n",
+        "        addAll(sampleTopLevelDestinations)\n",
+        "                sampleEntries()\n",
     )
-    # AppNavItem entries live in a plain list (not a per-item lambda), so each is located by its
-    # own `selected = isSelectedRoute(..., ScreenRoute.<X>::class.qualifiedName)` line, unique per route.
-    nav_item_markers = (
-        "                        AppNavItem(\n"
-        "                            selected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),\n",
-        "                        AppNavItem(\n"
-        "                            selected = isSelectedRoute(currentDestination, ScreenRoute.DesignSystem::class.qualifiedName),\n",
-    )
-    missing = [marker for marker in required + nav_item_markers if marker not in source]
+    missing = [marker for marker in markers if source.count(marker) != 1]
     if missing:
-        raise InitError("AppRoot sample markers changed; refusing partial cleanup: " + ", ".join(missing))
-    route_markers = (
-        "    @Serializable\n    public data object Demo : ScreenRoute\n",
-        "    @Serializable\n    public data object DesignSystem : ScreenRoute\n",
-    )
-    route_source = route_file.read_text(encoding="utf-8")
-    missing_routes = [marker for marker in route_markers if marker not in route_source]
-    if missing_routes:
-        raise InitError("ScreenRoute sample markers changed; refusing partial cleanup: " + ", ".join(missing_routes))
-    source = source.replace(required[0], "").replace(required[1], "")
-    for marker in required[2:4]:
+        raise InitError("MainShell sample markers changed; refusing partial cleanup: " + ", ".join(marker.strip() for marker in missing))
+    for marker in markers:
         source = source.replace(marker, "")
-    source = _remove_kotlin_block(source, required[4])
-    source = _remove_kotlin_block(source, required[5])
-    source = _remove_kotlin_list_item(source, nav_item_markers[0])
-    source = _remove_kotlin_list_item(source, nav_item_markers[1])
-    route_source = re.sub(r"^    @Serializable\n    public data object (?:Demo|DesignSystem) : ScreenRoute\n", "", route_source, flags=re.MULTILINE)
-    if "ScreenRoute.Demo" in source or "ScreenRoute.DesignSystem" in source or "data object Demo" in route_source or "data object DesignSystem" in route_source:
+    if ".sample." in source or "sampleEntries" in source or "sampleTopLevelDestinations" in source:
         raise InitError("Sample navigation references remain after cleanup.")
-    return app_root, source, route_file, route_source
+    return main_shell, source
 
 
 def _remove_sample_routes(root: Path, app_package: str, dry_run: bool) -> int:
-    app_root, source, route_file, route_source = _clean_sample_route_sources(root, app_package)
-    original_source = app_root.read_text(encoding="utf-8")
-    original_route_source = route_file.read_text(encoding="utf-8")
-    changed = source != original_source or route_source != original_route_source
+    main_shell, source = _clean_sample_route_sources(root, app_package)
+    changed = source != main_shell.read_text(encoding="utf-8")
     if dry_run:
         if changed:
-            print("  clean sample routes in AppRoot.kt and ScreenRoute.kt")
+            print("  clean sample routes in MainShell.kt")
     else:
-        app_root.write_text(source, encoding="utf-8")
-        route_file.write_text(route_source, encoding="utf-8")
+        main_shell.write_text(source, encoding="utf-8")
     return int(changed)
 
 
@@ -394,26 +368,10 @@ def _remove_kotlin_call(source: str, marker: str) -> str:
     return _remove_delimited(source, marker, "(", ")")
 
 
-def _remove_kotlin_block(source: str, marker: str) -> str:
-    return _remove_delimited(source, marker, "{", "}")
-
-
-def _remove_kotlin_list_item(source: str, marker: str) -> str:
-    """Removes a `Marker(...)` call plus its trailing list-item comma, e.g. an `AppNavItem(...),` entry."""
-    start_at, end_at = _find_block_span(source, marker, "(", ")")
-    if end_at < len(source) and source[end_at] == ",":
-        end_at += 1
-    while end_at < len(source) and source[end_at] in " \t":
-        end_at += 1
-    if end_at < len(source) and source[end_at] == "\n":
-        end_at += 1
-    return source[:start_at] + source[end_at:]
-
-
 def _remove_sample_kover_includes(source: str, marker: str) -> str:
     """Strips only the `*.sample.*` include lines out of the Kover block that follows `marker`.
 
-    Unlike `_remove_kotlin_block`, this keeps the rest of the block (real-feature includes,
+    Unlike removing the whole block, this keeps the rest of it (real-feature includes,
     excludes, and any `verify` rule) intact, so an initialized app keeps its coverage gate.
     """
     start_at, end_at = _find_block_span(source, marker, "{", "}")
@@ -513,11 +471,8 @@ def clean_samples(root: Path, app_package: str, dry_run: bool) -> int:
     target_dir = root / "app/src/main/java" / Path(*app_package.split("."))
     package_dir = target_dir if target_dir.exists() else root / "app/src/main/java" / Path(*SOURCE_APP_PACKAGE.split("."))
     logger_package = app_package if target_dir.exists() else SOURCE_APP_PACKAGE
-    for sample_dir in (package_dir / "sample/demo", package_dir / "sample/designsystem"):
-        changed += _remove_tree(root, sample_dir, dry_run)
-    test_package_dir = root / "app/src/test/java" / Path(*app_package.split(".")) / "sample"
-    for sample_dir in (test_package_dir / "demo", test_package_dir / "designsystem"):
-        changed += _remove_tree(root, sample_dir, dry_run)
+    changed += _remove_tree(root, package_dir / "sample", dry_run)
+    changed += _remove_tree(root, root / "app/src/test/java" / Path(*app_package.split(".")) / "sample", dry_run)
     changed += _remove_tree(root, package_dir / "di/AppNetworkModule.kt", dry_run)
     changed += _remove_metadata_logger(root, logger_package, dry_run)
     changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_demo_filled.xml", dry_run)
@@ -636,22 +591,18 @@ def _verify(root: Path, app_package: str, core_package: str, scope: str, clean: 
         raise InitError("Post-check failed: committed baseline profile must be regenerated for the renamed app.")
     if clean:
         package_dir = root / "app/src/main/java" / Path(*app_package.split("."))
-        test_package_dir = root / "app/src/test/java" / Path(*app_package.split(".")) / "sample"
         markers = (
-            package_dir / "sample/demo", package_dir / "sample/designsystem", package_dir / "di/AppNetworkModule.kt",
+            package_dir / "sample", package_dir / "di/AppNetworkModule.kt",
             package_dir / "di/MetadataLoggingInterceptor.kt",
-            test_package_dir / "demo", test_package_dir / "designsystem",
+            root / "app/src/test/java" / Path(*app_package.split(".")) / "sample",
             root / "app/src/release/generated/baselineProfiles/baseline-prof.txt",
         )
         leftovers = [path.relative_to(root) for path in markers if path.exists()]
-        app_root = (package_dir / "presentation/AppRoot.kt").read_text(encoding="utf-8")
-        routes = (package_dir / "navigation/ScreenRoute.kt").read_text(encoding="utf-8")
+        main_shell = (package_dir / "presentation/MainShell.kt").read_text(encoding="utf-8")
         app_build = (root / "app/build.gradle.kts").read_text(encoding="utf-8")
         manifest = (root / "app/src/main/AndroidManifest.xml").read_text(encoding="utf-8")
-        if "ScreenRoute.Demo" in app_root or "ScreenRoute.DesignSystem" in app_root:
-            leftovers.append(Path("app/src/main/java") / Path(*app_package.split(".")) / "presentation/AppRoot.kt")
-        if "data object Demo" in routes or "data object DesignSystem" in routes:
-            leftovers.append(Path("app/src/main/java") / Path(*app_package.split(".")) / "navigation/ScreenRoute.kt")
+        if ".sample." in main_shell or "sampleEntries" in main_shell or "sampleTopLevelDestinations" in main_shell:
+            leftovers.append(Path("app/src/main/java") / Path(*app_package.split(".")) / "presentation/MainShell.kt")
         if any(marker in app_build for marker in ("libs.room.", "libs.retrofit.", "libs.okhttp.", "API_BASE_URL", "sample.demo", "sample.designsystem")):
             leftovers.append(Path("app/build.gradle.kts"))
         if "android.permission.INTERNET" in manifest:
