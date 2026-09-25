@@ -38,12 +38,12 @@ class SettingsViewModel
         private val pendingMessages = MutableStateFlow(emptyList<PendingSettingsMessage>())
         private val themeMutationMutex = Mutex()
         private var requestedTheme: AppTheme? = null
-        private var hasObservedTheme = false
+        private var observedTheme: AppTheme? = null
         private var nextMessageId = 0L
 
         val state: StateFlow<SettingsUiState> =
             combine(
-                repository.observeTheme().onEach { hasObservedTheme = true },
+                repository.observeTheme().onEach { observedTheme = it },
                 selectedLanguage,
                 pendingMessages,
             ) { theme, language, messages ->
@@ -78,8 +78,7 @@ class SettingsViewModel
 
         private fun selectTheme(theme: AppTheme) {
             if (theme == requestedTheme) return
-            val themeAlreadyObserved = hasObservedTheme && theme == state.value.theme
-            if (requestedTheme == null && themeAlreadyObserved) return
+            if (requestedTheme == null && theme == observedTheme) return
             requestedTheme = theme
             viewModelScope.launch {
                 themeMutationMutex.withLock {
