@@ -65,17 +65,20 @@ class DemoViewModelTest {
         }
     }
 
-    private class DeferredInitialCountRepository(initialCount: Int) : FakeDemoRepository(initialCount) {
+    private class DeferredInitialCountRepository(
+        initialCount: Int,
+    ) : FakeDemoRepository(initialCount) {
         private val gate = CompletableDeferred<Unit>()
 
         fun releaseInitialLoad() {
             gate.complete(Unit)
         }
 
-        override fun observeCount(): Flow<Int> = flow {
-            gate.await()
-            emitAll(countFlow)
-        }
+        override fun observeCount(): Flow<Int> =
+            flow {
+                gate.await()
+                emitAll(countFlow)
+            }
     }
 
     private class DeferredCountWriteRepository : FakeDemoRepository() {
@@ -96,11 +99,10 @@ class DemoViewModelTest {
         }
     }
 
-    private fun createViewModel(repository: DemoRepository): DemoViewModel =
-        DemoViewModel(repository, IncrementCounterUseCase())
+    private fun createViewModel(repository: DemoRepository) = DemoViewModel(repository, IncrementCounterUseCase())
 
     @Test
-    fun `count follows the repository and increment persists the next value`() =
+    fun `count follows the repository and increment persists the next value`() {
         runTest {
             val repository = FakeDemoRepository()
             val viewModel = createViewModel(repository)
@@ -115,9 +117,10 @@ class DemoViewModelTest {
             runCurrent()
             assertEquals(4, viewModel.state.value.count)
         }
+    }
 
     @Test
-    fun `rapid increments save sequentially without older repository emissions replacing latest state`() =
+    fun `rapid increments save sequentially without older repository emissions replacing latest state`() {
         runTest {
             val repository = DeferredCountWriteRepository()
             val viewModel = createViewModel(repository)
@@ -141,9 +144,10 @@ class DemoViewModelTest {
             assertEquals(listOf(1, 2), repository.persistedWrites)
             assertEquals(2, viewModel.state.value.count)
         }
+    }
 
     @Test
-    fun `reaching cap queues reset action and action resets persisted counter`() =
+    fun `reaching cap queues reset action and action resets persisted counter`() {
         runTest {
             val repository = FakeDemoRepository()
             val viewModel = createViewModel(repository)
@@ -151,7 +155,9 @@ class DemoViewModelTest {
 
             repeat(10) { viewModel.onEvent(DemoUiEvent.IncrementClicked) }
             runCurrent()
-            val message = viewModel.state.value.pendingMessages.single()
+            val message =
+                viewModel.state.value.pendingMessages
+                    .single()
             assertEquals(DemoMessageAction.ResetCounter, message.action)
             assertEquals((1..10).toList(), repository.savedCounts)
 
@@ -159,27 +165,43 @@ class DemoViewModelTest {
             runCurrent()
             assertEquals(0, viewModel.state.value.count)
             assertEquals((1..10).toList() + 0, repository.savedCounts)
-            assertTrue(viewModel.state.value.pendingMessages.isEmpty())
+            assertTrue(
+                viewModel.state.value.pendingMessages
+                    .isEmpty(),
+            )
         }
+    }
 
     @Test
-    fun `stale message acknowledgement does not remove a later message`() =
+    fun `stale message acknowledgement does not remove a later message`() {
         runTest {
             val viewModel = createViewModel(FakeDemoRepository())
             runCurrent()
             repeat(11) { viewModel.onEvent(DemoUiEvent.IncrementClicked) }
-            val firstId = viewModel.state.value.pendingMessages.first().id
+            val firstId =
+                viewModel.state.value.pendingMessages
+                    .first()
+                    .id
             viewModel.onMessageHandled(firstId)
             viewModel.onMessageHandled(firstId)
 
             assertEquals(1, viewModel.state.value.pendingMessages.size)
-            assertNotEquals(firstId, viewModel.state.value.pendingMessages.single().id)
+            assertNotEquals(
+                firstId,
+                viewModel.state.value.pendingMessages
+                    .single()
+                    .id,
+            )
         }
+    }
 
     @Test
-    fun `save failure restores observed count and queues an error message`() =
+    fun `save failure restores observed count and queues an error message`() {
         runTest {
-            val repository = FakeDemoRepository(initialCount = 5).apply { failCountWrites = true }
+            val repository =
+                FakeDemoRepository(initialCount = 5).apply {
+                    failCountWrites = true
+                }
             val viewModel = createViewModel(repository)
             runCurrent()
 
@@ -189,9 +211,10 @@ class DemoViewModelTest {
             assertEquals(5, viewModel.state.value.count)
             assertEquals(1, viewModel.state.value.pendingMessages.size)
         }
+    }
 
     @Test
-    fun `increment before initial repository count loads is ignored`() =
+    fun `increment before initial repository count loads is ignored`() {
         runTest {
             val repository = DeferredInitialCountRepository(initialCount = 5)
             val viewModel = createViewModel(repository)
@@ -208,13 +231,15 @@ class DemoViewModelTest {
             runCurrent()
             assertEquals(listOf(6), repository.savedCounts)
         }
+    }
 
     @Test
-    fun `weather observes cache and successful refresh result`() =
+    fun `weather observes cache and successful refresh result`() {
         runTest {
-            val repository = FakeDemoRepository(initialWeather = null).apply {
-                refreshGate = CompletableDeferred()
-            }
+            val repository =
+                FakeDemoRepository(initialWeather = null).apply {
+                    refreshGate = CompletableDeferred()
+                }
             val viewModel = createViewModel(repository)
             runCurrent()
             assertEquals(DemoWeatherState.Loading, viewModel.state.value.weather)
@@ -223,15 +248,19 @@ class DemoViewModelTest {
             runCurrent()
             assertEquals(DemoWeatherState.Success(DEMO_WEATHER), viewModel.state.value.weather)
         }
+    }
 
     @Test
-    fun `weather failure maps to retryable error and cached weather stays visible`() =
+    fun `weather failure maps to retryable error and cached weather stays visible`() {
         runTest {
             val failure = WeatherResult.Failure(WeatherError.Network(IOException("offline")))
             val noCache = FakeDemoRepository(initialWeather = null, weatherResult = failure)
             val errorViewModel = createViewModel(noCache)
             runCurrent()
-            assertEquals(DemoWeatherState.Error(DemoWeatherError.NO_CONNECTION), errorViewModel.state.value.weather)
+            assertEquals(
+                DemoWeatherState.Error(DemoWeatherError.NO_CONNECTION),
+                errorViewModel.state.value.weather,
+            )
 
             val cached = FakeDemoRepository(weatherResult = failure)
             val cachedViewModel = createViewModel(cached)
@@ -241,9 +270,10 @@ class DemoViewModelTest {
                 cachedViewModel.state.value.weather,
             )
         }
+    }
 
     @Test
-    fun `weather error variants map to their presentation reasons`() =
+    fun `weather error variants map to their presentation reasons`() {
         runTest {
             val cases =
                 listOf(
@@ -255,20 +285,25 @@ class DemoViewModelTest {
                 )
 
             cases.forEach { (error, expectedReason) ->
-                val repository = FakeDemoRepository(initialWeather = null).apply {
-                    weatherResult = WeatherResult.Failure(error)
-                }
+                val repository =
+                    FakeDemoRepository(initialWeather = null).apply {
+                        weatherResult = WeatherResult.Failure(error)
+                    }
                 val viewModel = createViewModel(repository)
                 runCurrent()
 
                 assertEquals(DemoWeatherState.Error(expectedReason), viewModel.state.value.weather)
             }
         }
+    }
 
     @Test
-    fun `refresh tap is ignored while a weather refresh is in flight`() =
+    fun `refresh tap is ignored while a weather refresh is in flight`() {
         runTest {
-            val repository = FakeDemoRepository().apply { refreshGate = CompletableDeferred() }
+            val repository =
+                FakeDemoRepository().apply {
+                    refreshGate = CompletableDeferred()
+                }
             val viewModel = createViewModel(repository)
             runCurrent()
             assertEquals(1, repository.refreshCalls)
@@ -283,6 +318,7 @@ class DemoViewModelTest {
             runCurrent()
             assertEquals(false, (viewModel.state.value.weather as DemoWeatherState.Success).isRefreshing)
         }
+    }
 
     private companion object {
         val DEMO_WEATHER =
