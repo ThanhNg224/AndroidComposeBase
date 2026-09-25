@@ -77,6 +77,7 @@ class SettingsViewModel
                 themeMutationMutex.withLock {
                     try {
                         repository.setTheme(theme)
+                        if (requestedTheme == theme) requestedTheme = null
                     } catch (exception: CancellationException) {
                         throw exception
                     } catch (_: IOException) {

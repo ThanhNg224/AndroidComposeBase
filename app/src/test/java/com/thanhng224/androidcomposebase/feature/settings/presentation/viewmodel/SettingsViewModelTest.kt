@@ -76,6 +76,10 @@ class SettingsViewModelTest {
         fun setExternalLanguage(languageTag: String?) {
             currentLanguageTag = languageTag
         }
+
+        fun setExternalTheme(theme: AppTheme) {
+            themeFlow.value = theme
+        }
     }
 
     @Test
@@ -100,6 +104,23 @@ class SettingsViewModelTest {
         advanceUntilIdle()
 
         assertEquals(listOf(AppTheme.DARK), repository.themeWrites)
+        assertEquals(AppTheme.DARK, viewModel.state.value.theme)
+    }
+
+    @Test
+    fun `reselecting a theme after persisted theme changes externally writes the selection`() = runTest {
+        val repository = FakeSettingsRepository()
+        val viewModel = createViewModel(repository)
+        collectState(viewModel)
+
+        viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK))
+        advanceUntilIdle()
+        repository.setExternalTheme(AppTheme.LIGHT)
+        advanceUntilIdle()
+        viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK))
+        advanceUntilIdle()
+
+        assertEquals(listOf(AppTheme.DARK, AppTheme.DARK), repository.themeWrites)
         assertEquals(AppTheme.DARK, viewModel.state.value.theme)
     }
 
