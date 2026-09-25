@@ -20,10 +20,13 @@ Current reusable public Compose components include:
 
 - `AppPrimaryButton`, `AppSecondaryButton`, and `AppOutlinedButton`.
 - `AppTopBar` and `AppCenterTopBar`.
+- `AppLoadingState`, `AppEmptyState`, and `AppErrorState` for full-bleed screen/section placeholders. Each centers its content with `Dimens.spaceLarge` padding and reads colors from `MaterialTheme.colorScheme` only; `AppLoadingState`'s message is a polite live region, and `AppErrorState`'s `onRetry` renders an `AppPrimaryButton` labelled with `core_ui_retry`.
 - `AndroidComposeBaseTheme`, `AppShapes`, `AppTypography`, and `Dimens`.
 - `ComposeView.setThemedContent` for an intentional Compose/View interop boundary.
 
 Import the component from `core.ui.components` and use its actual parameters. Add a reusable component to `:core:ui` only when its visual behavior is useful across app features and does not depend on app-specific state or resources.
+
+`AppButton`, `AppTopBar`, and `AppStates` each carry private `@Preview` functions (light and dark, via `uiMode`) so Android Studio's preview pane renders them without running the app. Extend that pattern for new components instead of relying only on the sample gallery.
 
 Use Material 3 components directly for dialogs and adaptive app navigation. The app shell uses `NavigationSuiteScaffold`, which selects a bottom navigation bar or rail based on available window size. Screens should consume scaffold padding and safe drawing insets instead of adding a fixed navigation-bar spacer.
 

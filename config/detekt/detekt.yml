@@ -17,6 +17,8 @@ style:
     maxLineLength: 140
   ReturnCount:
     active: false
+  UnusedPrivateMember:
+    ignoreAnnotated: ["Preview"]
 
 naming:
   # Allow PascalCase for @Composable UI functions

@@ -108,4 +108,11 @@
     <string name="design_system_dialog_title">Sample dialog</string>
     <string name="design_system_dialog_body">This sample shows a Material 3 dialog. Its content can scroll when it is longer than the available space.</string>
     <string name="design_system_dialog_confirm">Got it</string>
+    <string name="design_system_states">States</string>
+    <string name="design_system_states_loading_message">Loading content…</string>
+    <string name="design_system_states_empty_title">No items yet</string>
+    <string name="design_system_states_empty_message">Items you add will show up here.</string>
+    <string name="design_system_states_empty_action">Add item</string>
+    <string name="design_system_states_error_title">Something went wrong</string>
+    <string name="design_system_states_error_message">We couldn\'t load this section.</string>
 </resources>

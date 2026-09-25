@@ -484,8 +484,10 @@ def clean_samples(root: Path, app_package: str, dry_run: bool) -> int:
         changed += _remove_tree(root, sample_dir, dry_run)
     changed += _remove_tree(root, package_dir / "di/AppNetworkModule.kt", dry_run)
     changed += _remove_metadata_logger(root, logger_package, dry_run)
-    changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_demo.xml", dry_run)
-    changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_ui_kit.xml", dry_run)
+    changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_demo_filled.xml", dry_run)
+    changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_demo_outlined.xml", dry_run)
+    changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_design_filled.xml", dry_run)
+    changed += _remove_tree(root, root / "app/src/main/res/drawable/ic_nav_design_outlined.xml", dry_run)
     changed += _remove_tree(root, root / "app/schemas", dry_run)
     journey_package = app_package if target_dir.exists() else SOURCE_APP_PACKAGE
     changed += _clean_critical_journey(root, app_package, dry_run, journey_source_package=journey_package)

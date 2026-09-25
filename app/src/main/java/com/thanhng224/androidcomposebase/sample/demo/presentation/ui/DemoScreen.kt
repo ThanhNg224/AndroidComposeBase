@@ -16,10 +16,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Thermostat
-import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
@@ -193,7 +191,7 @@ public fun DemoScreen(
                                     }
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
-                                            imageVector = Icons.Default.WbSunny,
+                                            painter = painterResource(R.drawable.ic_wb_sunny),
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(36.dp),
@@ -230,12 +228,12 @@ public fun DemoScreen(
                                         if (maxWidth < 360.dp) {
                                             Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
                                                 WeatherMetric(
-                                                    icon = { Icon(Icons.Default.Thermostat, contentDescription = null) },
+                                                    icon = { Icon(painterResource(R.drawable.ic_thermostat), contentDescription = null) },
                                                     value = temperature,
                                                     label = temperatureLabel,
                                                 )
                                                 WeatherMetric(
-                                                    icon = { Icon(Icons.Default.Air, contentDescription = null) },
+                                                    icon = { Icon(painterResource(R.drawable.ic_air), contentDescription = null) },
                                                     value = windSpeed,
                                                     label = windLabel,
                                                 )
@@ -246,12 +244,12 @@ public fun DemoScreen(
                                                 horizontalArrangement = Arrangement.SpaceAround,
                                             ) {
                                                 WeatherMetric(
-                                                    icon = { Icon(Icons.Default.Thermostat, contentDescription = null) },
+                                                    icon = { Icon(painterResource(R.drawable.ic_thermostat), contentDescription = null) },
                                                     value = temperature,
                                                     label = temperatureLabel,
                                                 )
                                                 WeatherMetric(
-                                                    icon = { Icon(Icons.Default.Air, contentDescription = null) },
+                                                    icon = { Icon(painterResource(R.drawable.ic_air), contentDescription = null) },
                                                     value = windSpeed,
                                                     label = windLabel,
                                                 )

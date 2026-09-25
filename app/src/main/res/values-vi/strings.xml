@@ -108,4 +108,11 @@
     <string name="design_system_dialog_title">Hộp thoại mẫu</string>
     <string name="design_system_dialog_body">Mẫu này minh hoạ hộp thoại Material 3. Nội dung có thể cuộn khi dài hơn vùng hiển thị.</string>
     <string name="design_system_dialog_confirm">Đã hiểu</string>
+    <string name="design_system_states">Trạng thái</string>
+    <string name="design_system_states_loading_message">Đang tải nội dung…</string>
+    <string name="design_system_states_empty_title">Chưa có mục nào</string>
+    <string name="design_system_states_empty_message">Các mục bạn thêm sẽ hiển thị ở đây.</string>
+    <string name="design_system_states_empty_action">Thêm mục</string>
+    <string name="design_system_states_error_title">Đã có lỗi xảy ra</string>
+    <string name="design_system_states_error_message">Không thể tải phần này.</string>
 </resources>

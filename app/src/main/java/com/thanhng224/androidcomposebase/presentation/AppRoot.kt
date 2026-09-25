@@ -9,15 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Palette
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Cloud
-import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Palette
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -25,7 +16,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -146,8 +139,8 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                                     }
                                 }
                             },
-                            selectedIcon = Icons.Filled.Home,
-                            unselectedIcon = Icons.Outlined.Home,
+                            selectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_home_filled),
+                            unselectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_home_outlined),
                             label = stringResource(R.string.navigation_home),
                         ),
                         AppNavItem(
@@ -161,8 +154,8 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                                     }
                                 }
                             },
-                            selectedIcon = Icons.Filled.Cloud,
-                            unselectedIcon = Icons.Outlined.Cloud,
+                            selectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_demo_filled),
+                            unselectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_demo_outlined),
                             label = stringResource(R.string.navigation_demo),
                         ),
                         AppNavItem(
@@ -176,8 +169,8 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                                     }
                                 }
                             },
-                            selectedIcon = Icons.Filled.Palette,
-                            unselectedIcon = Icons.Outlined.Palette,
+                            selectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_design_filled),
+                            unselectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_design_outlined),
                             label = stringResource(R.string.navigation_design),
                         ),
                         AppNavItem(
@@ -191,8 +184,8 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                                     }
                                 }
                             },
-                            selectedIcon = Icons.Filled.Settings,
-                            unselectedIcon = Icons.Outlined.Settings,
+                            selectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_settings_filled),
+                            unselectedIcon = ImageVector.vectorResource(R.drawable.ic_nav_settings_outlined),
                             label = stringResource(R.string.navigation_settings),
                         ),
                     )

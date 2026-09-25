@@ -42,6 +42,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
+import com.thanhng224.androidcomposebase.core.ui.components.AppEmptyState
+import com.thanhng224.androidcomposebase.core.ui.components.AppErrorState
+import com.thanhng224.androidcomposebase.core.ui.components.AppLoadingState
 import com.thanhng224.androidcomposebase.core.ui.components.AppOutlinedButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppPrimaryButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppSecondaryButton
@@ -130,6 +133,62 @@ public fun DesignSystemScreen(modifier: Modifier = Modifier) {
                                 onClick = {},
                             )
                         }
+                    }
+                }
+
+                item {
+                    Text(
+                        text = stringResource(R.string.design_system_states),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = Dimens.spaceSmall).semantics { heading() },
+                    )
+                }
+
+                item {
+                    Card(
+                        shape = MaterialTheme.shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
+                        modifier = Modifier.fillMaxWidth().height(200.dp),
+                    ) {
+                        AppLoadingState(message = stringResource(R.string.design_system_states_loading_message))
+                    }
+                }
+
+                item {
+                    Card(
+                        shape = MaterialTheme.shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
+                        modifier = Modifier.fillMaxWidth().height(260.dp),
+                    ) {
+                        AppEmptyState(
+                            title = stringResource(R.string.design_system_states_empty_title),
+                            message = stringResource(R.string.design_system_states_empty_message),
+                            action = {
+                                AppOutlinedButton(
+                                    text = stringResource(R.string.design_system_states_empty_action),
+                                    onClick = {},
+                                )
+                            },
+                        )
+                    }
+                }
+
+                item {
+                    Card(
+                        shape = MaterialTheme.shapes.medium,
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
+                        modifier = Modifier.fillMaxWidth().height(280.dp),
+                    ) {
+                        AppErrorState(
+                            title = stringResource(R.string.design_system_states_error_title),
+                            message = stringResource(R.string.design_system_states_error_message),
+                            onRetry = {},
+                        )
                     }
                 }
 

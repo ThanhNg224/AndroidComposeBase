@@ -1,5 +1,6 @@
 package com.thanhng224.androidcomposebase.core.ui.components
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -14,7 +15,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import com.thanhng224.androidcomposebase.core.ui.R
+import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 
 /**
  * Modern Material 3 Center-aligned Top App Bar.
@@ -94,4 +97,13 @@ public fun AppTopBar(
             ),
         modifier = modifier,
     )
+}
+
+@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
+@Composable
+private fun AppTopBarsPreview() {
+    AndroidComposeBaseTheme {
+        AppTopBar(title = "Screen title", onBackClick = {})
+    }
 }

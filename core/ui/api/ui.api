@@ -51,6 +51,12 @@ package com.thanhng224.androidcomposebase.core.ui.components {
     property public ErrorType unselectedIcon;
   }
 
+  public final class AppStatesKt {
+    method public static void AppEmptyState(String title, optional Modifier modifier, optional String? message, optional ImageVector? icon, optional kotlin.jvm.functions.Function0<kotlin.Unit>? action);
+    method public static void AppErrorState(String title, optional Modifier modifier, optional String? message, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onRetry);
+    method public static void AppLoadingState(optional Modifier modifier, optional String? message);
+  }
+
   public final class AppTopBarKt {
     method public static void AppCenterTopBar(String title, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<? super RowScope,kotlin.Unit> actions);
     method public static void AppTopBar(String title, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<? super RowScope,kotlin.Unit> actions);

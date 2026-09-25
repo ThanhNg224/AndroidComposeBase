@@ -1,10 +1,16 @@
 package com.thanhng224.androidcomposebase.core.ui.components
 
+import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -16,7 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
 /**
@@ -140,5 +148,22 @@ public fun AppOutlinedButton(
             text = text,
             style = MaterialTheme.typography.labelLarge,
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
+@Composable
+private fun AppButtonsPreview() {
+    AndroidComposeBaseTheme {
+        Column(
+            modifier = Modifier.padding(Dimens.spaceMedium),
+            verticalArrangement = Arrangement.spacedBy(Dimens.spaceSmall),
+        ) {
+            AppPrimaryButton(text = "Primary", icon = Icons.Default.Add, onClick = {})
+            AppSecondaryButton(text = "Secondary", onClick = {})
+            AppOutlinedButton(text = "Outlined", onClick = {})
+            AppPrimaryButton(text = "Loading", isLoading = true, onClick = {})
+        }
     }
 }
