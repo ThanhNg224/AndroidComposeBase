@@ -1,7 +1,12 @@
 package com.thanhng224.androidcomposebase.core.network
 
+import com.thanhng224.androidcomposebase.core.network.auth.AuthSession
+import com.thanhng224.androidcomposebase.core.network.auth.DEFAULT_AUTH_SCHEME
+import com.thanhng224.androidcomposebase.core.testing.FakeSecureStore
+import okhttp3.Authenticator
 import okhttp3.Interceptor
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -62,5 +67,30 @@ class NetworkClientFactoryTest {
             )
 
         assertEquals(listOf(first, second), client.interceptors)
+    }
+
+    @Test
+    fun `defaultJson ignores unknown keys and omits explicit nulls`() {
+        assertTrue(NetworkClientFactory.defaultJson.configuration.ignoreUnknownKeys)
+        assertFalse(NetworkClientFactory.defaultJson.configuration.explicitNulls)
+    }
+
+    @Test
+    fun `createRetrofit installs a converter factory by default`() {
+        val config = ApiConfig(baseUrl = "https://api.example.com/")
+        val client = NetworkClientFactory.createOkHttpClient(config = config)
+
+        val retrofit = NetworkClientFactory.createRetrofit(config = config, okHttpClient = client)
+
+        assertTrue(retrofit.converterFactories().isNotEmpty())
+    }
+
+    @Test
+    fun `createAuthenticator wires the given scheme into a TokenAuthenticator`() {
+        val authSession = AuthSession(FakeSecureStore())
+
+        val authenticator = NetworkClientFactory.createAuthenticator(authSession, scheme = DEFAULT_AUTH_SCHEME)
+
+        assertTrue(authenticator !== Authenticator.NONE)
     }
 }

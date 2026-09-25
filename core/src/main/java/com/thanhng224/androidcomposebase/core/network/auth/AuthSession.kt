@@ -3,6 +3,8 @@ package com.thanhng224.androidcomposebase.core.network.auth
 import com.thanhng224.androidcomposebase.core.foundation.SecureStore
 import com.thanhng224.androidcomposebase.core.foundation.SecureStoreKey
 import com.thanhng224.androidcomposebase.core.foundation.SecureStoreKeys
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -12,6 +14,10 @@ public class AuthSession
     ) {
         private val accessTokenSlot = TokenSlot(secureStore, SecureStoreKeys.AUTH_TOKEN)
         private val refreshTokenSlot = TokenSlot(secureStore, SecureStoreKeys.REFRESH_TOKEN)
+        private val sessionExpiredFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+        /** Emits whenever a token refresh definitively fails and the session has just been cleared. */
+        public val sessionExpired: Flow<Unit> = sessionExpiredFlow
 
         /** Cached snapshot of the access token; never touches storage. Null until [getAccessToken] first loads it. */
         public fun peekAccessToken(): String? = accessTokenSlot.peek()
@@ -31,6 +37,11 @@ public class AuthSession
         public suspend fun clear() {
             accessTokenSlot.clear()
             refreshTokenSlot.clear()
+        }
+
+        /** Signals [sessionExpired] listeners that the session was cleared after a failed refresh. */
+        internal fun notifySessionExpired() {
+            sessionExpiredFlow.tryEmit(Unit)
         }
 
         /**

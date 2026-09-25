@@ -1,6 +1,5 @@
 package com.thanhng224.androidcomposebase.core.network
 
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -17,6 +16,7 @@ import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
 import retrofit2.Retrofit
+import retrofit2.converter.kotlinx.serialization.asConverterFactory
 import retrofit2.http.GET
 import java.util.concurrent.TimeUnit
 
@@ -65,18 +65,32 @@ class RetrofitApiClientTest {
         }
 
     @Test
-    fun `401 maps to Failure with Http ApiFailure carrying code and message`() =
+    fun `400 with a non-blank error body maps to Failure with Http carrying the body text`() =
         runTest {
             server.enqueue(
                 MockResponse()
-                    .setResponseCode(401)
-                    .setStatus("HTTP/1.1 401 Unauthorized")
-                    .setBody("nope"),
+                    .setResponseCode(400)
+                    .setBody("""{"error":"bad"}"""),
             )
 
             val result = apiClient.execute { service.get() }
 
-            assertEquals(ApiResult.Failure(ApiFailure.Http(401, "Unauthorized")), result)
+            assertEquals(ApiResult.Failure(ApiFailure.Http(400, """{"error":"bad"}""")), result)
+        }
+
+    @Test
+    fun `500 with an empty error body falls back to the HTTP status message`() =
+        runTest {
+            server.enqueue(
+                MockResponse()
+                    .setResponseCode(500)
+                    .setStatus("HTTP/1.1 500 Internal Server Error")
+                    .setBody(""),
+            )
+
+            val result = apiClient.execute { service.get() }
+
+            assertEquals(ApiResult.Failure(ApiFailure.Http(500, "Internal Server Error")), result)
         }
 
     @Test

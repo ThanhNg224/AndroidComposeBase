@@ -12,6 +12,7 @@ internal class TokenAuthenticator
     internal constructor(
         private val authSession: AuthSession,
         private val tokenRefresher: (() -> AuthTokenRefresher)? = null,
+        private val scheme: String = DEFAULT_AUTH_SCHEME,
     ) : Authenticator {
         private val refreshMutex = Mutex()
 
@@ -30,7 +31,7 @@ internal class TokenAuthenticator
                 runBlocking {
                     refreshMutex.withLock {
                         val cached = authSession.getAccessToken()
-                        if (cached != null && cached != failedAuthHeader) {
+                        if (cached != null && authorizationValue(scheme, cached) != failedAuthHeader) {
                             cached
                         } else {
                             refreshAndPersist()
@@ -42,13 +43,18 @@ internal class TokenAuthenticator
 
             return response.request
                 .newBuilder()
-                .header("Authorization", nextToken)
+                .header("Authorization", authorizationValue(scheme, nextToken))
                 .build()
         }
 
         private suspend fun refreshAndPersist(): String? {
             val refresher = tokenRefresher?.invoke() ?: return null
-            val newToken = refresher.refresh(authSession.getRefreshToken()) ?: return null
+            val newToken = refresher.refresh(authSession.getRefreshToken())
+            if (newToken == null) {
+                authSession.clear()
+                authSession.notifySessionExpired()
+                return null
+            }
             authSession.setTokens(newToken)
             return newToken
         }

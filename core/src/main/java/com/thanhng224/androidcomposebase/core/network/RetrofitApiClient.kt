@@ -4,6 +4,9 @@ import kotlinx.coroutines.CancellationException
 import retrofit2.Response
 import java.io.IOException
 
+/** Error bodies are truncated to this many characters before being surfaced as [ApiFailure.Http.serverMessage]. */
+private const val MAX_ERROR_BODY_CHARS = 2_048
+
 internal class RetrofitApiClient internal constructor() : ApiClient {
     override suspend fun <T> execute(call: suspend () -> Response<T>): ApiResult<T> =
         try {
@@ -12,7 +15,14 @@ internal class RetrofitApiClient internal constructor() : ApiClient {
                 response.body()?.let { ApiResult.Success(it) }
                     ?: ApiResult.Failure(ApiFailure.EmptyBody)
             } else {
-                ApiResult.Failure(ApiFailure.Http(response.code(), response.message()))
+                val serverMessage =
+                    response
+                        .errorBody()
+                        ?.use { it.string() }
+                        ?.takeIf(String::isNotBlank)
+                        ?.take(MAX_ERROR_BODY_CHARS)
+                        ?: response.message().takeIf(String::isNotBlank)
+                ApiResult.Failure(ApiFailure.Http(response.code(), serverMessage))
             }
         } catch (e: CancellationException) {
             throw e

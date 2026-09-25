@@ -12,6 +12,10 @@ The `com.thanhng224.androidcomposebase.core` namespace contains:
 - `theme`: `AppTheme` and `ThemeManager` for theme persistence/application.
 - `text`: `UiText`, a localizable UI message type resolved via `UiText.resolve(context)`.
 - `network`: `ApiConfig`, `ApiClient`, `ApiResult`, and `NetworkClientFactory`; optional auth and file-transfer contracts are in subpackages.
+
+### Network auth and error handling
+
+`AuthTokenInterceptor` and `TokenAuthenticator` format the `Authorization` header as `"$scheme $token"` (replacing any existing header rather than duplicating it); the scheme defaults to `DEFAULT_AUTH_SCHEME` ("Bearer") and a blank scheme sends the raw token. `TokenAuthenticator` compares the failed request's `Authorization` header against the cached token formatted the same way before deciding whether to retry with the cached token or invoke the configured refresher. When a refresher is configured and returns null (refresh failed, or there was no refresh token), the authenticator clears `AuthSession` and emits on `AuthSession.sessionExpired` (a `Flow<Unit>`) so the app can react (e.g. sign the user out); with no refresher configured, it returns null without clearing anything. `RetrofitApiClient` surfaces non-2xx responses as `ApiFailure.Http` with the response's error body text (truncated to 2,048 characters) when present and non-blank, falling back to the HTTP status message otherwise. `NetworkClientFactory.defaultJson` (`ignoreUnknownKeys = true`, `explicitNulls = false`) is the default used by `createRetrofit` and can be overridden per call. The Kotlin serialization Retrofit converter is the official `com.squareup.retrofit2:converter-kotlinx-serialization` artifact.
 - `common`: small platform helpers such as `Debouncer` and Flow/lifecycle collection extensions.
 
 The module does not own app configuration, Hilt bindings, feature repositories, Room databases, credentials, or a base URL. Construct or bind its factories from the consuming app's composition root.

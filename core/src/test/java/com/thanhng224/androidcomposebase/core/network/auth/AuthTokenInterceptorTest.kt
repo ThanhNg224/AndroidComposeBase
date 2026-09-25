@@ -54,21 +54,52 @@ class AuthTokenInterceptorTest {
         server.shutdown()
     }
 
-    private fun clientWith(provider: AuthTokenProvider): OkHttpClient =
+    private fun clientWith(
+        provider: AuthTokenProvider,
+        scheme: String = DEFAULT_AUTH_SCHEME,
+    ): OkHttpClient =
         OkHttpClient
             .Builder()
-            .addInterceptor(AuthTokenInterceptor(provider))
+            .addInterceptor(AuthTokenInterceptor(provider, scheme))
             .build()
 
     @Test
-    fun `adds raw authorization header when a token is available`() {
+    fun `adds Bearer-prefixed authorization header when a token is available`() {
         server.enqueue(MockResponse().setResponseCode(200))
-        val client = clientWith(FakeAuthTokenProvider(token = "known-token"))
+        val client = clientWith(FakeAuthTokenProvider(token = "abc"))
 
         client.newCall(Request.Builder().url(server.url("/")).build()).execute().close()
 
         val recorded = server.takeRequest()
-        assertEquals("known-token", recorded.getHeader("Authorization"))
+        assertEquals(listOf("Bearer abc"), recorded.headers.values("Authorization"))
+    }
+
+    @Test
+    fun `replaces a pre-existing Authorization header instead of duplicating it`() {
+        server.enqueue(MockResponse().setResponseCode(200))
+        val client = clientWith(FakeAuthTokenProvider(token = "abc"))
+        val request =
+            Request
+                .Builder()
+                .url(server.url("/"))
+                .header("Authorization", "stale-value")
+                .build()
+
+        client.newCall(request).execute().close()
+
+        val recorded = server.takeRequest()
+        assertEquals(listOf("Bearer abc"), recorded.headers.values("Authorization"))
+    }
+
+    @Test
+    fun `blank scheme sends the raw token with no prefix`() {
+        server.enqueue(MockResponse().setResponseCode(200))
+        val client = clientWith(FakeAuthTokenProvider(token = "raw-token"), scheme = "")
+
+        client.newCall(Request.Builder().url(server.url("/")).build()).execute().close()
+
+        val recorded = server.takeRequest()
+        assertEquals("raw-token", recorded.getHeader("Authorization"))
     }
 
     @Test
@@ -113,7 +144,7 @@ class AuthTokenInterceptorTest {
         client.newCall(Request.Builder().url(server.url("/")).build()).execute().close()
 
         val recorded = server.takeRequest()
-        assertEquals("loaded-token", recorded.getHeader("Authorization"))
+        assertEquals("Bearer loaded-token", recorded.getHeader("Authorization"))
         assertEquals(1, provider.getTokenCallCount)
     }
 }

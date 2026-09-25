@@ -6,6 +6,7 @@ import okhttp3.Response
 
 public class AuthTokenInterceptor(
     private val authTokenProvider: AuthTokenProvider,
+    private val scheme: String = DEFAULT_AUTH_SCHEME,
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         // The snapshot covers the common warm case with no blocking bridge at all; getToken()
@@ -17,7 +18,7 @@ public class AuthTokenInterceptor(
         val request =
             chain.request().let { original ->
                 if (token != null) {
-                    original.newBuilder().addHeader("Authorization", token).build()
+                    original.newBuilder().header("Authorization", authorizationValue(scheme, token)).build()
                 } else {
                     original
                 }

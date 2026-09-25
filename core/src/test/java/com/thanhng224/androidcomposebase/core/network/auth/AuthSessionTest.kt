@@ -1,5 +1,6 @@
 package com.thanhng224.androidcomposebase.core.network.auth
 
+import app.cash.turbine.test
 import com.thanhng224.androidcomposebase.core.foundation.SecureStore
 import com.thanhng224.androidcomposebase.core.foundation.SecureStoreKey
 import com.thanhng224.androidcomposebase.core.foundation.SecureStoreKeys
@@ -98,6 +99,18 @@ class AuthSessionTest {
 
             assertEquals("fresh-token", result)
             assertEquals(callCountAfterSet, countingStore.getStringCallCount(SecureStoreKeys.AUTH_TOKEN))
+        }
+
+    @Test
+    fun `notifySessionExpired emits once on the sessionExpired flow`() =
+        runTest {
+            val session = AuthSession(FakeSecureStore())
+
+            session.sessionExpired.test {
+                session.notifySessionExpired()
+
+                assertEquals(Unit, awaitItem())
+            }
         }
 
     @Test
