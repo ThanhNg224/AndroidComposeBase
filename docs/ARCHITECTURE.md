@@ -35,11 +35,15 @@ The compile-time dependency is presentation to domain, and data to domain. Data 
 
 ## Feature ownership
 
-Place a capability under `app/src/main/java/<package>/feature/<name>/`. A small feature can keep `presentation/ui`, `presentation/viewmodel`, and `presentation/state` flat. Add `domain/` or `data/` only when the feature has real policy or an external data boundary.
+Place a capability under `app/src/main/java/<package>/feature/<name>/`. Keep its route, entry registration, UI, ViewModel, and state together. Add `domain/` or `data/` when the feature has a real contract or external data boundary, and `di/` when it owns app-graph bindings.
 
 ```text
 feature/<name>/
-  presentation/       # Composable, ViewModel, UiState, UiEvent
+  navigation/         # serializable NavKey route, entry, optional top-level metadata
+  presentation/
+    ui/                # Composable destination
+    viewmodel/         # screen state and action coordination
+    state/             # immutable UiState and UiEvent
   domain/             # feature contracts and meaningful business rules
   data/               # contract implementations, sources, and mapping
   di/                 # feature bindings/providers registered by :app
@@ -47,14 +51,14 @@ feature/<name>/
 
 The sample includes `feature/onboarding` and `feature/settings`; `sample/demo` demonstrates Room-backed offline weather and counter state, while `sample/designsystem` showcases `:core:ui`. These samples are not required layers for new product features.
 
-Keep one screen's UI, ViewModel, and state together. When multiple screens share a capability, group their presentation code by screen and share feature-level domain/data code. Split independent capabilities into separate features instead of grouping them only because they are navigated together.
+Declare each route as a serializable Navigation 3 key, for example `@Serializable data object ProfileRoute : NavKey`, and expose an `EntryProviderScope<NavKey>.profileEntry()` registration from the feature's `navigation/` package. A top-level destination also exposes `TopLevelDestination` metadata with a stable unique ID. `presentation/MainShell.kt` registers feature entries and lists top-level destinations in display order; features do not depend on the app shell. Keep one screen's UI, ViewModel, and state together. When multiple screens share a capability, group their presentation code by screen and share feature-level domain/data code. Split independent capabilities into separate features instead of grouping them only because they are navigated together.
 
 ## Presentation and state
 
 - Composables render state, forward user input, and collect `StateFlow` with lifecycle awareness. They do not access repositories, Room, or APIs.
 - ViewModels own screen state and coordinate feature contracts. Keep Android resource resolution at the presentation edge.
 - Model durable screen state as immutable `UiState`. For messages that must survive recreation until acknowledged, store a small pending-message list in state and remove the matching head after display. Use a transient event mechanism only when its loss/replay behavior is intentional.
-- Each feature declares its Navigation 3 route key and entry alongside its screen; top-level features also declare their `TopLevelDestination` metadata. `presentation/MainShell.kt` lists top-level destinations in display order and assembles feature entry registrations. Keep cross-feature navigation assembly and localized destination labels at the app boundary.
+- Each feature declares its Navigation 3 route key and `EntryProviderScope<NavKey>` entry in `navigation/`; top-level features also declare their `TopLevelDestination` metadata. `presentation/MainShell.kt` lists top-level destinations in display order and assembles feature entry registrations. Each top-level tab has a separate back stack, preserving its route state when switching tabs and restoring after process recreation. Keep cross-feature navigation assembly and localized destination labels at the app boundary.
 
 ## Domain and use cases
 

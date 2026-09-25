@@ -1,6 +1,6 @@
 # AndroidComposeBase
 
-AndroidComposeBase is a cloneable Android application base using Kotlin, Jetpack Compose, Material 3, Navigation Compose, Hilt, Room, DataStore, and coroutines. It keeps the current Gradle modules small and places application features in `:app` until a real reuse boundary justifies extraction.
+AndroidComposeBase is a cloneable Android application base using Kotlin, Jetpack Compose, Material 3, Navigation 3, Hilt, Room, DataStore, and coroutines. It keeps the current Gradle modules small and places application features in `:app` until a real reuse boundary justifies extraction.
 
 ## Start a project
 
@@ -28,7 +28,7 @@ Open the initialized directory in Android Studio with JDK 21, sync Gradle, then 
 | `:core:ui` | Compose theme and reusable Compose components. |
 | `:baselineprofile` | Macrobenchmark target and baseline-profile journey for the sample app. |
 
-The dependency direction inside a feature is presentation to domain contracts, with data implementing those contracts. `:app` assembles features and shared infrastructure. See [core modules](docs/CORE_MODULES.md) for the reusable library boundaries.
+The dependency direction inside a feature is presentation to domain contracts, with data implementing those contracts. Features own serializable route keys and entry registrations; `:app` assembles them in `MainShell` and owns the ordered top-level destinations. Each top-level tab retains its own back stack. See the [feature guide](docs/FEATURE_TEMPLATE.md) for the Navigation 3 recipe and [core modules](docs/CORE_MODULES.md) for reusable library boundaries.
 
 Theme selection is persisted in DataStore and applied using app-specific platform night mode on Android 12+ with an AppCompat fallback on older versions. Language selection uses the platform/AppCompat per-app locale as its single persisted source; selecting System clears the app override. See [theme and locale behavior](docs/CORE_MODULES.md#theme-and-locale-behavior) for API-level behavior, startup timing, and the pre-Android 13 storage tradeoff.
 

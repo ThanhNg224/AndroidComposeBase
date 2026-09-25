@@ -20,6 +20,8 @@ The `com.thanhng224.androidcomposebase.core` namespace contains:
 
 The module does not own app configuration, Hilt bindings, feature repositories, Room databases, credentials, or a base URL. Construct or bind its factories from the consuming app's composition root.
 
+`AppSettingsKeys` contains only the reusable theme preference key (`THEME_MODE`). Onboarding completion is app-feature state, so the onboarding repository owns that key instead of exporting it from `:core`.
+
 ### Theme and locale behavior
 
 `:core` exposes `ThemeManager` and `LocaleManager`; the consuming app owns when and where to call them. Theme preference is stored in the app's DataStore. The app applies it through the platform app-specific night-mode API on Android 12 (API 31) and later, and through `AppCompatDelegate` on API 30 and earlier. `SYSTEM` clears the app-specific override/follows the device setting. On API 31+, the app maps `SYSTEM` to `UiModeManager.MODE_NIGHT_AUTO`; AOSP maps that app-specific value to an undefined package night qualifier, which lets the system configuration decide. This is distinct from setting the device-wide night mode. See [Android dark theme guidance](https://developer.android.com/develop/ui/views/theming/darktheme) and [AOSP `UiModeManagerService`](https://android.googlesource.com/platform/frameworks/base/%2B/refs/heads/android15-release/services/core/java/com/android/server/UiModeManagerService.java).
@@ -30,7 +32,7 @@ Startup waits up to two seconds for the persisted theme read before releasing th
 
 ## `:core:ui`
 
-`com.thanhng224.androidcomposebase.core.ui` contains the Compose design system and the `AndroidComposeBaseTheme` entry point. Its shared components are `AppPrimaryButton`, `AppSecondaryButton`, `AppOutlinedButton`, `AppTopBar`, `AppCenterTopBar`, and `AppFloatingNavBar`; `Dimens`, `AppShapes`, and `AppTypography` provide common design tokens. Use Material 3 directly for dialogs. `:app` owns Navigation 3 assembly and uses `AppFloatingNavBar` for its top-level tabs.
+`com.thanhng224.androidcomposebase.core.ui` contains the Compose design system and the `AndroidComposeBaseTheme` entry point. Its shared components include `AppPrimaryButton`, `AppSecondaryButton`, `AppOutlinedButton`, `AppTopBar`, `AppCenterTopBar`, `AppFloatingNavBar`, and the `AppLoadingState`, `AppEmptyState`, and `AppErrorState` screen states; `Dimens`, `AppShapes`, and `AppTypography` provide common design tokens. Use Material 3 directly for dialogs. `:app` owns Navigation 3 assembly and uses `AppFloatingNavBar` for its top-level tabs.
 
 The `:core:ui` module depends on `:core` for selected foundation/theme support. It does not depend on app features. `UiText` is declared in `:core`; `:core:ui` provides Compose resolution helpers. A consuming app may depend on either module independently according to the APIs it uses.
 
