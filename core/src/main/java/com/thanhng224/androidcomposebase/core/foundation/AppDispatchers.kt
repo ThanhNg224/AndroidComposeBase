@@ -1,6 +1,5 @@
 package com.thanhng224.androidcomposebase.core.foundation
 
-import com.thanhng224.androidcomposebase.core.architecture.DefaultAppDispatchers
 import kotlinx.coroutines.CoroutineDispatcher
 
 public interface AppDispatchers {

@@ -37,10 +37,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.appshell.home.HomeScreen
+import com.thanhng224.androidcomposebase.core.theme.AppTheme
 import com.thanhng224.androidcomposebase.core.ui.components.AppFloatingNavBar
 import com.thanhng224.androidcomposebase.core.ui.components.AppNavItem
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
-import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 import com.thanhng224.androidcomposebase.feature.onboarding.presentation.ui.OnboardingScreen
 import com.thanhng224.androidcomposebase.feature.settings.presentation.ui.SettingsScreen

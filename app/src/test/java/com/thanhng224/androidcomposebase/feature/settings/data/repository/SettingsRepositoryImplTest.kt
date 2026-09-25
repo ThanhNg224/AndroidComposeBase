@@ -5,7 +5,7 @@ import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.localization.AppLocaleApplier
 import com.thanhng224.androidcomposebase.core.localization.LocaleManager
 import com.thanhng224.androidcomposebase.core.testing.FakeSettingsStore
-import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
+import com.thanhng224.androidcomposebase.core.theme.ThemeManager
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows

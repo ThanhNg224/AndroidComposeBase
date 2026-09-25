@@ -1,4 +1,4 @@
-package com.thanhng224.androidcomposebase.core.ui.text
+package com.thanhng224.androidcomposebase.core.text
 
 import android.content.Context
 import androidx.annotation.StringRes

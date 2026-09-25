@@ -9,8 +9,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.thanhng224.androidcomposebase.core.foundation.SettingsKey
 import com.thanhng224.androidcomposebase.core.foundation.SettingsStore
-import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
-import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
+import com.thanhng224.androidcomposebase.core.theme.AppTheme
+import com.thanhng224.androidcomposebase.core.theme.ThemeManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Assert.assertEquals

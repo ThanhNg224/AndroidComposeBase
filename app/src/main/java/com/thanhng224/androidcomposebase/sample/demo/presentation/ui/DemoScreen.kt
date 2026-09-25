@@ -47,10 +47,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thanhng224.androidcomposebase.R
+import com.thanhng224.androidcomposebase.core.text.resolve
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
 import com.thanhng224.androidcomposebase.core.ui.components.AppOutlinedButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppPrimaryButton
-import com.thanhng224.androidcomposebase.core.ui.text.resolve
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoUiEvent
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherError

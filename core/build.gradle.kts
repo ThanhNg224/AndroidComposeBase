@@ -70,21 +70,21 @@ kover {
     reports {
         filters {
             // Positive selection of the deterministic (non-UI, non-Android-glue) surface, rather
-            // than a wildcard-plus-growing-exclusion-list: `core.ui.components`/`core.ui.window`
-            // (real View/Window glue) and `core.ui.base`'s Activity/Fragment hosts are simply never
-            // listed here at all, instead of being excluded from a catch-all `core.*` include.
+            // than a wildcard-plus-growing-exclusion-list: `:core:ui`'s View/Window/Activity glue
+            // lives in a separate module entirely, so it is simply never listed here, instead of
+            // being excluded from a catch-all `core.*` include.
             includes {
                 classes(
                     "com.thanhng224.androidcomposebase.core.foundation.*",
-                    "com.thanhng224.androidcomposebase.core.architecture.*",
                     "com.thanhng224.androidcomposebase.core.localization.*",
                     "com.thanhng224.androidcomposebase.core.network.*",
                     "com.thanhng224.androidcomposebase.core.network.auth.*",
                     "com.thanhng224.androidcomposebase.core.network.transfer.*",
                     "com.thanhng224.androidcomposebase.core.storage.settings.*",
                     "com.thanhng224.androidcomposebase.core.storage.secure.*",
-                    "com.thanhng224.androidcomposebase.core.ui.theme.*",
-                    "com.thanhng224.androidcomposebase.core.ui.text.*",
+                    "com.thanhng224.androidcomposebase.core.theme.*",
+                    "com.thanhng224.androidcomposebase.core.text.*",
+                    "com.thanhng224.androidcomposebase.core.common.*",
                     "com.thanhng224.androidcomposebase.core.navigation.*",
                 )
             }

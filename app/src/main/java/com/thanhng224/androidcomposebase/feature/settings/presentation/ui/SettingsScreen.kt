@@ -50,9 +50,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
+import com.thanhng224.androidcomposebase.core.text.resolve
+import com.thanhng224.androidcomposebase.core.theme.AppTheme
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
-import com.thanhng224.androidcomposebase.core.ui.text.resolve
-import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiEvent
 import com.thanhng224.androidcomposebase.feature.settings.presentation.viewmodel.SettingsViewModel

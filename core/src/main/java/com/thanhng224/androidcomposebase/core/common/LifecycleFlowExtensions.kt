@@ -1,4 +1,4 @@
-package com.thanhng224.androidcomposebase.core.ui.base
+package com.thanhng224.androidcomposebase.core.common
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner

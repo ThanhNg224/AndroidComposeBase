@@ -9,9 +9,10 @@ The `com.thanhng224.androidcomposebase.core` namespace contains:
 - `foundation`: framework-independent `AppDispatchers`, `SettingsStore`, `SettingsKey`, `SecureStore`, and secure-store key contracts.
 - `storage`: DataStore-backed settings via `SettingsStoreFactory` and Keystore-backed secure storage via `SecureStoreFactory`.
 - `localization`: `AppLanguage`, `SupportedLanguages`, `LocaleManager`, and `AppLocaleApplier` for per-app locale changes.
-- `ui.theme`: `AppTheme` and `ThemeManager` for theme persistence/application.
+- `theme`: `AppTheme` and `ThemeManager` for theme persistence/application.
+- `text`: `UiText`, a localizable UI message type resolved via `UiText.resolve(context)`.
 - `network`: `ApiConfig`, `ApiClient`, `ApiResult`, and `NetworkClientFactory`; optional auth and file-transfer contracts are in subpackages.
-- `ui.base`: small platform helpers such as `Debouncer` and Flow/lifecycle collection extensions.
+- `common`: small platform helpers such as `Debouncer` and Flow/lifecycle collection extensions.
 
 The module does not own app configuration, Hilt bindings, feature repositories, Room databases, credentials, or a base URL. Construct or bind its factories from the consuming app's composition root.
 

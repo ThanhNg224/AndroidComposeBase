@@ -1,6 +1,6 @@
 package com.thanhng224.androidcomposebase.sample.demo.presentation.state
 
-import com.thanhng224.androidcomposebase.core.ui.text.UiText
+import com.thanhng224.androidcomposebase.core.text.UiText
 
 data class PendingDemoMessage(
     val id: Long,

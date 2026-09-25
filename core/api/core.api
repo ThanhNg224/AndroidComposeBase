@@ -1,4 +1,24 @@
 // Signature format: 4.0
+package com.thanhng224.androidcomposebase.core.common {
+
+  public final class Debouncer {
+    ctor public Debouncer();
+    ctor public Debouncer(optional long intervalMs);
+    method public boolean shouldAllow(long nowMs);
+    field public static final com.thanhng224.androidcomposebase.core.common.Debouncer.Companion Companion;
+    field public static final long DEFAULT_INTERVAL_MS = 600L; // 0x258L
+  }
+
+  public static final class Debouncer.Companion {
+    property public static long DEFAULT_INTERVAL_MS;
+  }
+
+  public final class LifecycleFlowExtensionsKt {
+    method public static <T> void collectOnStartedBy(Flow<T>, LifecycleOwner lifecycleOwner, kotlin.jvm.functions.Function2<? super T,? super error.NonExistentClass<kotlin.Unit!>!,? extends java.lang.Object?> action);
+  }
+
+}
+
 package com.thanhng224.androidcomposebase.core.foundation {
 
   public interface AppDispatchers {
@@ -383,15 +403,7 @@ package com.thanhng224.androidcomposebase.core.storage.secure {
 package com.thanhng224.androidcomposebase.core.storage.settings {
 
   public final class AppSettingsKeys {
-    method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey getDEBUG_LOGGING_ENABLED();
-    method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.LongKey getFIRST_OPEN_AT();
-    method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey getONBOARDING_COMPLETED();
-    method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.IntKey getOPEN_COUNT();
     method @InaccessibleFromKotlin public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.StringKey getTHEME_MODE();
-    property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey DEBUG_LOGGING_ENABLED;
-    property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.LongKey FIRST_OPEN_AT;
-    property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.BooleanKey ONBOARDING_COMPLETED;
-    property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.IntKey OPEN_COUNT;
     property public com.thanhng224.androidcomposebase.core.foundation.SettingsKey.StringKey THEME_MODE;
     field public static final com.thanhng224.androidcomposebase.core.storage.settings.AppSettingsKeys INSTANCE;
   }
@@ -403,44 +415,24 @@ package com.thanhng224.androidcomposebase.core.storage.settings {
 
 }
 
-package com.thanhng224.androidcomposebase.core.ui.base {
-
-  public final class Debouncer {
-    ctor public Debouncer();
-    ctor public Debouncer(optional long intervalMs);
-    method public boolean shouldAllow(long nowMs);
-    field public static final com.thanhng224.androidcomposebase.core.ui.base.Debouncer.Companion Companion;
-    field public static final long DEFAULT_INTERVAL_MS = 600L; // 0x258L
-  }
-
-  public static final class Debouncer.Companion {
-    property public static long DEFAULT_INTERVAL_MS;
-  }
-
-  public final class LifecycleFlowExtensionsKt {
-    method public static <T> void collectOnStartedBy(Flow<T>, LifecycleOwner lifecycleOwner, kotlin.jvm.functions.Function2<? super T,? super error.NonExistentClass<kotlin.Unit!>!,? extends java.lang.Object?> action);
-  }
-
-}
-
-package com.thanhng224.androidcomposebase.core.ui.text {
+package com.thanhng224.androidcomposebase.core.text {
 
   public sealed exhaustive interface UiText {
   }
 
-  public static final class UiText.DynamicString implements com.thanhng224.androidcomposebase.core.ui.text.UiText {
+  public static final class UiText.DynamicString implements com.thanhng224.androidcomposebase.core.text.UiText {
     ctor public UiText.DynamicString(String value);
     method public String component1();
-    method public com.thanhng224.androidcomposebase.core.ui.text.UiText.DynamicString copy(optional String value);
+    method public com.thanhng224.androidcomposebase.core.text.UiText.DynamicString copy(optional String value);
     method @InaccessibleFromKotlin public String getValue();
     property public String value;
   }
 
-  public static final class UiText.StringResource implements com.thanhng224.androidcomposebase.core.ui.text.UiText {
+  public static final class UiText.StringResource implements com.thanhng224.androidcomposebase.core.text.UiText {
     ctor public UiText.StringResource(int resId, optional java.util.List<?> formatArgs);
     method public int component1();
     method public java.util.List<java.lang.Object> component2();
-    method public com.thanhng224.androidcomposebase.core.ui.text.UiText.StringResource copy(optional int resId, optional java.util.List<?> formatArgs);
+    method public com.thanhng224.androidcomposebase.core.text.UiText.StringResource copy(optional int resId, optional java.util.List<?> formatArgs);
     method @InaccessibleFromKotlin public java.util.List<java.lang.Object> getFormatArgs();
     method @InaccessibleFromKotlin public int getResId();
     property public java.util.List<java.lang.Object> formatArgs;
@@ -448,40 +440,40 @@ package com.thanhng224.androidcomposebase.core.ui.text {
   }
 
   public final class UiTextKt {
-    method public static String resolve(com.thanhng224.androidcomposebase.core.ui.text.UiText, android.content.Context context);
+    method public static String resolve(com.thanhng224.androidcomposebase.core.text.UiText, android.content.Context context);
   }
 
 }
 
-package com.thanhng224.androidcomposebase.core.ui.theme {
+package com.thanhng224.androidcomposebase.core.theme {
 
   public enum AppTheme {
     method @InaccessibleFromKotlin public String getKey();
     property public String key;
-    enum_constant public static final com.thanhng224.androidcomposebase.core.ui.theme.AppTheme DARK;
-    enum_constant public static final com.thanhng224.androidcomposebase.core.ui.theme.AppTheme LIGHT;
-    enum_constant public static final com.thanhng224.androidcomposebase.core.ui.theme.AppTheme SYSTEM;
-    field public static final com.thanhng224.androidcomposebase.core.ui.theme.AppTheme.Companion Companion;
+    enum_constant public static final com.thanhng224.androidcomposebase.core.theme.AppTheme DARK;
+    enum_constant public static final com.thanhng224.androidcomposebase.core.theme.AppTheme LIGHT;
+    enum_constant public static final com.thanhng224.androidcomposebase.core.theme.AppTheme SYSTEM;
+    field public static final com.thanhng224.androidcomposebase.core.theme.AppTheme.Companion Companion;
   }
 
   public static final class AppTheme.Companion {
-    method public com.thanhng224.androidcomposebase.core.ui.theme.AppTheme fromKey(String key);
+    method public com.thanhng224.androidcomposebase.core.theme.AppTheme fromKey(String key);
   }
 
   public interface ThemeManager {
-    method public void applyTheme(com.thanhng224.androidcomposebase.core.ui.theme.AppTheme theme);
-    method @InaccessibleFromKotlin public Flow<com.thanhng224.androidcomposebase.core.ui.theme.AppTheme!> getCurrentTheme();
+    method public void applyTheme(com.thanhng224.androidcomposebase.core.theme.AppTheme theme);
+    method @InaccessibleFromKotlin public Flow<com.thanhng224.androidcomposebase.core.theme.AppTheme!> getCurrentTheme();
     method public suspend Object? getTheme(error.NonExistentClass);
     method @InaccessibleFromKotlin public StateFlow<java.lang.Boolean!> isThemeApplied();
-    method public suspend Object? setTheme(com.thanhng224.androidcomposebase.core.ui.theme.AppTheme theme, error.NonExistentClass);
+    method public suspend Object? setTheme(com.thanhng224.androidcomposebase.core.theme.AppTheme theme, error.NonExistentClass);
     property public abstract ErrorType currentTheme;
     property public abstract ErrorType isThemeApplied;
-    field public static final com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager.Companion Companion;
+    field public static final com.thanhng224.androidcomposebase.core.theme.ThemeManager.Companion Companion;
   }
 
   public static final class ThemeManager.Companion {
-    method public com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager create(com.thanhng224.androidcomposebase.core.foundation.SettingsStore settingsStore);
-    method public com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager create(com.thanhng224.androidcomposebase.core.foundation.SettingsStore settingsStore, android.content.Context context);
+    method public com.thanhng224.androidcomposebase.core.theme.ThemeManager create(com.thanhng224.androidcomposebase.core.foundation.SettingsStore settingsStore);
+    method public com.thanhng224.androidcomposebase.core.theme.ThemeManager create(com.thanhng224.androidcomposebase.core.foundation.SettingsStore settingsStore, android.content.Context context);
   }
 
 }

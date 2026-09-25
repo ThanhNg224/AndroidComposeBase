@@ -1,4 +1,4 @@
-package com.thanhng224.androidcomposebase.core.ui.base
+package com.thanhng224.androidcomposebase.core.common
 
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

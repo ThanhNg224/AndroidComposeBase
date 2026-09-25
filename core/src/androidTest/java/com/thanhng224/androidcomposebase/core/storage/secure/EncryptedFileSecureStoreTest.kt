@@ -3,7 +3,7 @@ package com.thanhng224.androidcomposebase.core.storage.secure
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.thanhng224.androidcomposebase.core.architecture.DefaultAppDispatchers
+import com.thanhng224.androidcomposebase.core.foundation.DefaultAppDispatchers
 import com.thanhng224.androidcomposebase.core.foundation.SecureStoreKey
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async

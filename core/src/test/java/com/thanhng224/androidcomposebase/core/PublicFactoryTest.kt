@@ -9,7 +9,7 @@ import com.thanhng224.androidcomposebase.core.network.transfer.FileTransferClien
 import com.thanhng224.androidcomposebase.core.storage.secure.DbPassphraseProvider
 import com.thanhng224.androidcomposebase.core.testing.FakeSecureStore
 import com.thanhng224.androidcomposebase.core.testing.FakeSettingsStore
-import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
+import com.thanhng224.androidcomposebase.core.theme.ThemeManager
 import okhttp3.Authenticator
 import okhttp3.OkHttpClient
 import org.junit.Assert.assertNotNull

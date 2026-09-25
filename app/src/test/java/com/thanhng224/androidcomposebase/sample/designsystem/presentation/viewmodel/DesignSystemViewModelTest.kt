@@ -1,6 +1,6 @@
 package com.thanhng224.androidcomposebase.sample.designsystem.presentation.viewmodel
 
-import com.thanhng224.androidcomposebase.core.ui.text.UiText
+import com.thanhng224.androidcomposebase.core.text.UiText
 import com.thanhng224.androidcomposebase.sample.designsystem.presentation.state.DesignSystemDemoState
 import com.thanhng224.androidcomposebase.sample.designsystem.presentation.state.DesignSystemUiEvent
 import org.junit.Assert.assertEquals

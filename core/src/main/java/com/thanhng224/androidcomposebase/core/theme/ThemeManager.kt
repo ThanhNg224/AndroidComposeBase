@@ -1,4 +1,4 @@
-package com.thanhng224.androidcomposebase.core.ui.theme
+package com.thanhng224.androidcomposebase.core.theme
 
 import android.app.UiModeManager
 import android.content.Context

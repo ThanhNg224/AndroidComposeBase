@@ -5,8 +5,8 @@ import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.localization.SupportedLanguages
 import com.thanhng224.androidcomposebase.core.testing.MainDispatcherRule
-import com.thanhng224.androidcomposebase.core.ui.text.UiText
-import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
+import com.thanhng224.androidcomposebase.core.text.UiText
+import com.thanhng224.androidcomposebase.core.theme.AppTheme
 import com.thanhng224.androidcomposebase.feature.settings.domain.repository.SettingsRepository
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetCurrentLanguageUseCase
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetSupportedLanguagesUseCase

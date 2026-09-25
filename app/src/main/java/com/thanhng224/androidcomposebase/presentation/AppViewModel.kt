@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thanhng224.androidcomposebase.core.foundation.SettingsStore
 import com.thanhng224.androidcomposebase.core.storage.settings.AppSettingsKeys
-import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
+import com.thanhng224.androidcomposebase.core.theme.AppTheme
 import com.thanhng224.androidcomposebase.feature.onboarding.domain.repository.OnboardingRepository
 import com.thanhng224.androidcomposebase.feature.onboarding.presentation.state.OnboardingError
 import com.thanhng224.androidcomposebase.feature.onboarding.presentation.state.OnboardingUiState

@@ -11,7 +11,7 @@ import com.thanhng224.androidcomposebase.core.localization.LocaleManager
 import com.thanhng224.androidcomposebase.core.localization.SupportedLanguages
 import com.thanhng224.androidcomposebase.core.storage.secure.SecureStoreFactory
 import com.thanhng224.androidcomposebase.core.storage.settings.SettingsStoreFactory
-import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
+import com.thanhng224.androidcomposebase.core.theme.ThemeManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

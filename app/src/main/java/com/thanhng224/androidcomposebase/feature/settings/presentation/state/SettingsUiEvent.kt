@@ -1,7 +1,7 @@
 package com.thanhng224.androidcomposebase.feature.settings.presentation.state
 
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
-import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
+import com.thanhng224.androidcomposebase.core.theme.AppTheme
 
 sealed interface SettingsUiEvent {
     data class ThemeSelected(

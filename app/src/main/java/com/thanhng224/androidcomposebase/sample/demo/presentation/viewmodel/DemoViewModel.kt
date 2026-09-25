@@ -4,7 +4,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.thanhng224.androidcomposebase.R
-import com.thanhng224.androidcomposebase.core.ui.text.UiText
+import com.thanhng224.androidcomposebase.core.text.UiText
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.DemoWeather
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherError
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.WeatherResult

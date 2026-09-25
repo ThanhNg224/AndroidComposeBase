@@ -1,4 +1,4 @@
-package com.thanhng224.androidcomposebase.core.ui.theme
+package com.thanhng224.androidcomposebase.core.theme
 
 public enum class AppTheme(
     public val key: String,

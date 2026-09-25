@@ -2,7 +2,6 @@ package com.thanhng224.androidcomposebase.feature.onboarding.data.repository
 
 import com.thanhng224.androidcomposebase.core.foundation.SettingsKey
 import com.thanhng224.androidcomposebase.core.foundation.SettingsStore
-import com.thanhng224.androidcomposebase.core.storage.settings.AppSettingsKeys
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -22,7 +21,7 @@ class OnboardingRepositoryImplTest {
             repository.complete()
 
             assertTrue(repository.isCompleted())
-            assertEquals(listOf(AppSettingsKeys.ONBOARDING_COMPLETED.name), store.writes)
+            assertEquals(listOf("onboarding_completed"), store.writes)
         }
 
     private class RecordingSettingsStore : SettingsStore {

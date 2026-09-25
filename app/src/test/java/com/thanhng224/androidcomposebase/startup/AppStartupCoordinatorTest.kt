@@ -1,7 +1,7 @@
 package com.thanhng224.androidcomposebase.startup
 
-import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
-import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
+import com.thanhng224.androidcomposebase.core.theme.AppTheme
+import com.thanhng224.androidcomposebase.core.theme.ThemeManager
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

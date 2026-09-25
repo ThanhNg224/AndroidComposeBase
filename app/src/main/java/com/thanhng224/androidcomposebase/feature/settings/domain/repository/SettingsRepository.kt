@@ -1,6 +1,6 @@
 package com.thanhng224.androidcomposebase.feature.settings.domain.repository
 
-import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
+import com.thanhng224.androidcomposebase.core.theme.AppTheme
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {

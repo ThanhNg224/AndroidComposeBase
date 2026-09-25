@@ -1,7 +1,7 @@
 package com.thanhng224.androidcomposebase.startup
 
-import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
-import com.thanhng224.androidcomposebase.core.ui.theme.ThemeManager
+import com.thanhng224.androidcomposebase.core.theme.AppTheme
+import com.thanhng224.androidcomposebase.core.theme.ThemeManager
 import com.thanhng224.androidcomposebase.di.ApplicationScope
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope

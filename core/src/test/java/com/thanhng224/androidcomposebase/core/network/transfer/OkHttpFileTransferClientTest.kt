@@ -1,7 +1,7 @@
 package com.thanhng224.androidcomposebase.core.network.transfer
 
 import app.cash.turbine.test
-import com.thanhng224.androidcomposebase.core.architecture.DefaultAppDispatchers
+import com.thanhng224.androidcomposebase.core.foundation.DefaultAppDispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay

@@ -1,6 +1,6 @@
 package com.thanhng224.androidcomposebase.sample.designsystem.presentation.state
 
-import com.thanhng224.androidcomposebase.core.ui.text.UiText
+import com.thanhng224.androidcomposebase.core.text.UiText
 
 sealed interface DesignSystemDemoState {
     data object Loading : DesignSystemDemoState
