@@ -103,8 +103,7 @@ class SettingsViewModel
             }
         }
 
-        private fun languageFor(languageTag: String?): AppLanguage? =
-            languageTag?.let { AppLanguage.findByLanguageTag(it, languages) }
+        private fun languageFor(tag: String?): AppLanguage? = tag?.let { AppLanguage.findByLanguageTag(it, languages) }
 
         private fun enqueue(messageResId: Int) {
             pendingMessages.update { messages ->
