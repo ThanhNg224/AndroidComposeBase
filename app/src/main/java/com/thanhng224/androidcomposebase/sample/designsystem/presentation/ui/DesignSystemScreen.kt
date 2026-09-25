@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
@@ -48,12 +49,28 @@ import com.thanhng224.androidcomposebase.core.ui.components.AppLoadingState
 import com.thanhng224.androidcomposebase.core.ui.components.AppOutlinedButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppPrimaryButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppSecondaryButton
+import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
 @Composable
 public fun DesignSystemScreen(modifier: Modifier = Modifier) {
     var showDialog by rememberSaveable { mutableStateOf(false) }
 
+    DesignSystemContent(
+        showDialog = showDialog,
+        onOpenDialog = { showDialog = true },
+        onDismissDialog = { showDialog = false },
+        modifier = modifier,
+    )
+}
+
+@Composable
+private fun DesignSystemContent(
+    showDialog: Boolean,
+    onOpenDialog: () -> Unit,
+    onDismissDialog: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         topBar = {
             AppCenterTopBar(title = stringResource(R.string.design_system_title))
@@ -218,7 +235,7 @@ public fun DesignSystemScreen(modifier: Modifier = Modifier) {
                             Spacer(modifier = Modifier.height(Dimens.spaceMedium))
                             AppPrimaryButton(
                                 text = stringResource(R.string.design_system_open_dialog),
-                                onClick = { showDialog = true },
+                                onClick = onOpenDialog,
                             )
                         }
                     }
@@ -229,7 +246,7 @@ public fun DesignSystemScreen(modifier: Modifier = Modifier) {
 
     if (showDialog) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = onDismissDialog,
             title = { Text(stringResource(R.string.design_system_dialog_title)) },
             text = {
                 Text(
@@ -238,15 +255,43 @@ public fun DesignSystemScreen(modifier: Modifier = Modifier) {
                 )
             },
             confirmButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = onDismissDialog) {
                     Text(stringResource(R.string.design_system_dialog_confirm))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showDialog = false }) {
+                TextButton(onClick = onDismissDialog) {
                     Text(stringResource(R.string.action_cancel))
                 }
             },
+        )
+    }
+}
+
+@Preview(name = "Design system light", showBackground = true)
+@Composable
+private fun DesignSystemContentLightPreview() {
+    AndroidComposeBaseTheme(darkTheme = false) {
+        DesignSystemContent(
+            showDialog = false,
+            onOpenDialog = {},
+            onDismissDialog = {},
+        )
+    }
+}
+
+@Preview(
+    name = "Design system dark",
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+)
+@Composable
+private fun DesignSystemContentDarkPreview() {
+    AndroidComposeBaseTheme(darkTheme = true) {
+        DesignSystemContent(
+            showDialog = false,
+            onOpenDialog = {},
+            onDismissDialog = {},
         )
     }
 }

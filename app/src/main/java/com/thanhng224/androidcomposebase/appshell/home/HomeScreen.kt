@@ -19,13 +19,20 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
+import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
 @Composable
 public fun HomeScreen(modifier: Modifier = Modifier) {
+    HomeContent(modifier = modifier)
+}
+
+@Composable
+private fun HomeContent(modifier: Modifier = Modifier) {
     Scaffold(
         topBar = {
             AppCenterTopBar(title = stringResource(R.string.app_name))
@@ -68,5 +75,25 @@ public fun HomeScreen(modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Home light", showBackground = true)
+@Composable
+private fun HomeContentLightPreview() {
+    AndroidComposeBaseTheme(darkTheme = false) {
+        HomeContent()
+    }
+}
+
+@Preview(
+    name = "Home dark",
+    uiMode = android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    showBackground = true,
+)
+@Composable
+private fun HomeContentDarkPreview() {
+    AndroidComposeBaseTheme(darkTheme = true) {
+        HomeContent()
     }
 }
