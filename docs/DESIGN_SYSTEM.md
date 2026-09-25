@@ -6,6 +6,8 @@ The reusable Compose theme and components are in `:core:ui`, under `com.thanhng2
 
 `AppRoot` wraps app content with `AndroidComposeBaseTheme`. For another host, wrap its Compose content with the theme. It maps the shared `:core` color resources to Material 3 color roles, supports an explicit light/dark choice, and uses dynamic color on supported Android versions when enabled. Read colors, typography, and shapes through `MaterialTheme` rather than duplicating theme values.
 
+The app persists the Light/Dark/System choice in DataStore. On Android 12+ it applies the app-specific platform night mode (including clearing the app override for System), while older versions use AppCompat. Startup gives the persisted-theme read at most two seconds of splash time; a later result still applies. This is a bounded wait, not a measured startup target. Dynamic Material 3 color remains supported. The platform and locale persistence policy is described in [Core modules](CORE_MODULES.md#theme-and-locale-behavior).
+
 ## Tokens
 
 Use `Dimens` for shared spacing, touch, corner, and elevation values. Existing names include `spaceSmall`, `spaceMedium`, `spaceLarge`, `spaceXLarge`, `minTouchTarget`, `buttonHeight`, `radiusMedium`, and `elevationLow`. The complete source of truth is [Dimens.kt](../core/ui/src/main/java/com/thanhng224/androidcomposebase/core/ui/theme/Dimens.kt).

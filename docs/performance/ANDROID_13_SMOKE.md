@@ -2,6 +2,23 @@
 
 Functional checks on one Samsung handset after the Compose UI, locale handling, and adaptive width updates. This is a smoke report, not a device qualification or a performance benchmark.
 
+## Theme and locale verification (2026-09-25)
+
+The following additional checks were run on the same Samsung `SM-N770F`, Android 13 (API 33), after the theme and locale integration fixes. The instrumentation suite reported **8 tests, 0 failures** at `1032d1e`; the subsequent System-locale reset fix at `454eb9d` also passed its connected instrumentation run. These are device-specific functional checks; API 32 and earlier and foldable hardware were not tested.
+
+| Check | Observed result |
+|---|---|
+| System theme with device Night mode on | Dark background RGB `(13, 20, 25)` |
+| Explicit Light | Light background RGB `(246, 250, 255)` |
+| Explicit Dark | Dark background RGB `(13, 20, 25)` |
+| Return to System, then device Night mode off | Light background RGB `(246, 250, 255)` |
+| Choose Vietnamese in app | Framework per-app locale `[vi-VN]`; Settings selection showed Vietnamese |
+| Choose System in app | Framework locale list `[]`; Settings selection showed System |
+| Change app locale to `vi-VN` externally while app was backgrounded, then relaunch | Settings selected Vietnamese |
+| Reset external app locale | Framework locale list `[]`; Settings selected System |
+
+After testing, the app was uninstalled and the device was restored to Night mode off, font scale `1.1`, resolution `1080×2400`, and density `420`. The process validates the observed theme/locale behavior on this API 33 device; it does not establish startup performance. Android's current [dark theme guidance](https://developer.android.com/develop/ui/views/theming/darktheme) recommends the app-specific `UiModeManager` API on API 31+ and AppCompat on older releases. [Per-app language guidance](https://developer.android.com/guide/topics/resources/app-languages) describes framework locale synchronization from API 33 and the AppCompat `autoStoreLocales` compatibility path (including its blocking disk I/O caveat). The app-specific `MODE_NIGHT_AUTO` mapping for System follows [AOSP `UiModeManagerService`](https://android.googlesource.com/platform/frameworks/base/%2B/refs/heads/android15-release/services/core/java/com/android/server/UiModeManagerService.java).
+
 ## Device and artifact provenance
 
 | Checks | Source revision | Artifact |

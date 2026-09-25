@@ -15,6 +15,14 @@ The `com.thanhng224.androidcomposebase.core` namespace contains:
 
 The module does not own app configuration, Hilt bindings, feature repositories, Room databases, credentials, or a base URL. Construct or bind its factories from the consuming app's composition root.
 
+### Theme and locale behavior
+
+`:core` exposes `ThemeManager` and `LocaleManager`; the consuming app owns when and where to call them. Theme preference is stored in the app's DataStore. The app applies it through the platform app-specific night-mode API on Android 12 (API 31) and later, and through `AppCompatDelegate` on API 30 and earlier. `SYSTEM` clears the app-specific override/follows the device setting. On API 31+, the app maps `SYSTEM` to `UiModeManager.MODE_NIGHT_AUTO`; AOSP maps that app-specific value to an undefined package night qualifier, which lets the system configuration decide. This is distinct from setting the device-wide night mode. See [Android dark theme guidance](https://developer.android.com/develop/ui/views/theming/darktheme) and [AOSP `UiModeManagerService`](https://android.googlesource.com/platform/frameworks/base/%2B/refs/heads/android15-release/services/core/java/com/android/server/UiModeManagerService.java).
+
+AppCompat/platform application locales are the sole persisted locale source. Android 13 (API 33) and later reads and writes the framework per-app locale, which is shared with Android Settings. On API 32 and earlier, AppCompat's `autoStoreLocales=true` stores the selection for backward compatibility; Android's guidance documents that this may perform a blocking main-thread disk read/write. The Settings feature does not maintain a second locale preference. Choosing **System** clears the app locale override, so the framework reports an empty locale list and the device locale is used. The hosting Activity must extend `AppCompatActivity` for the backward-compatible AppCompat locale API. See [per-app language guidance](https://developer.android.com/guide/topics/resources/app-languages).
+
+Startup waits up to two seconds for the persisted theme read before releasing the splash screen. A read that finishes later still applies the selected theme; the timeout bounds splash waiting and is not a performance measurement or guarantee. Dynamic Material 3 color remains available in `:core:ui` where supported and enabled.
+
 ## `:core:ui`
 
 `com.thanhng224.androidcomposebase.core.ui` contains the Compose design system and the `AndroidComposeBaseTheme` entry point. Its shared components are `AppPrimaryButton`, `AppSecondaryButton`, `AppOutlinedButton`, `AppTopBar`, and `AppCenterTopBar`; `Dimens`, `AppShapes`, and `AppTypography` provide common design tokens. Use Material 3 directly for dialogs and app navigation. The app owns adaptive navigation through `NavigationSuiteScaffold`.

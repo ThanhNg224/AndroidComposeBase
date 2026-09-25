@@ -30,6 +30,8 @@ Open the initialized directory in Android Studio with JDK 21, sync Gradle, then 
 
 The dependency direction inside a feature is presentation to domain contracts, with data implementing those contracts. `:app` assembles features and shared infrastructure. See [core modules](docs/CORE_MODULES.md) for the reusable library boundaries.
 
+Theme selection is persisted in DataStore and applied using app-specific platform night mode on Android 12+ with an AppCompat fallback on older versions. Language selection uses the platform/AppCompat per-app locale as its single persisted source; selecting System clears the app override. See [theme and locale behavior](docs/CORE_MODULES.md#theme-and-locale-behavior) for API-level behavior, startup timing, and the pre-Android 13 storage tradeoff.
+
 ## Local checks
 
 ```bash
