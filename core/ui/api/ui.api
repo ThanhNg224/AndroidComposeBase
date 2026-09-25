@@ -21,6 +21,36 @@ package com.thanhng224.androidcomposebase.core.ui.components {
     method public static void AppSecondaryButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional Modifier modifier, optional boolean enabled, optional ImageVector? icon);
   }
 
+  public final class AppFloatingNavBarKt {
+    method public static void AppFloatingNavBar(java.util.List<com.thanhng224.androidcomposebase.core.ui.components.AppNavItem> items, optional Modifier modifier, optional Color containerColor, optional Color contentColor, optional Color selectedIndicatorColor, optional Color selectedContentColor);
+  }
+
+  public final class AppNavItem {
+    ctor public AppNavItem(boolean selected, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, ImageVector selectedIcon, ImageVector unselectedIcon, String label, optional int badgeCount, optional String? contentDescription);
+    method public boolean component1();
+    method public kotlin.jvm.functions.Function0<kotlin.Unit> component2();
+    method public ImageVector component3();
+    method public ImageVector component4();
+    method public String component5();
+    method public int component6();
+    method public String? component7();
+    method public com.thanhng224.androidcomposebase.core.ui.components.AppNavItem copy(optional boolean selected, optional kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional ImageVector selectedIcon, optional ImageVector unselectedIcon, optional String label, optional int badgeCount, optional String? contentDescription);
+    method @InaccessibleFromKotlin public int getBadgeCount();
+    method @InaccessibleFromKotlin public String? getContentDescription();
+    method @InaccessibleFromKotlin public String getLabel();
+    method @InaccessibleFromKotlin public kotlin.jvm.functions.Function0<kotlin.Unit> getOnClick();
+    method @InaccessibleFromKotlin public boolean getSelected();
+    method @InaccessibleFromKotlin public ImageVector getSelectedIcon();
+    method @InaccessibleFromKotlin public ImageVector getUnselectedIcon();
+    property public int badgeCount;
+    property public String? contentDescription;
+    property public String label;
+    property public kotlin.jvm.functions.Function0<kotlin.Unit> onClick;
+    property public boolean selected;
+    property public ErrorType selectedIcon;
+    property public ErrorType unselectedIcon;
+  }
+
   public final class AppTopBarKt {
     method public static void AppCenterTopBar(String title, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<? super RowScope,kotlin.Unit> actions);
     method public static void AppTopBar(String title, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<? super RowScope,kotlin.Unit> actions);

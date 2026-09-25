@@ -6,25 +6,27 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination
@@ -35,8 +37,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.appshell.home.HomeScreen
+import com.thanhng224.androidcomposebase.core.ui.components.AppFloatingNavBar
+import com.thanhng224.androidcomposebase.core.ui.components.AppNavItem
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
+import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 import com.thanhng224.androidcomposebase.feature.onboarding.presentation.ui.OnboardingScreen
 import com.thanhng224.androidcomposebase.feature.settings.presentation.ui.SettingsScreen
 import com.thanhng224.androidcomposebase.navigation.ScreenRoute
@@ -82,75 +87,11 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                 ScreenRoute.DesignSystem::class.qualifiedName,
             )
         val showNavigation = currentDestination?.hierarchy?.any { it.route in topLevelRoutes } == true
-        val adaptiveInfo = currentWindowAdaptiveInfoV2()
-        val navigationSuiteType =
-            if (showNavigation) {
-                NavigationSuiteScaffoldDefaults.navigationSuiteType(adaptiveInfo)
-            } else {
-                NavigationSuiteType.None
-            }
-
-        NavigationSuiteScaffold(
-            layoutType = navigationSuiteType,
-            containerColor = MaterialTheme.colorScheme.background,
-            navigationSuiteItems = {
-                item(
-                    icon = { Icon(Icons.Default.Home, contentDescription = null) },
-                    label = { Text(stringResource(R.string.navigation_home)) },
-                    selected = isSelectedRoute(currentDestination, ScreenRoute.Home::class.qualifiedName),
-                    onClick = {
-                        if (!isSelectedRoute(currentDestination, ScreenRoute.Home::class.qualifiedName)) {
-                            navController.navigate(ScreenRoute.Home) {
-                                popUpTo<ScreenRoute.Home> { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    },
-                )
-                item(
-                    icon = { Icon(Icons.Default.Cloud, contentDescription = null) },
-                    label = { Text(stringResource(R.string.navigation_demo)) },
-                    selected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),
-                    onClick = {
-                        if (!isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName)) {
-                            navController.navigate(ScreenRoute.Demo) {
-                                popUpTo<ScreenRoute.Home> { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    },
-                )
-                item(
-                    icon = { Icon(Icons.Default.Palette, contentDescription = null) },
-                    label = { Text(stringResource(R.string.navigation_design)) },
-                    selected = isSelectedRoute(currentDestination, ScreenRoute.DesignSystem::class.qualifiedName),
-                    onClick = {
-                        if (!isSelectedRoute(currentDestination, ScreenRoute.DesignSystem::class.qualifiedName)) {
-                            navController.navigate(ScreenRoute.DesignSystem) {
-                                popUpTo<ScreenRoute.Home> { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    },
-                )
-                item(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = null) },
-                    label = { Text(stringResource(R.string.navigation_settings)) },
-                    selected = isSelectedRoute(currentDestination, ScreenRoute.Settings::class.qualifiedName),
-                    onClick = {
-                        if (!isSelectedRoute(currentDestination, ScreenRoute.Settings::class.qualifiedName)) {
-                            navController.navigate(ScreenRoute.Settings) {
-                                popUpTo<ScreenRoute.Home> { saveState = true }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    },
-                )
-            },
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
         ) {
             NavHost(
                 navController = navController,
@@ -159,6 +100,12 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                 exitTransition = { ExitTransition.None },
                 popEnterTransition = { EnterTransition.None },
                 popExitTransition = { ExitTransition.None },
+                modifier =
+                    if (showNavigation) {
+                        Modifier.padding(bottom = 80.dp)
+                    } else {
+                        Modifier
+                    },
             ) {
                 composable<ScreenRoute.Onboarding> {
                     OnboardingScreen(
@@ -183,6 +130,82 @@ public fun AppRoot(viewModel: AppViewModel = hiltViewModel()) {
                 composable<ScreenRoute.DesignSystem> {
                     DesignSystemScreen()
                 }
+            }
+
+            if (showNavigation) {
+                val navItems =
+                    listOf(
+                        AppNavItem(
+                            selected = isSelectedRoute(currentDestination, ScreenRoute.Home::class.qualifiedName),
+                            onClick = {
+                                if (!isSelectedRoute(currentDestination, ScreenRoute.Home::class.qualifiedName)) {
+                                    navController.navigate(ScreenRoute.Home) {
+                                        popUpTo<ScreenRoute.Home> { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            selectedIcon = Icons.Filled.Home,
+                            unselectedIcon = Icons.Outlined.Home,
+                            label = stringResource(R.string.navigation_home),
+                        ),
+                        AppNavItem(
+                            selected = isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName),
+                            onClick = {
+                                if (!isSelectedRoute(currentDestination, ScreenRoute.Demo::class.qualifiedName)) {
+                                    navController.navigate(ScreenRoute.Demo) {
+                                        popUpTo<ScreenRoute.Home> { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            selectedIcon = Icons.Filled.Cloud,
+                            unselectedIcon = Icons.Outlined.Cloud,
+                            label = stringResource(R.string.navigation_demo),
+                        ),
+                        AppNavItem(
+                            selected = isSelectedRoute(currentDestination, ScreenRoute.DesignSystem::class.qualifiedName),
+                            onClick = {
+                                if (!isSelectedRoute(currentDestination, ScreenRoute.DesignSystem::class.qualifiedName)) {
+                                    navController.navigate(ScreenRoute.DesignSystem) {
+                                        popUpTo<ScreenRoute.Home> { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            selectedIcon = Icons.Filled.Palette,
+                            unselectedIcon = Icons.Outlined.Palette,
+                            label = stringResource(R.string.navigation_design),
+                        ),
+                        AppNavItem(
+                            selected = isSelectedRoute(currentDestination, ScreenRoute.Settings::class.qualifiedName),
+                            onClick = {
+                                if (!isSelectedRoute(currentDestination, ScreenRoute.Settings::class.qualifiedName)) {
+                                    navController.navigate(ScreenRoute.Settings) {
+                                        popUpTo<ScreenRoute.Home> { saveState = true }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                }
+                            },
+                            selectedIcon = Icons.Filled.Settings,
+                            unselectedIcon = Icons.Outlined.Settings,
+                            label = stringResource(R.string.navigation_settings),
+                        ),
+                    )
+
+                AppFloatingNavBar(
+                    items = navItems,
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .navigationBarsPadding()
+                            .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
+                            .widthIn(max = 600.dp),
+                )
             }
         }
 
