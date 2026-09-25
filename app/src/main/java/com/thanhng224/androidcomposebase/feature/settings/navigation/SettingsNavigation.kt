@@ -15,6 +15,7 @@ data object SettingsRoute : NavKey
 
 val SettingsDestination =
     TopLevelDestination(
+        id = "settings",
         key = SettingsRoute,
         selectedIconRes = R.drawable.ic_nav_settings_filled,
         unselectedIconRes = R.drawable.ic_nav_settings_outlined,

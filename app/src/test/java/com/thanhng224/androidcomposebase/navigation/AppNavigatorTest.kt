@@ -6,9 +6,11 @@ import androidx.navigation3.runtime.NavKey
 import com.thanhng224.androidcomposebase.appshell.home.HomeRoute
 import com.thanhng224.androidcomposebase.feature.settings.navigation.SettingsRoute
 import com.thanhng224.androidcomposebase.sample.demo.navigation.DemoRoute
+import com.thanhng224.androidcomposebase.sample.designsystem.navigation.DesignSystemRoute
 import kotlinx.serialization.Serializable
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -21,6 +23,56 @@ class AppNavigatorTest {
             startKey = HomeRoute,
             backStacks = listOf(HomeRoute, DemoRoute, SettingsRoute).associateWith { NavBackStack(it) },
         )
+
+    private fun destination(
+        id: String,
+        key: NavKey,
+    ): TopLevelDestination =
+        TopLevelDestination(
+            id = id,
+            key = key,
+            selectedIconRes = 0,
+            unselectedIconRes = 0,
+            labelRes = 0,
+        )
+
+    @Test
+    fun `restores selected tab by stable ID after destinations are reordered`() {
+        val oldDestinations =
+            listOf(
+                destination("home", HomeRoute),
+                destination("demo", DemoRoute),
+                destination("settings", SettingsRoute),
+            )
+        val savedId = topLevelDestinationIdsByKey(oldDestinations).getValue(SettingsRoute)
+        val newDestinations =
+            listOf(
+                destination("settings", SettingsRoute),
+                destination("home", HomeRoute),
+                destination("demo", DemoRoute),
+            )
+
+        assertEquals(SettingsRoute, topLevelKeyForId(savedId, HomeRoute, newDestinations))
+    }
+
+    @Test
+    fun `restores start tab when selected destination ID was removed`() {
+        val savedId =
+            topLevelDestinationIdsByKey(listOf(destination("design-system", DesignSystemRoute)))
+                .getValue(DesignSystemRoute)
+        val currentDestinations = listOf(destination("home", HomeRoute), destination("settings", SettingsRoute))
+
+        assertEquals(HomeRoute, topLevelKeyForId(savedId, HomeRoute, currentDestinations))
+    }
+
+    @Test
+    fun `rejects duplicate stable destination IDs`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            topLevelDestinationIdsByKey(
+                listOf(destination("duplicate", HomeRoute), destination("duplicate", DemoRoute)),
+            )
+        }
+    }
 
     @Test
     fun `starts on the start tab showing only its root`() {
@@ -71,6 +123,23 @@ class AppNavigatorTest {
 
         assertEquals(listOf(HomeRoute, SettingsRoute, Detail), navigator.visibleEntries)
         assertFalse(navigator.isOnTopLevelRoot)
+    }
+
+    @Test
+    fun `tab stacks expose every tab's stack including hidden ones`() {
+        val navigator = createNavigator()
+        navigator.navigate(SettingsRoute)
+        navigator.navigate(Detail)
+        navigator.navigate(DemoRoute)
+
+        assertEquals(
+            mapOf(
+                HomeRoute to listOf(HomeRoute),
+                DemoRoute to listOf(DemoRoute),
+                SettingsRoute to listOf(SettingsRoute, Detail),
+            ),
+            navigator.tabStacks.mapValues { (_, stack) -> stack.toList() },
+        )
     }
 
     @Test

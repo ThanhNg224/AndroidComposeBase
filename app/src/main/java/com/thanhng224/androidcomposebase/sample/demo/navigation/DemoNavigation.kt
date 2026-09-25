@@ -15,6 +15,7 @@ data object DemoRoute : NavKey
 
 val DemoDestination =
     TopLevelDestination(
+        id = "demo",
         key = DemoRoute,
         selectedIconRes = R.drawable.ic_nav_demo_filled,
         unselectedIconRes = R.drawable.ic_nav_demo_outlined,

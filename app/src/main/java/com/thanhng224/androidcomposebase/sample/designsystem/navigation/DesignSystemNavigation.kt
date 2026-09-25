@@ -15,6 +15,7 @@ data object DesignSystemRoute : NavKey
 
 val DesignSystemDestination =
     TopLevelDestination(
+        id = "design-system",
         key = DesignSystemRoute,
         selectedIconRes = R.drawable.ic_nav_design_filled,
         unselectedIconRes = R.drawable.ic_nav_design_outlined,

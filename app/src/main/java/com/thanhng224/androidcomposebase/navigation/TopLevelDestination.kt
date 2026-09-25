@@ -9,6 +9,8 @@ import androidx.navigation3.runtime.NavKey
  * its route key; `MainShell` only lists them in display order.
  */
 data class TopLevelDestination(
+    /** Stable identifier used to restore this tab across destination reordering and app updates. */
+    val id: String,
     val key: NavKey,
     @param:DrawableRes val selectedIconRes: Int,
     @param:DrawableRes val unselectedIconRes: Int,

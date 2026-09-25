@@ -14,6 +14,7 @@ data object HomeRoute : NavKey
 
 val HomeDestination =
     TopLevelDestination(
+        id = "home",
         key = HomeRoute,
         selectedIconRes = R.drawable.ic_nav_home_filled,
         unselectedIconRes = R.drawable.ic_nav_home_outlined,
