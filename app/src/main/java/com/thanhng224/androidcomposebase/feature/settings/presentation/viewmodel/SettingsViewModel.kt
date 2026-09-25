@@ -6,6 +6,7 @@ import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.localization.SupportedLanguages
 import com.thanhng224.androidcomposebase.core.ui.text.UiText
+import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetCurrentLanguageUseCase
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetSupportedLanguagesUseCase
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.ObserveThemeUseCase
@@ -40,7 +41,13 @@ class SettingsViewModel
     ) : ViewModel() {
         private var isInitialLanguageLoaded = false
         private var latestRequestedLanguageTag: String? = null
+        private var languageRequestVersion = 0L
         private val languageMutationMutex = Mutex()
+        private var latestRequestedTheme: AppTheme? = null
+        private var persistedTheme: AppTheme? = null
+        private var themeRequestVersion = 0L
+        private var completedThemeRequestVersion = 0L
+        private val themeMutationMutex = Mutex()
         private val nextMessageId = AtomicLong(0)
         private val presentationLanguages = supportedLanguages.values
         private val mutableState =
@@ -53,7 +60,13 @@ class SettingsViewModel
 
         init {
             viewModelScope.launch {
-                observeTheme().collect { theme -> mutableState.update { it.copy(theme = theme) } }
+                observeTheme().collect { theme ->
+                    persistedTheme = theme
+                    if (themeRequestVersion == completedThemeRequestVersion) {
+                        latestRequestedTheme = theme
+                        mutableState.update { it.copy(theme = theme) }
+                    }
+                }
             }
             viewModelScope.launch {
                 val language = getCurrentLanguage()?.let(::findPresentationLanguage)
@@ -74,9 +87,56 @@ class SettingsViewModel
             removeHeadIfMatching(id)
         }
 
+        /** Reconciles the selected language after returning from system per-app language settings. */
+        fun refreshCurrentLanguage() {
+            if (!isInitialLanguageLoaded) return
+            val requestVersion = languageRequestVersion
+            viewModelScope.launch {
+                languageMutationMutex.withLock {
+                    if (requestVersion != languageRequestVersion) return@withLock
+                    val language = getCurrentLanguage()?.let(::findPresentationLanguage)
+                    if (requestVersion != languageRequestVersion) return@withLock
+                    latestRequestedLanguageTag = language?.languageTag
+                    mutableState.update { it.copy(language = language) }
+                }
+            }
+        }
+
         private fun selectTheme(event: SettingsUiEvent.ThemeSelected) {
-            if (event.theme == mutableState.value.theme) return
-            viewModelScope.launch { setTheme(event.theme) }
+            if (event.theme == (latestRequestedTheme ?: mutableState.value.theme)) return
+            latestRequestedTheme = event.theme
+            val requestVersion = ++themeRequestVersion
+            viewModelScope.launch {
+                themeMutationMutex.withLock {
+                    if (requestVersion != themeRequestVersion) return@withLock
+                    try {
+                        setTheme(event.theme)
+                        persistedTheme = event.theme
+                        completedThemeRequestVersion = requestVersion
+                        if (requestVersion == themeRequestVersion) {
+                            mutableState.update { it.copy(theme = event.theme) }
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (_: IOException) {
+                        completedThemeRequestVersion = requestVersion
+                        if (requestVersion == themeRequestVersion) {
+                            latestRequestedTheme = persistedTheme ?: mutableState.value.theme
+                            mutableState.update {
+                                it.copy(
+                                    theme = latestRequestedTheme ?: it.theme,
+                                    pendingMessages =
+                                        it.pendingMessages +
+                                            PendingSettingsMessage(
+                                                id = nextMessageId.incrementAndGet(),
+                                                text = UiText.StringResource(R.string.settings_theme_update_failed),
+                                            ),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private fun selectLanguage(event: SettingsUiEvent.LanguageSelected) {
@@ -84,15 +144,19 @@ class SettingsViewModel
             val requestedLanguageTag = event.language?.languageTag
             if (requestedLanguageTag == latestRequestedLanguageTag) return
             latestRequestedLanguageTag = requestedLanguageTag
+            val requestVersion = ++languageRequestVersion
             viewModelScope.launch {
                 languageMutationMutex.withLock {
+                    if (requestVersion != languageRequestVersion) return@withLock
                     try {
                         setLanguage(requestedLanguageTag)
-                        mutableState.update { it.copy(language = event.language) }
+                        if (requestVersion == languageRequestVersion) {
+                            mutableState.update { it.copy(language = event.language) }
+                        }
                     } catch (e: CancellationException) {
                         throw e
                     } catch (_: IOException) {
-                        if (latestRequestedLanguageTag == requestedLanguageTag) {
+                        if (requestVersion == languageRequestVersion) {
                             latestRequestedLanguageTag = mutableState.value.language?.languageTag
                             enqueueMessage(UiText.StringResource(R.string.settings_language_update_failed))
                         }

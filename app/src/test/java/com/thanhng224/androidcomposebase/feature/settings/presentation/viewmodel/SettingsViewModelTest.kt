@@ -5,6 +5,7 @@ import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
 import com.thanhng224.androidcomposebase.core.localization.SupportedLanguages
 import com.thanhng224.androidcomposebase.core.testing.MainDispatcherRule
+import com.thanhng224.androidcomposebase.core.ui.text.UiText
 import com.thanhng224.androidcomposebase.core.ui.theme.AppTheme
 import com.thanhng224.androidcomposebase.feature.settings.domain.repository.SettingsRepository
 import com.thanhng224.androidcomposebase.feature.settings.domain.usecase.GetCurrentLanguageUseCase
@@ -35,15 +36,21 @@ class SettingsViewModelTest {
         theme: AppTheme = AppTheme.SYSTEM,
         private val calls: MutableList<String>? = null,
         private val failLanguagePersistence: Boolean = false,
+        failThemePersistence: Boolean = false,
     ) : SettingsRepository {
         private val themeFlow = MutableStateFlow(theme)
         private var currentLanguageTag = languageTag
+        var failNextThemePersistence = failThemePersistence
         var setThemeCalls = 0
             private set
 
         override fun observeTheme(): Flow<AppTheme> = themeFlow
 
         override suspend fun getCurrentLanguageTag(): String? = currentLanguageTag
+
+        fun setExternalLanguage(languageTag: String?) {
+            currentLanguageTag = languageTag
+        }
 
         override fun getSupportedLanguageTags(): List<String> = supportedLanguageTags
 
@@ -57,6 +64,10 @@ class SettingsViewModelTest {
 
         override suspend fun setTheme(theme: AppTheme) {
             setThemeCalls += 1
+            if (failNextThemePersistence) {
+                failNextThemePersistence = false
+                throw IOException("persist failed")
+            }
             themeFlow.value = theme
         }
     }
@@ -95,6 +106,60 @@ class SettingsViewModelTest {
         }
     }
 
+    private class LocaleRefreshRaceRepository : SettingsRepository {
+        private val themeFlow = MutableStateFlow(AppTheme.SYSTEM)
+        val refreshStarted = CompletableDeferred<Unit>()
+        val finishRefresh = CompletableDeferred<Unit>()
+        private var reads = 0
+        var currentLanguageTag: String? = AppLanguage.VIETNAMESE.languageTag
+            private set
+
+        override fun observeTheme(): Flow<AppTheme> = themeFlow
+
+        override suspend fun getCurrentLanguageTag(): String? {
+            reads += 1
+            if (reads > 1) {
+                refreshStarted.complete(Unit)
+                finishRefresh.await()
+            }
+            return currentLanguageTag
+        }
+
+        override fun getSupportedLanguageTags(): List<String> = AppLanguage.BUILT_IN.map(AppLanguage::languageTag)
+
+        override suspend fun setLanguageTag(languageTag: String?) {
+            currentLanguageTag = languageTag
+        }
+
+        override suspend fun setTheme(theme: AppTheme) {
+            themeFlow.value = theme
+        }
+    }
+
+    private class DelayedThemeSettingsRepository : SettingsRepository {
+        private val themeFlow = MutableStateFlow(AppTheme.SYSTEM)
+        val darkMutationStarted = CompletableDeferred<Unit>()
+        val finishDarkMutation = CompletableDeferred<Unit>()
+        val mutationThemes = mutableListOf<AppTheme>()
+
+        override fun observeTheme(): Flow<AppTheme> = themeFlow
+
+        override suspend fun getCurrentLanguageTag(): String? = AppLanguage.ENGLISH.languageTag
+
+        override fun getSupportedLanguageTags(): List<String> = AppLanguage.BUILT_IN.map(AppLanguage::languageTag)
+
+        override suspend fun setLanguageTag(languageTag: String?) = Unit
+
+        override suspend fun setTheme(theme: AppTheme) {
+            mutationThemes += theme
+            if (theme == AppTheme.DARK) {
+                darkMutationStarted.complete(Unit)
+                finishDarkMutation.await()
+            }
+            themeFlow.value = theme
+        }
+    }
+
     @Test
     fun `initial state reflects the current language and observed theme`() =
         runTest {
@@ -104,6 +169,41 @@ class SettingsViewModelTest {
 
             assertEquals(AppLanguage.VIETNAMESE, viewModel.state.value.language)
             assertEquals(AppTheme.DARK, viewModel.state.value.theme)
+        }
+
+    @Test
+    fun `refresh reflects external language changes and clearing the system override`() =
+        runTest {
+            val repository = FakeSettingsRepository(languageTag = AppLanguage.ENGLISH.languageTag)
+            val viewModel = createViewModel(repository)
+            advanceUntilIdle()
+
+            repository.setExternalLanguage(AppLanguage.VIETNAMESE.languageTag)
+            viewModel.refreshCurrentLanguage()
+            advanceUntilIdle()
+            assertEquals(AppLanguage.VIETNAMESE, viewModel.state.value.language)
+
+            repository.setExternalLanguage(null)
+            viewModel.refreshCurrentLanguage()
+            advanceUntilIdle()
+            assertEquals(null, viewModel.state.value.language)
+        }
+
+    @Test
+    fun `language selection wins over an in flight stale resume refresh`() =
+        runTest {
+            val repository = LocaleRefreshRaceRepository()
+            val viewModel = createViewModel(repository)
+            advanceUntilIdle()
+
+            viewModel.refreshCurrentLanguage()
+            repository.refreshStarted.await()
+            viewModel.onEvent(SettingsUiEvent.LanguageSelected(AppLanguage.ENGLISH))
+            repository.finishRefresh.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(AppLanguage.ENGLISH.languageTag, repository.currentLanguageTag)
+            assertEquals(AppLanguage.ENGLISH, viewModel.state.value.language)
         }
 
     @Test
@@ -131,6 +231,52 @@ class SettingsViewModelTest {
             advanceUntilIdle()
 
             assertEquals(0, repository.setThemeCalls)
+        }
+
+    @Test
+    fun `theme persistence failure reports an error and a later selection retries`() =
+        runTest {
+            val repository = FakeSettingsRepository(failThemePersistence = true)
+            val viewModel = createViewModel(repository)
+            advanceUntilIdle()
+
+            viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK))
+            advanceUntilIdle()
+
+            assertEquals(AppTheme.SYSTEM, viewModel.state.value.theme)
+            val message =
+                viewModel.state.value.pendingMessages
+                    .single()
+                    .text as UiText.StringResource
+            assertEquals(R.string.settings_theme_update_failed, message.resId)
+
+            viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK))
+            advanceUntilIdle()
+
+            assertEquals(AppTheme.DARK, viewModel.state.value.theme)
+            assertEquals(2, repository.setThemeCalls)
+        }
+
+    @Test
+    fun `rapid theme selections coalesce duplicates and retain the latest intent`() =
+        runTest {
+            val repository = DelayedThemeSettingsRepository()
+            val viewModel = createViewModel(repository)
+            advanceUntilIdle()
+
+            viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK))
+            repository.darkMutationStarted.await()
+            viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK))
+            viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.LIGHT))
+            viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.LIGHT))
+            advanceUntilIdle()
+
+            assertEquals(listOf(AppTheme.DARK), repository.mutationThemes)
+            repository.finishDarkMutation.complete(Unit)
+            advanceUntilIdle()
+
+            assertEquals(listOf(AppTheme.DARK, AppTheme.LIGHT), repository.mutationThemes)
+            assertEquals(AppTheme.LIGHT, viewModel.state.value.theme)
         }
 
     @Test

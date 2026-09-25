@@ -38,7 +38,7 @@ class SettingsRepositoryImplTest {
         }
 
     @Test
-    fun `setting a configured custom tag applies that locale without a second persistence store`() =
+    fun `setting a configured language updates the platform app locale source`() =
         runTest {
             val settingsStore = FakeSettingsStore()
             val localeApplier = FakeLocaleApplier()
@@ -80,7 +80,7 @@ class SettingsRepositoryImplTest {
         }
 
     @Test
-    fun `unsupported language tag is rejected before persistence`() =
+    fun `unsupported language tag is rejected before applying a platform locale`() =
         runTest {
             val settingsStore = FakeSettingsStore()
             val repository = createRepository(settingsStore)

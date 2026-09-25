@@ -27,6 +27,7 @@
     <string name="settings_language_dialog_title">Choose app language</string>
     <string name="settings_language_system">System</string>
     <string name="settings_language_update_failed">Couldn\'t save your language choice. Please try again.</string>
+    <string name="settings_theme_update_failed">Couldn\'t save your theme choice. Please try again.</string>
     <string name="action_cancel">Cancel</string>
     <string name="demo_title">Demo</string>
     <string name="demo_increment">Increment</string>
