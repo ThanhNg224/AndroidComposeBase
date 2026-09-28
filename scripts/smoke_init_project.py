@@ -20,6 +20,9 @@ from pathlib import Path
 
 APP_SOURCE = "com.thanhng224.androidcomposebase"
 CORE_SOURCE = f"{APP_SOURCE}.core"
+# Mirrors init_project.py's SAMPLE_ONLY_STRING_NAMES: string resources that are sample-only
+# despite not living under the demo_/design_system_ prefixes asserted below.
+SAMPLE_ONLY_STRING_NAMES = frozenset({"navigation_demo", "navigation_design"})
 
 
 def archive_revision(repo: Path, revision: str, destination: Path) -> None:
@@ -100,12 +103,12 @@ def check_clone(clone: Path, scope: str, clean: bool, build: bool) -> None:
         assert 'android.permission.INTERNET' not in text(clone / "app/src/main/AndroidManifest.xml")
         for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
             strings = ET.parse(clone / relative).getroot()
-            sample_only_names = {
-                "navigation_demo", "navigation_design", "appshell_home_greeting", "appshell_home_subtitle",
-                "home_title", "home_card_eyebrow", "home_card_title", "home_card_body", "home_navigation_hint",
-                "error_network", "error_parse", "error_empty_body",
-            }
-            sample_strings = [node.attrib["name"] for node in strings if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in sample_only_names]
+            sample_strings = [
+                node.attrib["name"]
+                for node in strings
+                if node.attrib.get("name", "").startswith(("demo_", "design_system_"))
+                or node.attrib.get("name") in SAMPLE_ONLY_STRING_NAMES
+            ]
             assert not sample_strings, f"sample strings remain: {sample_strings}"
         journey = text(clone / "baselineprofile/src/main/java" / Path(*app_package.split(".")) / "baselineprofile/CriticalJourney.kt")
         assert "Demo" not in journey and "Design" not in journey and "weather" not in journey.lower()

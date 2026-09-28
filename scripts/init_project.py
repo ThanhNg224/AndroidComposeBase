@@ -31,6 +31,10 @@ IGNORED_PARTS = {
     "outputs", "reports", "test-results", "__pycache__",
 }
 IGNORED_SUFFIXES = {".aar", ".bin", ".class", ".ico", ".jar", ".jpg", ".jpeg", ".png", ".pyc", ".so", ".webp"}
+# String resources that are sample-only despite not living under the demo_/design_system_
+# prefixes cleaned wholesale below; kept as one set so the removal pass and its post-check
+# agree on what "clean" means.
+SAMPLE_ONLY_STRING_NAMES = frozenset({"navigation_demo", "navigation_design"})
 
 
 class InitError(RuntimeError):
@@ -425,10 +429,12 @@ def _clean_sample_resources(root: Path, dry_run: bool) -> int:
             continue
         tree = ET.parse(resource_file)
         parent = tree.getroot()
-        sample_names = {
-            "navigation_demo", "navigation_design",
-        }
-        to_remove = [node for node in list(parent) if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in sample_names]
+        to_remove = [
+            node
+            for node in list(parent)
+            if node.attrib.get("name", "").startswith(("demo_", "design_system_"))
+            or node.attrib.get("name") in SAMPLE_ONLY_STRING_NAMES
+        ]
         if to_remove:
             changed += len(to_remove)
             for node in to_remove:
@@ -605,14 +611,14 @@ def _verify(root: Path, app_package: str, core_package: str, scope: str, clean: 
             leftovers.append(Path("app/build.gradle.kts"))
         if "android.permission.INTERNET" in manifest:
             leftovers.append(Path("app/src/main/AndroidManifest.xml"))
-        sample_resource_names = {
-            "navigation_demo", "navigation_design", "appshell_home_greeting", "appshell_home_subtitle",
-            "home_title", "home_card_eyebrow", "home_card_title", "home_card_body", "home_navigation_hint",
-            "error_network", "error_parse", "error_empty_body",
-        }
         for relative in ("app/src/main/res/values/strings.xml", "app/src/main/res/values-vi/strings.xml"):
             resources = ET.parse(root / relative).getroot()
-            stale_strings = [node.attrib.get("name", "") for node in resources if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in sample_resource_names]
+            stale_strings = [
+                node.attrib.get("name", "")
+                for node in resources
+                if node.attrib.get("name", "").startswith(("demo_", "design_system_"))
+                or node.attrib.get("name") in SAMPLE_ONLY_STRING_NAMES
+            ]
             if stale_strings:
                 leftovers.append(Path(relative))
         if leftovers:
