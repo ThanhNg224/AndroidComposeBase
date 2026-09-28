@@ -32,7 +32,8 @@ Add a use case when it names a meaningful business operation, coordinates multip
 Put the serializable route key, entry registration, and (for a top-level tab) destination metadata in `navigation/`:
 
 ```kotlin
-// One file per feature holds its route key, tab destination, and entry registration.
+// Suppresses detekt's MatchingDeclarationName rule: one file holds the route key, tab
+// destination, and entry registration, not a single top-level declaration matching the file name.
 @file:Suppress("MatchingDeclarationName")
 
 package com.example.app.feature.profile.navigation
@@ -40,6 +41,7 @@ package com.example.app.feature.profile.navigation
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
 import com.example.app.R
+import com.example.app.feature.profile.presentation.ui.ProfileScreen
 import com.example.app.navigation.TopLevelDestination
 import kotlinx.serialization.Serializable
 
