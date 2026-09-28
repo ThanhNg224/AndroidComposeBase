@@ -20,7 +20,6 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
@@ -44,7 +43,7 @@ private fun HomeContent(modifier: Modifier = Modifier) {
             contentAlignment = Alignment.TopCenter,
         ) {
             LazyColumn(
-                modifier = Modifier.widthIn(max = 720.dp).fillMaxSize(),
+                modifier = Modifier.widthIn(max = Dimens.maxContentWidth).fillMaxSize(),
                 contentPadding =
                     PaddingValues(
                         start = Dimens.spaceLarge,

@@ -76,7 +76,7 @@ public fun OnboardingContent(
         Column(
             modifier =
                 Modifier
-                    .widthIn(max = 560.dp)
+                    .widthIn(max = Dimens.maxReadableWidth)
                     .fillMaxWidth()
                     .heightIn(min = maxHeight, max = maxHeight)
                     .verticalScroll(rememberScrollState())

@@ -62,6 +62,13 @@ import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeat
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherState
 import com.thanhng224.androidcomposebase.sample.demo.presentation.viewmodel.DemoViewModel
 
+// AppLoadingState/AppErrorState fill their available height, so the weather card needs a
+// minimum to lay out inside the unbounded LazyColumn item; heightIn(min = ...) lets the
+// message still grow beyond it (e.g. at large font scale) instead of clipping.
+private val WeatherLoadingMinHeight = 112.dp
+private val WeatherErrorMinHeight = 190.dp
+private val WeatherIconSize = 36.dp
+
 @Composable
 public fun DemoScreen(
     modifier: Modifier = Modifier,
@@ -108,7 +115,7 @@ private fun DemoContent(
             contentAlignment = Alignment.TopCenter,
         ) {
             LazyColumn(
-                modifier = Modifier.widthIn(max = 800.dp).fillMaxSize(),
+                modifier = Modifier.widthIn(max = Dimens.maxContentWidth).fillMaxSize(),
                 contentPadding =
                     PaddingValues(
                         start = Dimens.spaceLarge,
@@ -179,7 +186,7 @@ private fun DemoContent(
                             when (val weather = state.weather) {
                                 DemoWeatherState.Loading ->
                                     AppLoadingState(
-                                        modifier = Modifier.fillMaxWidth().height(112.dp),
+                                        modifier = Modifier.fillMaxWidth().heightIn(min = WeatherLoadingMinHeight),
                                         message = stringResource(R.string.demo_weather_loading),
                                     )
 
@@ -189,7 +196,7 @@ private fun DemoContent(
                                         modifier =
                                             Modifier
                                                 .fillMaxWidth()
-                                                .heightIn(min = 190.dp)
+                                                .heightIn(min = WeatherErrorMinHeight)
                                                 .semantics { liveRegion = LiveRegionMode.Assertive },
                                         onRetry = { onEvent(DemoUiEvent.RefreshWeatherClicked) },
                                     )
@@ -218,7 +225,7 @@ private fun WeatherContent(
             painter = painterResource(R.drawable.ic_wb_sunny),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(36.dp),
+            modifier = Modifier.size(WeatherIconSize),
         )
         Spacer(modifier = Modifier.size(Dimens.spaceMedium))
         Column {
