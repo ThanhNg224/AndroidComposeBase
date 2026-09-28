@@ -71,7 +71,6 @@ class SettingsViewModel
         }
 
         private fun selectTheme(theme: AppTheme) {
-            if (theme == state.value.theme) return
             viewModelScope.launch {
                 try {
                     repository.setTheme(theme)

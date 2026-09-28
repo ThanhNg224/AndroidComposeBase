@@ -8,13 +8,17 @@ import com.thanhng224.androidcomposebase.core.text.UiText
 import com.thanhng224.androidcomposebase.core.theme.AppTheme
 import com.thanhng224.androidcomposebase.feature.settings.domain.repository.SettingsRepository
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiEvent
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -40,17 +44,31 @@ class SettingsViewModelTest {
         var themeCalls = 0
         val themeWrites = mutableListOf<AppTheme>()
         val languageWrites = mutableListOf<String?>()
+        var delayedTheme: AppTheme? = null
+        val delayedThemeStarted = CompletableDeferred<Unit>()
+        val finishDelayedTheme = CompletableDeferred<Unit>()
+
+        // Real DataStore writes (dataStore.edit { ... }) are serialized: concurrent calls apply in
+        // the order they were made, one at a time. This mutex reproduces that guarantee so a
+        // delayed write can't be overtaken by a later, faster one.
+        private val writeMutex = Mutex()
 
         override fun observeTheme(): Flow<AppTheme> = themeFlow
 
         override suspend fun setTheme(theme: AppTheme) {
-            themeCalls += 1
-            themeWrites += theme
-            if (failThemePersistence) {
-                failThemePersistence = false
-                throw IOException("theme write failed")
+            writeMutex.withLock {
+                themeCalls += 1
+                themeWrites += theme
+                if (failThemePersistence) {
+                    failThemePersistence = false
+                    throw IOException("theme write failed")
+                }
+                if (theme == delayedTheme) {
+                    delayedThemeStarted.complete(Unit)
+                    finishDelayedTheme.await()
+                }
+                themeFlow.value = theme
             }
-            themeFlow.value = theme
         }
 
         override fun currentLanguageTag(): String? = currentLanguageTag
@@ -147,7 +165,7 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `selecting the persisted theme does not write it again`() =
+    fun `same theme tap is persisted harmlessly`() =
         runTest {
             val repository = FakeSettingsRepository(theme = AppTheme.LIGHT)
             val viewModel = createViewModel(repository)
@@ -156,7 +174,8 @@ class SettingsViewModelTest {
             viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.LIGHT))
             advanceUntilIdle()
 
-            assertEquals(0, repository.themeCalls)
+            assertEquals(listOf(AppTheme.LIGHT), repository.themeWrites)
+            assertEquals(AppTheme.LIGHT, viewModel.state.value.theme)
         }
 
     @Test
@@ -168,6 +187,27 @@ class SettingsViewModelTest {
 
             viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK))
             viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.SYSTEM))
+            advanceUntilIdle()
+
+            assertEquals(listOf(AppTheme.DARK, AppTheme.SYSTEM), repository.themeWrites)
+            assertEquals(AppTheme.SYSTEM, viewModel.state.value.theme)
+        }
+
+    @Test
+    fun `a tap that reverts to the still-displayed theme persists while an earlier write is in flight`() =
+        runTest {
+            val repository = FakeSettingsRepository().apply { delayedTheme = AppTheme.DARK }
+            val viewModel = createViewModel(repository)
+            collectState(viewModel)
+
+            viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK))
+            runCurrent()
+            repository.delayedThemeStarted.await()
+            // The DARK write hasn't reached the observed flow yet, so state still shows SYSTEM here.
+            assertEquals(AppTheme.SYSTEM, viewModel.state.value.theme)
+            viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.SYSTEM))
+            runCurrent()
+            repository.finishDelayedTheme.complete(Unit)
             advanceUntilIdle()
 
             assertEquals(listOf(AppTheme.DARK, AppTheme.SYSTEM), repository.themeWrites)

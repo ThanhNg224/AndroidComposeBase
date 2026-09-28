@@ -15,6 +15,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -82,6 +84,23 @@ class DemoViewModelTest {
         }
     }
 
+    /** Delays the first [observeCount] emission so a test can tap before real data has loaded. */
+    private class DeferredInitialCountRepository(
+        initialCount: Int,
+    ) : FakeDemoRepository(initialCount) {
+        private val gate = CompletableDeferred<Unit>()
+
+        fun releaseInitialLoad() {
+            gate.complete(Unit)
+        }
+
+        override fun observeCount(): Flow<Int> =
+            flow {
+                gate.await()
+                emitAll(countFlow)
+            }
+    }
+
     private fun createViewModel(repository: DemoRepository) = DemoViewModel(repository, IncrementCounterUseCase())
 
     private fun TestScope.collectState(viewModel: DemoViewModel) {
@@ -133,6 +152,27 @@ class DemoViewModelTest {
             runCurrent()
             assertEquals(listOf(1, 2), repository.persistedWrites)
             assertEquals(2, viewModel.state.value.count)
+        }
+    }
+
+    @Test
+    fun `increment tapped before the initial count loads is queued and persists once it arrives`() {
+        runTest {
+            val repository = DeferredInitialCountRepository(initialCount = 5)
+            val viewModel = createViewModel(repository)
+            collectState(viewModel)
+            runCurrent()
+
+            viewModel.onEvent(DemoUiEvent.IncrementClicked)
+            runCurrent()
+            assertEquals(0, viewModel.state.value.count)
+            assertTrue(repository.savedCounts.isEmpty())
+
+            repository.releaseInitialLoad()
+            runCurrent()
+
+            assertEquals(listOf(6), repository.savedCounts)
+            assertEquals(6, viewModel.state.value.count)
         }
     }
 
