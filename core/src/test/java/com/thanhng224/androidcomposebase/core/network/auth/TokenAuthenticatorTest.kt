@@ -149,6 +149,25 @@ class TokenAuthenticatorTest {
         }
 
     @Test
+    fun `authenticate returns null without invoking the refresher when the failed request carried no auth header and no token is cached`() =
+        runBlocking {
+            // e.g. a login endpoint rejecting bad credentials with 401: there is no session to
+            // refresh or expire, so this must not be treated as an expired-session failure.
+            val store = FakeSecureStore()
+            val authSession = AuthSession(store)
+            val refresher = FakeAuthTokenRefresher("fresh-token")
+            val sut = authenticator(authSession, refresher)
+
+            authSession.sessionExpired.test {
+                val result = sut.authenticate(null, response(authorizationHeader = null))
+
+                assertNull(result)
+                assertEquals(0, refresher.callCount)
+                expectNoEvents()
+            }
+        }
+
+    @Test
     fun `authenticate gives up after too many retries without touching the refresher`() =
         runBlocking {
             val store = FakeSecureStore()

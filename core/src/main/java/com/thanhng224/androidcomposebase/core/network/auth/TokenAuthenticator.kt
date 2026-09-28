@@ -40,6 +40,12 @@ internal class TokenAuthenticator
                             // refresher, clearing, and emitting sessionExpired a second time for what is
                             // really the same failure.
                             failedAuthHeader != null && cached == null -> null
+                            // No Authorization header on the failed request and no cached token
+                            // means this 401 never went through session auth in the first place
+                            // (e.g. a login endpoint rejecting bad credentials). There is no
+                            // session to refresh or expire, so this must not invoke the
+                            // refresher, clear anything, or emit sessionExpired.
+                            failedAuthHeader == null && cached == null -> null
                             else -> refreshAndPersist()
                         }
                     }
