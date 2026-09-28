@@ -19,7 +19,7 @@ Keep user-facing text in localized Android string resources, preserve a minimum 
 Current reusable public Compose components include:
 
 - `AppPrimaryButton`, `AppSecondaryButton`, and `AppOutlinedButton`.
-- `AppCard`, the standard content container. It is a Material 3 `Card` on the `surfaceContainerLow` tonal role with no drop shadow and `MaterialTheme.shapes.large`, so it stays distinct from the background in dark theme, where shadows are invisible. It applies no inner padding: callers pad their content (usually `Dimens.spaceMedium` or `Dimens.spaceLarge`). Pass `onClick` to make the whole card one clickable target. Use it instead of repeating a `Card` color/elevation configuration in each screen.
+- `AppCard`, the standard content container. It is a Material 3 `Card` on the `surfaceContainer` tonal role with no drop shadow and `MaterialTheme.shapes.large`, so it stays distinct from the background in dark theme, where shadows are invisible. It applies no inner padding: callers pad their content (usually `Dimens.spaceMedium` or `Dimens.spaceLarge`). Pass `onClick` to make the whole card one clickable target. Use it instead of repeating a `Card` color/elevation configuration in each screen.
 - `AppTopBar` and `AppCenterTopBar`.
 - `AppLoadingState`, `AppEmptyState`, and `AppErrorState` for full-bleed screen/section placeholders. Each centers its content with `Dimens.spaceLarge` padding and reads colors from `MaterialTheme.colorScheme` only; `AppLoadingState`'s message is a polite live region, and `AppErrorState`'s `onRetry` renders an `AppPrimaryButton` labelled with `core_ui_retry`.
 - `AndroidComposeBaseTheme`, `AppShapes`, `AppTypography`, and `Dimens`.

@@ -18,7 +18,7 @@ import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
 /**
- * Standard content container: a Material 3 card on the `surfaceContainerLow` tonal role with no
+ * Standard content container: a Material 3 card on the `surfaceContainer` tonal role with no
  * drop shadow, so it stays distinct from the background in dark theme, where shadows are
  * invisible. It applies no inner padding; callers pad [content] (typically [Dimens.spaceMedium]
  * or [Dimens.spaceLarge]).
@@ -32,7 +32,7 @@ public fun AppCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val shape = MaterialTheme.shapes.large
-    val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow)
+    val colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
     val elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationNone)
     if (onClick != null) {
         Card(
