@@ -204,6 +204,35 @@ class DemoViewModelTest {
     }
 
     @Test
+    fun `reset action save failure queues an error message and count stays at the capped value`() {
+        runTest {
+            val repository = FakeDemoRepository()
+            val viewModel = createViewModel(repository)
+            collectState(viewModel)
+            runCurrent()
+
+            repeat(10) { viewModel.onEvent(DemoUiEvent.IncrementClicked) }
+            runCurrent()
+            val message =
+                viewModel.state.value.pendingMessages
+                    .single()
+            assertEquals(DemoMessageAction.ResetCounter, message.action)
+
+            repository.failCountWrites = true
+            viewModel.onMessageAction(message.id)
+            runCurrent()
+
+            // The reset write failed, so the count is never persisted to 0: it stays at the
+            // last real repository value, and no extra entry lands in savedCounts.
+            assertEquals(10, viewModel.state.value.count)
+            assertEquals((1..10).toList(), repository.savedCounts)
+            // The ResetCounter message was removed on tap, and the save failure queued its own
+            // message in its place, so the queue still holds exactly one message.
+            assertEquals(1, viewModel.state.value.pendingMessages.size)
+        }
+    }
+
+    @Test
     fun `stale message acknowledgement does not remove a later message`() {
         runTest {
             val viewModel = createViewModel(FakeDemoRepository())
