@@ -6,13 +6,6 @@
     <string name="navigation_settings">Settings</string>
     <string name="onboarding_get_started">Get Started</string>
     <string name="onboarding_save_failed">Couldn’t save your setup. Please try again.</string>
-    <string name="appshell_home_greeting">Hello Android!</string>
-    <string name="appshell_home_subtitle">A production-ready XML foundation for Android apps.</string>
-    <string name="home_title">Home</string>
-    <string name="home_card_eyebrow">Android XML base</string>
-    <string name="home_card_title">A clean foundation, ready to extend</string>
-    <string name="home_card_body">Explore a state-driven sample feature and the reusable UI kit without leaving the main app flow.</string>
-    <string name="home_navigation_hint">Use the navigation bar below to switch between top-level areas. Each tab keeps its own navigation state.</string>
     <string name="settings_title">Settings</string>
     <string name="settings_subtitle">Personalize how the app looks and feels.</string>
     <string name="settings_personalization_section">Personalization</string>
@@ -76,9 +69,6 @@
     <string name="design_system_result_loading">Loading…</string>
     <string name="design_system_result_success">Success!</string>
     <string name="design_system_error_sample">Something went wrong. Please try again.</string>
-    <string name="error_network">No internet connection</string>
-    <string name="error_parse">Data parsing error</string>
-    <string name="error_empty_body">Empty response from server</string>
     <string name="onboarding_welcome_body">A simple starting point for your next app. Explore the sample screens, then shape the experience around your product.</string>
     <string name="home_welcome_title">Welcome to your new app</string>
     <string name="home_welcome_body">This starter includes a few example screens and settings. Replace them with the features your users need.</string>

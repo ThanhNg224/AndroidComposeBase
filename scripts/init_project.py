@@ -426,9 +426,7 @@ def _clean_sample_resources(root: Path, dry_run: bool) -> int:
         tree = ET.parse(resource_file)
         parent = tree.getroot()
         sample_names = {
-            "navigation_demo", "navigation_design", "appshell_home_greeting", "appshell_home_subtitle",
-            "home_title", "home_card_eyebrow", "home_card_title", "home_card_body", "home_navigation_hint",
-            "error_network", "error_parse", "error_empty_body",
+            "navigation_demo", "navigation_design",
         }
         to_remove = [node for node in list(parent) if node.attrib.get("name", "").startswith(("demo_", "design_system_")) or node.attrib.get("name") in sample_names]
         if to_remove:
