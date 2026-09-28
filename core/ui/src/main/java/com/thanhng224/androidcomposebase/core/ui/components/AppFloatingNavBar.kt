@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -84,131 +85,150 @@ public fun AppFloatingNavBar(
         ) {
             items.forEach { item ->
                 key(item.id) {
-                    val interactionSource = remember { MutableInteractionSource() }
-                    val isSelected = item.selected
-
-                    val itemIndicatorColor by animateColorAsState(
-                        targetValue = if (isSelected) selectedIndicatorColor else Color.Transparent,
-                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                        label = "indicatorColor",
+                    AppNavItemPill(
+                        item = item,
+                        capsuleShape = capsuleShape,
+                        contentColor = contentColor,
+                        selectedContentColor = selectedContentColor,
+                        selectedIndicatorColor = selectedIndicatorColor,
                     )
+                }
+            }
+        }
+    }
+}
 
-                    val itemContentColor by animateColorAsState(
-                        targetValue = if (isSelected) selectedContentColor else contentColor,
-                        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
-                        label = "contentColor",
-                    )
+@Composable
+private fun AppNavItemPill(
+    item: AppNavItem,
+    capsuleShape: Shape,
+    contentColor: Color,
+    selectedContentColor: Color,
+    selectedIndicatorColor: Color,
+    modifier: Modifier = Modifier,
+) {
+    val haptic = LocalHapticFeedback.current
+    val interactionSource = remember { MutableInteractionSource() }
+    val isSelected = item.selected
 
-                    val iconScale by animateFloatAsState(
-                        targetValue = if (isSelected) 1.12f else 1.0f,
-                        animationSpec =
-                            spring(
-                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                stiffness = Spring.StiffnessMediumLow,
-                            ),
-                        label = "iconScale",
-                    )
+    val itemIndicatorColor by animateColorAsState(
+        targetValue = if (isSelected) selectedIndicatorColor else Color.Transparent,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "indicatorColor",
+    )
 
-                    Box(
+    val itemContentColor by animateColorAsState(
+        targetValue = if (isSelected) selectedContentColor else contentColor,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "contentColor",
+    )
+
+    val iconScale by animateFloatAsState(
+        targetValue = if (isSelected) 1.12f else 1.0f,
+        animationSpec =
+            spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessMediumLow,
+            ),
+        label = "iconScale",
+    )
+
+    Box(
+        modifier =
+            modifier
+                // The pill itself is the touch target: at least 48dp in both
+                // dimensions, with Tab semantics so TalkBack announces the tab and
+                // its selected state.
+                .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget)
+                .clip(capsuleShape)
+                .background(itemIndicatorColor, shape = capsuleShape)
+                .selectable(
+                    selected = isSelected,
+                    interactionSource = interactionSource,
+                    indication = ripple(bounded = true, color = selectedContentColor),
+                    role = Role.Tab,
+                    onClick = {
+                        if (!isSelected) {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            item.onClick()
+                        }
+                    },
+                ).padding(horizontal = Dimens.spaceMediumSmall, vertical = Dimens.spaceSmall),
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            val iconVector = if (isSelected) item.selectedIcon else item.unselectedIcon
+            // While selected, the visible label already names the tab; describing the
+            // icon too would make TalkBack read the name twice.
+            val iconDescription =
+                when {
+                    item.contentDescription != null -> item.contentDescription
+                    isSelected -> null
+                    else -> item.label
+                }
+
+            if (item.badgeCount > 0) {
+                BadgedBox(
+                    badge = {
+                        Badge(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError,
+                        ) {
+                            Text(
+                                text = if (item.badgeCount > 99) "99+" else item.badgeCount.toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        }
+                    },
+                ) {
+                    Icon(
+                        imageVector = iconVector,
+                        contentDescription = iconDescription,
+                        tint = itemContentColor,
                         modifier =
                             Modifier
-                                // The pill itself is the touch target: at least 48dp in both
-                                // dimensions, with Tab semantics so TalkBack announces the tab and
-                                // its selected state.
-                                .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget)
-                                .clip(capsuleShape)
-                                .background(itemIndicatorColor, shape = capsuleShape)
-                                .selectable(
-                                    selected = isSelected,
-                                    interactionSource = interactionSource,
-                                    indication = ripple(bounded = true, color = selectedContentColor),
-                                    role = Role.Tab,
-                                    onClick = {
-                                        if (!isSelected) {
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                            item.onClick()
-                                        }
-                                    },
-                                ).padding(horizontal = Dimens.spaceMediumSmall, vertical = Dimens.spaceSmall),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            val iconVector = if (isSelected) item.selectedIcon else item.unselectedIcon
-                            // While selected, the visible label already names the tab; describing the
-                            // icon too would make TalkBack read the name twice.
-                            val iconDescription =
-                                when {
-                                    item.contentDescription != null -> item.contentDescription
-                                    isSelected -> null
-                                    else -> item.label
-                                }
-
-                            if (item.badgeCount > 0) {
-                                BadgedBox(
-                                    badge = {
-                                        Badge(
-                                            containerColor = MaterialTheme.colorScheme.error,
-                                            contentColor = MaterialTheme.colorScheme.onError,
-                                        ) {
-                                            Text(
-                                                text = if (item.badgeCount > 99) "99+" else item.badgeCount.toString(),
-                                                style = MaterialTheme.typography.labelSmall,
-                                            )
-                                        }
-                                    },
-                                ) {
-                                    Icon(
-                                        imageVector = iconVector,
-                                        contentDescription = iconDescription,
-                                        tint = itemContentColor,
-                                        modifier =
-                                            Modifier
-                                                .size(Dimens.iconSizeMedium)
-                                                .graphicsLayer {
-                                                    scaleX = iconScale
-                                                    scaleY = iconScale
-                                                },
-                                    )
-                                }
-                            } else {
-                                Icon(
-                                    imageVector = iconVector,
-                                    contentDescription = iconDescription,
-                                    tint = itemContentColor,
-                                    modifier =
-                                        Modifier
-                                            .size(Dimens.iconSizeMedium)
-                                            .graphicsLayer {
-                                                scaleX = iconScale
-                                                scaleY = iconScale
-                                            },
-                                )
-                            }
-
-                            AnimatedVisibility(
-                                visible = isSelected,
-                                enter =
-                                    fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                                        expandHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),
-                                exit =
-                                    fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
-                                        shrinkHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),
-                            ) {
-                                Text(
-                                    text = item.label,
-                                    color = itemContentColor,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                    modifier = Modifier.padding(start = Dimens.spaceSmall),
-                                )
-                            }
-                        }
-                    }
+                                .size(Dimens.iconSizeMedium)
+                                .graphicsLayer {
+                                    scaleX = iconScale
+                                    scaleY = iconScale
+                                },
+                    )
                 }
+            } else {
+                Icon(
+                    imageVector = iconVector,
+                    contentDescription = iconDescription,
+                    tint = itemContentColor,
+                    modifier =
+                        Modifier
+                            .size(Dimens.iconSizeMedium)
+                            .graphicsLayer {
+                                scaleX = iconScale
+                                scaleY = iconScale
+                            },
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isSelected,
+                enter =
+                    fadeIn(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                        expandHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),
+                exit =
+                    fadeOut(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)) +
+                        shrinkHorizontally(animationSpec = spring(stiffness = Spring.StiffnessMediumLow)),
+            ) {
+                Text(
+                    text = item.label,
+                    color = itemContentColor,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    modifier = Modifier.padding(start = Dimens.spaceSmall),
+                )
             }
         }
     }

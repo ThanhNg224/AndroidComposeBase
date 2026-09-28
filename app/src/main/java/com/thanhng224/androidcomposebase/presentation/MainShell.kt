@@ -72,16 +72,23 @@ fun MainShell(modifier: Modifier = Modifier) {
     val configuration = LocalConfiguration.current
     val isExpanded = configuration.screenWidthDp >= 600 && configuration.screenHeightDp >= 480
 
+    val currentKey = navigator.currentTopLevelKey
     val navItems =
         topLevelDestinations.map { destination ->
-            AppNavItem(
-                id = destination.key.toString(),
-                selected = navigator.currentTopLevelKey == destination.key,
-                onClick = { navigator.navigate(destination.key) },
-                selectedIcon = ImageVector.vectorResource(destination.selectedIconRes),
-                unselectedIcon = ImageVector.vectorResource(destination.unselectedIconRes),
-                label = stringResource(destination.labelRes),
-            )
+            val isSelected = currentKey == destination.key
+            val selectedIcon = ImageVector.vectorResource(destination.selectedIconRes)
+            val unselectedIcon = ImageVector.vectorResource(destination.unselectedIconRes)
+            val label = stringResource(destination.labelRes)
+            remember(destination.key, isSelected, label, selectedIcon, unselectedIcon) {
+                AppNavItem(
+                    id = destination.key.toString(),
+                    selected = isSelected,
+                    onClick = { navigator.navigate(destination.key) },
+                    selectedIcon = selectedIcon,
+                    unselectedIcon = unselectedIcon,
+                    label = label,
+                )
+            }
         }
 
     if (isExpanded) {
