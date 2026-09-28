@@ -5,6 +5,8 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -77,7 +79,13 @@ fun MainShell(modifier: Modifier = Modifier) {
             predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
             modifier =
                 if (navigator.isOnTopLevelRoot) {
-                    Modifier.padding(bottom = barHeight)
+                    // barHeight already includes AppFloatingNavBar's own navigationBarsPadding(),
+                    // so without consumeWindowInsets a screen's Scaffold (default
+                    // contentWindowInsets) would pad for that same bottom system-bar inset again,
+                    // leaving an empty gap above the bar equal to the inset's height.
+                    Modifier
+                        .padding(bottom = barHeight)
+                        .consumeWindowInsets(PaddingValues(bottom = barHeight))
                 } else {
                     Modifier
                 },
