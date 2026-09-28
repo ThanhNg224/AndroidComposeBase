@@ -143,16 +143,6 @@ package com.thanhng224.androidcomposebase.core.localization {
 
 }
 
-package com.thanhng224.androidcomposebase.core.navigation {
-
-  public final class ArgumentDelegatesKt {
-    method public static <T> T? getTyped(android.os.Bundle, String key, Class<T> clazz);
-    method @KotlinOnly public static inline <reified T> ErrorType intentExtra(String key, optional T? defaultValue);
-    method @KotlinOnly public static inline <reified T> ErrorType intentExtraNullable(String key);
-  }
-
-}
-
 package com.thanhng224.androidcomposebase.core.network {
 
   public interface ApiClient {

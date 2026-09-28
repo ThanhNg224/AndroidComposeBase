@@ -85,7 +85,6 @@ kover {
                     "com.thanhng224.androidcomposebase.core.theme.*",
                     "com.thanhng224.androidcomposebase.core.text.*",
                     "com.thanhng224.androidcomposebase.core.common.*",
-                    "com.thanhng224.androidcomposebase.core.navigation.*",
                 )
             }
             excludes {
@@ -94,11 +93,6 @@ kover {
                     "*.BuildConfig",
                     "*.R",
                     "*.R$*",
-                    // Property-delegate helpers over android.os.Bundle/Intent -- framework glue, not
-                    // business logic, even though the package above is otherwise deterministic.
-                    "*.core.navigation.ArgumentDelegatesKt",
-                    "*.core.navigation.IntentExtraDelegate",
-                    "*.core.navigation.IntentExtraNullableDelegate",
                     // Android System & Storage Services
                     "*.core.storage.secure.EncryptedFileSecureStore*",
                     "*.core.storage.secure.EncryptedFileCodec*",
