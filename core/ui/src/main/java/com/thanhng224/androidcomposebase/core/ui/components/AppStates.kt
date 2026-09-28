@@ -79,7 +79,7 @@ public fun AppEmptyState(
                 imageVector = icon,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(Dimens.spaceXXLarge),
+                modifier = Modifier.size(Dimens.iconSizeLarge),
             )
             Spacer(modifier = Modifier.height(Dimens.spaceMedium))
         }
@@ -131,7 +131,7 @@ public fun AppErrorState(
             imageVector = Icons.Filled.Warning,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.error,
-            modifier = Modifier.size(Dimens.spaceXXLarge),
+            modifier = Modifier.size(Dimens.iconSizeLarge),
         )
         Spacer(modifier = Modifier.height(Dimens.spaceMedium))
         Column(

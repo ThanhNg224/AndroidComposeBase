@@ -19,6 +19,11 @@
     <color name="core_color_on_surface">@color/core_color_on_surface_dark</color>
     <color name="core_color_surface_variant">@color/core_color_surface_variant_dark</color>
     <color name="core_color_on_surface_variant">@color/core_color_on_surface_variant_dark</color>
+    <color name="core_color_surface_container_lowest">@color/core_color_surface_container_lowest_dark</color>
+    <color name="core_color_surface_container_low">@color/core_color_surface_container_low_dark</color>
+    <color name="core_color_surface_container">@color/core_color_surface_container_dark</color>
+    <color name="core_color_surface_container_high">@color/core_color_surface_container_high_dark</color>
+    <color name="core_color_surface_container_highest">@color/core_color_surface_container_highest_dark</color>
     <color name="core_color_outline">@color/core_color_outline_dark</color>
     <color name="core_color_outline_variant">@color/core_color_outline_variant_dark</color>
     <color name="core_color_error">@color/core_color_error_dark</color>

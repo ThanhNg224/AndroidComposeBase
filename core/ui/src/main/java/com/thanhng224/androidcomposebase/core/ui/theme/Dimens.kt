@@ -25,6 +25,17 @@ public object Dimens {
     public val buttonHeight: Dp = 48.dp
     public val inputHeight: Dp = 56.dp
 
+    // Icon sizes
+
+    /** Icon inside a button or other dense control, beside its label. */
+    public val iconSizeSmall: Dp = 18.dp
+
+    /** Standard Material icon, e.g. navigation items, list leading icons, inline metrics. */
+    public val iconSizeMedium: Dp = 24.dp
+
+    /** Illustrative icon heading an empty, error, or other full-bleed state. */
+    public val iconSizeLarge: Dp = 48.dp
+
     // Width caps for large-screen content columns
 
     /** Cap for a screen's main content column (Home, Settings, Demo, DesignSystem). */

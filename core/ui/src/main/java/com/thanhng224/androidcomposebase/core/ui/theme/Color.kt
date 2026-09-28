@@ -7,7 +7,14 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 import com.thanhng224.androidcomposebase.core.R as CoreR
 
-/** Creates a static palette from explicit resource IDs, independent of the current uiMode. */
+/**
+ * Creates a static palette from explicit resource IDs, independent of the current uiMode.
+ *
+ * The surface container roles are set explicitly: left to the `lightColorScheme`/`darkColorScheme`
+ * defaults they would come from the Material baseline palette rather than this one, and
+ * container-based components ([com.thanhng224.androidcomposebase.core.ui.components.AppCard],
+ * dialogs, menus) would not step consistently above `background`.
+ */
 internal fun staticColorScheme(
     context: Context,
     darkTheme: Boolean,
@@ -38,6 +45,11 @@ private fun createLightColorScheme(context: Context): ColorScheme =
         onSurface = context.color(CoreR.color.core_color_on_surface_light),
         surfaceVariant = context.color(CoreR.color.core_color_surface_variant_light),
         onSurfaceVariant = context.color(CoreR.color.core_color_on_surface_variant_light),
+        surfaceContainerLowest = context.color(CoreR.color.core_color_surface_container_lowest_light),
+        surfaceContainerLow = context.color(CoreR.color.core_color_surface_container_low_light),
+        surfaceContainer = context.color(CoreR.color.core_color_surface_container_light),
+        surfaceContainerHigh = context.color(CoreR.color.core_color_surface_container_high_light),
+        surfaceContainerHighest = context.color(CoreR.color.core_color_surface_container_highest_light),
         outline = context.color(CoreR.color.core_color_outline_light),
         outlineVariant = context.color(CoreR.color.core_color_outline_variant_light),
         error = context.color(CoreR.color.core_color_error_light),
@@ -66,6 +78,11 @@ private fun createDarkColorScheme(context: Context): ColorScheme =
         onSurface = context.color(CoreR.color.core_color_on_surface_dark),
         surfaceVariant = context.color(CoreR.color.core_color_surface_variant_dark),
         onSurfaceVariant = context.color(CoreR.color.core_color_on_surface_variant_dark),
+        surfaceContainerLowest = context.color(CoreR.color.core_color_surface_container_lowest_dark),
+        surfaceContainerLow = context.color(CoreR.color.core_color_surface_container_low_dark),
+        surfaceContainer = context.color(CoreR.color.core_color_surface_container_dark),
+        surfaceContainerHigh = context.color(CoreR.color.core_color_surface_container_high_dark),
+        surfaceContainerHighest = context.color(CoreR.color.core_color_surface_container_highest_dark),
         outline = context.color(CoreR.color.core_color_outline_dark),
         outlineVariant = context.color(CoreR.color.core_color_outline_variant_dark),
         error = context.color(CoreR.color.core_color_error_dark),

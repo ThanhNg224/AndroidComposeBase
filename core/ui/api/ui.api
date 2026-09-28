@@ -21,6 +21,10 @@ package com.thanhng224.androidcomposebase.core.ui.components {
     method public static void AppSecondaryButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional Modifier modifier, optional boolean enabled, optional ImageVector? icon);
   }
 
+  public final class AppCardKt {
+    method public static void AppCard(optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onClick, kotlin.jvm.functions.Function1<? super ColumnScope,kotlin.Unit> content);
+  }
+
   public final class AppFloatingNavBarKt {
     method public static void AppFloatingNavBar(java.util.List<com.thanhng224.androidcomposebase.core.ui.components.AppNavItem> items, optional Modifier modifier, optional Color containerColor, optional Color contentColor, optional Color selectedIndicatorColor, optional Color selectedContentColor);
   }
@@ -80,6 +84,9 @@ package com.thanhng224.androidcomposebase.core.ui.theme {
     method @InaccessibleFromKotlin public Dp getElevationLow();
     method @InaccessibleFromKotlin public Dp getElevationMedium();
     method @InaccessibleFromKotlin public Dp getElevationNone();
+    method @InaccessibleFromKotlin public Dp getIconSizeLarge();
+    method @InaccessibleFromKotlin public Dp getIconSizeMedium();
+    method @InaccessibleFromKotlin public Dp getIconSizeSmall();
     method @InaccessibleFromKotlin public Dp getInputHeight();
     method @InaccessibleFromKotlin public Dp getMaxContentWidth();
     method @InaccessibleFromKotlin public Dp getMaxNavBarWidth();
@@ -104,6 +111,9 @@ package com.thanhng224.androidcomposebase.core.ui.theme {
     property public ErrorType elevationLow;
     property public ErrorType elevationMedium;
     property public ErrorType elevationNone;
+    property public ErrorType iconSizeLarge;
+    property public ErrorType iconSizeMedium;
+    property public ErrorType iconSizeSmall;
     property public ErrorType inputHeight;
     property public ErrorType maxContentWidth;
     property public ErrorType maxNavBarWidth;

@@ -55,7 +55,7 @@ public fun AppPrimaryButton(
     ) {
         if (isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(Dimens.iconSizeSmall),
                 color = MaterialTheme.colorScheme.onPrimary,
                 strokeWidth = 2.dp,
             )
@@ -64,7 +64,7 @@ public fun AppPrimaryButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(Dimens.iconSizeSmall),
                 )
                 Spacer(modifier = Modifier.width(Dimens.spaceSmall))
             }
@@ -105,7 +105,7 @@ public fun AppSecondaryButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(Dimens.iconSizeSmall),
             )
             Spacer(modifier = Modifier.width(Dimens.spaceSmall))
         }
@@ -140,7 +140,7 @@ public fun AppOutlinedButton(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                modifier = Modifier.size(18.dp),
+                modifier = Modifier.size(Dimens.iconSizeSmall),
             )
             Spacer(modifier = Modifier.width(Dimens.spaceSmall))
         }
