@@ -52,9 +52,12 @@ import com.thanhng224.androidcomposebase.core.ui.components.AppSecondaryButton
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
-// The state composables fill their available height, so each showcase card needs a minimum
-// to lay out inside the unbounded LazyColumn item; heightIn(min = ...) lets content grow
-// beyond it (e.g. at large font scale) instead of clipping.
+// AppLoadingState/AppEmptyState/AppErrorState fill their available height, so the minimum
+// belongs on the composable itself (as DemoScreen does), not on the surrounding Card: a Card
+// only wraps its content's own size, so a min on the Card alone doesn't reach inside to a
+// fillMaxSize() child and the state content ends up top-aligned in extra Card space instead of
+// centered. heightIn(min = ...) here still lets content grow beyond it (e.g. at large font
+// scale) instead of clipping.
 private val LoadingStateCardMinHeight = 200.dp
 private val EmptyStateCardMinHeight = 260.dp
 private val ErrorStateCardMinHeight = 280.dp
@@ -175,9 +178,12 @@ private fun DesignSystemContent(
                         shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth().heightIn(min = LoadingStateCardMinHeight),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
-                        AppLoadingState(message = stringResource(R.string.design_system_states_loading_message))
+                        AppLoadingState(
+                            modifier = Modifier.heightIn(min = LoadingStateCardMinHeight),
+                            message = stringResource(R.string.design_system_states_loading_message),
+                        )
                     }
                 }
 
@@ -186,10 +192,11 @@ private fun DesignSystemContent(
                         shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth().heightIn(min = EmptyStateCardMinHeight),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         AppEmptyState(
                             title = stringResource(R.string.design_system_states_empty_title),
+                            modifier = Modifier.heightIn(min = EmptyStateCardMinHeight),
                             message = stringResource(R.string.design_system_states_empty_message),
                             action = {
                                 AppOutlinedButton(
@@ -206,10 +213,11 @@ private fun DesignSystemContent(
                         shape = MaterialTheme.shapes.medium,
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth().heightIn(min = ErrorStateCardMinHeight),
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         AppErrorState(
                             title = stringResource(R.string.design_system_states_error_title),
+                            modifier = Modifier.heightIn(min = ErrorStateCardMinHeight),
                             message = stringResource(R.string.design_system_states_error_message),
                             onRetry = {},
                         )
