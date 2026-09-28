@@ -72,6 +72,13 @@
     <string name="onboarding_welcome_body">Điểm khởi đầu gọn gàng cho ứng dụng tiếp theo của bạn. Khám phá các màn hình mẫu rồi phát triển trải nghiệm theo sản phẩm.</string>
     <string name="home_welcome_title">Chào mừng đến với ứng dụng mới</string>
     <string name="home_welcome_body">Bản khởi đầu này có một số màn hình mẫu và phần cài đặt. Hãy thay chúng bằng những tính năng người dùng cần.</string>
+    <string name="home_next_steps_title">Bước tiếp theo</string>
+    <string name="home_next_steps_rename_title">Đổi tên dự án</string>
+    <string name="home_next_steps_rename_body">Chạy python3 scripts/init_project.py để đặt tên ứng dụng và package.</string>
+    <string name="home_next_steps_feature_title">Thêm tính năng</string>
+    <string name="home_next_steps_feature_body">Tạo feature/&lt;name&gt;/ kèm route và entry của nó. Xem docs/FEATURE_TEMPLATE.md.</string>
+    <string name="home_next_steps_checks_title">Chạy kiểm tra</string>
+    <string name="home_next_steps_checks_body">Chạy ./gradlew check trước mỗi lần commit.</string>
     <string name="settings_theme_heading">Giao diện</string>
     <string name="settings_language_heading">Ngôn ngữ</string>
     <string name="demo_counter_description">Số đếm được lưu trên thiết bị này.</string>

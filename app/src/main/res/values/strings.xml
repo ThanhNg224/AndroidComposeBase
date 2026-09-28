@@ -72,6 +72,13 @@
     <string name="onboarding_welcome_body">A simple starting point for your next app. Explore the sample screens, then shape the experience around your product.</string>
     <string name="home_welcome_title">Welcome to your new app</string>
     <string name="home_welcome_body">This starter includes a few example screens and settings. Replace them with the features your users need.</string>
+    <string name="home_next_steps_title">Next steps</string>
+    <string name="home_next_steps_rename_title">Rename the project</string>
+    <string name="home_next_steps_rename_body">Run python3 scripts/init_project.py to set your app name and package.</string>
+    <string name="home_next_steps_feature_title">Add a feature</string>
+    <string name="home_next_steps_feature_body">Create feature/&lt;name&gt;/ with its route and entry. See docs/FEATURE_TEMPLATE.md.</string>
+    <string name="home_next_steps_checks_title">Run the checks</string>
+    <string name="home_next_steps_checks_body">Run ./gradlew check before every commit.</string>
     <string name="settings_theme_heading">Theme</string>
     <string name="settings_language_heading">Language</string>
     <string name="demo_counter_description">Your count is saved on this device.</string>
