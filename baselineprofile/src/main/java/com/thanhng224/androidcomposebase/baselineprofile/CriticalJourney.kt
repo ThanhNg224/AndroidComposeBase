@@ -19,7 +19,15 @@ private const val WAIT_TIMEOUT_MS = 15_000L
  */
 internal object CriticalJourney {
     private fun textSelector(vararg labels: String): BySelector =
-        By.text(Pattern.compile(labels.joinToString("|") { Pattern.quote(it) }))
+        By.text(labels.toPattern())
+
+    /**
+     * Floating nav tabs show their label as text only while selected; unselected tabs expose it
+     * as the icon's content description instead.
+     */
+    private fun tabSelector(vararg labels: String): BySelector = By.desc(labels.toPattern())
+
+    private fun Array<out String>.toPattern(): Pattern = Pattern.compile(joinToString("|") { Pattern.quote(it) })
 
     /**
      * `findObject(...)?.click()` silently does nothing when the node is missing, which then
@@ -49,7 +57,7 @@ internal object CriticalJourney {
         }
 
         // Navigate to the offline weather example
-        device.clickOrFail(textSelector("Demo"), "the Demo tab")
+        device.clickOrFail(tabSelector("Demo"), "the Demo tab")
         check(
             device.wait(
                 Until.hasObject(textSelector("Current conditions", "Thời tiết hiện tại")),
@@ -61,7 +69,7 @@ internal object CriticalJourney {
         device.clickOrFail(textSelector("Refresh weather", "Làm mới thời tiết"), "the weather refresh button")
 
         // Navigate to the UI Kit
-        device.clickOrFail(textSelector("Design", "Thiết kế"), "the Design tab")
+        device.clickOrFail(tabSelector("Design", "Thiết kế"), "the Design tab")
         check(
             device.wait(Until.hasObject(textSelector("Color roles", "Vai trò màu sắc")), WAIT_TIMEOUT_MS),
         ) {
@@ -69,13 +77,13 @@ internal object CriticalJourney {
         }
 
         // Navigate to Settings
-        device.clickOrFail(textSelector("Settings", "Cài đặt"), "the Settings tab")
+        device.clickOrFail(tabSelector("Settings", "Cài đặt"), "the Settings tab")
         check(device.wait(Until.hasObject(textSelector("Appearance", "Giao diện")), WAIT_TIMEOUT_MS)) {
             "Settings tab never rendered"
         }
 
         // Return to Home
-        device.clickOrFail(textSelector("Home", "Trang chủ"), "the Home tab")
+        device.clickOrFail(tabSelector("Home", "Trang chủ"), "the Home tab")
         check(
             device.wait(
                 Until.hasObject(textSelector("Welcome to your new app", "Chào mừng đến với ứng dụng mới")),
