@@ -14,3 +14,5 @@ local.properties
 /docs/superpowers/
 __pycache__/
 *.pyc
+/docs/plans
+/docs/specs
