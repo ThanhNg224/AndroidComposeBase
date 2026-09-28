@@ -10,7 +10,7 @@ The app persists the Light/Dark/System choice in DataStore. On Android 12+ it ap
 
 ## Tokens
 
-Use `Dimens` for shared spacing, touch, corner, and elevation values. Existing names include `spaceSmall`, `spaceMedium`, `spaceLarge`, `spaceXLarge`, `minTouchTarget`, `buttonHeight`, `radiusMedium`, and `elevationLow`. The complete source of truth is [Dimens.kt](../core/ui/src/main/java/com/thanhng224/androidcomposebase/core/ui/theme/Dimens.kt).
+Use `Dimens` for shared spacing, touch, corner, and elevation values. Existing names include `spaceSmall`, `spaceMedium`, `spaceLarge`, `spaceXLarge`, `minTouchTarget`, `buttonHeight`, `radiusMedium`, and `elevationLow`. `Dimens` also carries width caps for large-screen content columns: `maxContentWidth` (720.dp, a screen's main content column, e.g. Home, Settings, Demo, DesignSystem), `maxReadableWidth` (560.dp, a narrow reading/CTA column, e.g. Onboarding), and `maxNavBarWidth` (600.dp, the floating top-level navigation bar). The complete source of truth is [Dimens.kt](../core/ui/src/main/java/com/thanhng224/androidcomposebase/core/ui/theme/Dimens.kt).
 
 Keep user-facing text in localized Android string resources, preserve a minimum 48dp touch target, and provide meaningful semantics for interactive controls. Prefer `MaterialTheme.colorScheme` and typography over hard-coded presentation values. Allow system font scaling and use scrollable content for screens that can exceed the available height.
 
