@@ -14,7 +14,7 @@ package com.thanhng224.androidcomposebase.core.common {
   }
 
   public final class LifecycleFlowExtensionsKt {
-    method public static <T> void collectOnStartedBy(Flow<T>, LifecycleOwner lifecycleOwner, kotlin.jvm.functions.Function2<? super T,? super error.NonExistentClass<kotlin.Unit!>!,? extends java.lang.Object?> action);
+    method public static <T> void collectOnStartedBy(kotlinx.coroutines.flow.Flow<? extends T>, androidx.lifecycle.LifecycleOwner lifecycleOwner, kotlin.jvm.functions.Function2<? super T,? super kotlin.coroutines.Continuation<? super kotlin.Unit>,? extends java.lang.Object?> action);
   }
 
 }
@@ -22,12 +22,12 @@ package com.thanhng224.androidcomposebase.core.common {
 package com.thanhng224.androidcomposebase.core.foundation {
 
   public interface AppDispatchers {
-    method @InaccessibleFromKotlin public CoroutineDispatcher getDefault();
-    method @InaccessibleFromKotlin public CoroutineDispatcher getIo();
-    method @InaccessibleFromKotlin public CoroutineDispatcher getMain();
-    property public abstract ErrorType default;
-    property public abstract ErrorType io;
-    property public abstract ErrorType main;
+    method @InaccessibleFromKotlin public kotlinx.coroutines.CoroutineDispatcher getDefault();
+    method @InaccessibleFromKotlin public kotlinx.coroutines.CoroutineDispatcher getIo();
+    method @InaccessibleFromKotlin public kotlinx.coroutines.CoroutineDispatcher getMain();
+    property public abstract kotlinx.coroutines.CoroutineDispatcher default;
+    property public abstract kotlinx.coroutines.CoroutineDispatcher io;
+    property public abstract kotlinx.coroutines.CoroutineDispatcher main;
     field public static final com.thanhng224.androidcomposebase.core.foundation.AppDispatchers.Companion Companion;
   }
 
@@ -36,13 +36,13 @@ package com.thanhng224.androidcomposebase.core.foundation {
   }
 
   public interface SecureStore {
-    method public suspend Object? clear(error.NonExistentClass);
+    method public suspend Object? clear(kotlin.coroutines.Continuation<? super kotlin.Unit>);
     method @KotlinOnly public suspend Object? getString(com.thanhng224.androidcomposebase.core.foundation.SecureStoreKey key, kotlin.coroutines.Continuation<? super java.lang.String?>);
     method @KotlinOnly public suspend Object? putString(com.thanhng224.androidcomposebase.core.foundation.SecureStoreKey key, String value, kotlin.coroutines.Continuation<? super java.lang.Void>);
     method @KotlinOnly public suspend Object? remove(com.thanhng224.androidcomposebase.core.foundation.SecureStoreKey key, kotlin.coroutines.Continuation<? super java.lang.Void>);
   }
 
-  public final value class SecureStoreKey {
+  @kotlin.jvm.JvmInline public final value class SecureStoreKey {
     ctor @KotlinOnly public SecureStoreKey(String name);
     method @InaccessibleFromKotlin public String getName();
     property public String name;
@@ -82,10 +82,10 @@ package com.thanhng224.androidcomposebase.core.foundation {
   }
 
   public interface SettingsStore {
-    method public suspend <T> Object? get(com.thanhng224.androidcomposebase.core.foundation.SettingsKey<T> key, error.NonExistentClass);
-    method public <T> Flow<T> observe(com.thanhng224.androidcomposebase.core.foundation.SettingsKey<T> key);
-    method public suspend <T> Object? remove(com.thanhng224.androidcomposebase.core.foundation.SettingsKey<T> key, error.NonExistentClass);
-    method public suspend <T> Object? set(com.thanhng224.androidcomposebase.core.foundation.SettingsKey<T> key, T value, error.NonExistentClass);
+    method public suspend <T> Object? get(com.thanhng224.androidcomposebase.core.foundation.SettingsKey<T> key, kotlin.coroutines.Continuation<? super T>);
+    method public <T> kotlinx.coroutines.flow.Flow<T> observe(com.thanhng224.androidcomposebase.core.foundation.SettingsKey<T> key);
+    method public suspend <T> Object? remove(com.thanhng224.androidcomposebase.core.foundation.SettingsKey<T> key, kotlin.coroutines.Continuation<? super kotlin.Unit>);
+    method public suspend <T> Object? set(com.thanhng224.androidcomposebase.core.foundation.SettingsKey<T> key, T value, kotlin.coroutines.Continuation<? super kotlin.Unit>);
   }
 
 }
@@ -99,10 +99,10 @@ package com.thanhng224.androidcomposebase.core.localization {
   }
 
   public final class AppLanguage {
-    ctor public AppLanguage(String languageTag, int displayNameResId);
+    ctor public AppLanguage(String languageTag, @StringRes int displayNameResId);
     method public String component1();
     method public int component2();
-    method public com.thanhng224.androidcomposebase.core.localization.AppLanguage copy(optional String languageTag, optional int displayNameResId);
+    method public com.thanhng224.androidcomposebase.core.localization.AppLanguage copy(optional String languageTag, optional @StringRes int displayNameResId);
     method @InaccessibleFromKotlin public int getDisplayNameResId();
     method @InaccessibleFromKotlin public String getLanguageTag();
     property public int displayNameResId;
@@ -146,7 +146,7 @@ package com.thanhng224.androidcomposebase.core.localization {
 package com.thanhng224.androidcomposebase.core.network {
 
   public interface ApiClient {
-    method public suspend <T> Object? execute(kotlin.jvm.functions.Function1<? super error.NonExistentClass<retrofit2.Response<T>!>!,? extends java.lang.Object?> call, error.NonExistentClass);
+    method public suspend <T> Object? execute(kotlin.jvm.functions.Function1<? super kotlin.coroutines.Continuation<? super retrofit2.Response<T>>,? extends java.lang.Object?> call, kotlin.coroutines.Continuation<? super com.thanhng224.androidcomposebase.core.network.ApiResult<? extends T>>);
   }
 
   public final class ApiConfig {
@@ -231,12 +231,12 @@ package com.thanhng224.androidcomposebase.core.network {
   public final class NetworkClientFactory {
     method public com.thanhng224.androidcomposebase.core.network.ApiClient createApiClient();
     method public com.thanhng224.androidcomposebase.core.network.auth.AuthTokenProvider createAuthTokenProvider(com.thanhng224.androidcomposebase.core.network.auth.AuthSession authSession);
-    method public Authenticator createAuthenticator(com.thanhng224.androidcomposebase.core.network.auth.AuthSession authSession, optional kotlin.jvm.functions.Function0<? extends com.thanhng224.androidcomposebase.core.network.auth.AuthTokenRefresher>? tokenRefresher, optional String scheme);
-    method public com.thanhng224.androidcomposebase.core.network.transfer.FileTransferClient createFileTransferClient(OkHttpClient okHttpClient, com.thanhng224.androidcomposebase.core.foundation.AppDispatchers dispatchers);
-    method public OkHttpClient createOkHttpClient(com.thanhng224.androidcomposebase.core.network.ApiConfig config, optional java.util.List<? extends Interceptor> interceptors, optional Authenticator authenticator);
-    method public Retrofit createRetrofit(com.thanhng224.androidcomposebase.core.network.ApiConfig config, OkHttpClient okHttpClient, optional Json json);
-    method @InaccessibleFromKotlin public Json getDefaultJson();
-    property public ErrorType defaultJson;
+    method public okhttp3.Authenticator createAuthenticator(com.thanhng224.androidcomposebase.core.network.auth.AuthSession authSession, optional kotlin.jvm.functions.Function0<? extends com.thanhng224.androidcomposebase.core.network.auth.AuthTokenRefresher>? tokenRefresher, optional String scheme);
+    method public com.thanhng224.androidcomposebase.core.network.transfer.FileTransferClient createFileTransferClient(okhttp3.OkHttpClient okHttpClient, com.thanhng224.androidcomposebase.core.foundation.AppDispatchers dispatchers);
+    method public okhttp3.OkHttpClient createOkHttpClient(com.thanhng224.androidcomposebase.core.network.ApiConfig config, optional java.util.List<? extends okhttp3.Interceptor> interceptors, optional okhttp3.Authenticator authenticator);
+    method public retrofit2.Retrofit createRetrofit(com.thanhng224.androidcomposebase.core.network.ApiConfig config, okhttp3.OkHttpClient okHttpClient, optional kotlinx.serialization.json.Json json);
+    method @InaccessibleFromKotlin public kotlinx.serialization.json.Json getDefaultJson();
+    property public kotlinx.serialization.json.Json defaultJson;
     field public static final com.thanhng224.androidcomposebase.core.network.NetworkClientFactory INSTANCE;
   }
 
@@ -246,27 +246,27 @@ package com.thanhng224.androidcomposebase.core.network.auth {
 
   public final class AuthSession {
     ctor public AuthSession(com.thanhng224.androidcomposebase.core.foundation.SecureStore secureStore);
-    method public suspend Object? clear(error.NonExistentClass);
-    method public suspend Object? getAccessToken(error.NonExistentClass);
-    method public suspend Object? getRefreshToken(error.NonExistentClass);
-    method @InaccessibleFromKotlin public Flow<kotlin.Unit!> getSessionExpired();
+    method public suspend Object? clear(kotlin.coroutines.Continuation<? super kotlin.Unit>);
+    method public suspend Object? getAccessToken(kotlin.coroutines.Continuation<? super java.lang.String?>);
+    method public suspend Object? getRefreshToken(kotlin.coroutines.Continuation<? super java.lang.String?>);
+    method @InaccessibleFromKotlin public kotlinx.coroutines.flow.Flow<kotlin.Unit> getSessionExpired();
     method public String? peekAccessToken();
-    method public suspend Object? setTokens(String accessToken, optional String? refreshToken, error.NonExistentClass);
-    property public ErrorType sessionExpired;
+    method public suspend Object? setTokens(String accessToken, optional String? refreshToken, kotlin.coroutines.Continuation<? super kotlin.Unit>);
+    property public kotlinx.coroutines.flow.Flow<kotlin.Unit> sessionExpired;
   }
 
-  public final class AuthTokenInterceptor {
+  public final class AuthTokenInterceptor implements okhttp3.Interceptor {
     ctor public AuthTokenInterceptor(com.thanhng224.androidcomposebase.core.network.auth.AuthTokenProvider authTokenProvider, optional String scheme);
-    method public Response intercept(Interceptor.Chain chain);
+    method public okhttp3.Response intercept(okhttp3.Interceptor.Chain chain);
   }
 
   public interface AuthTokenProvider {
-    method public suspend Object? getToken(error.NonExistentClass);
+    method public suspend Object? getToken(kotlin.coroutines.Continuation<? super java.lang.String?>);
     method public String? peekToken();
   }
 
   public interface AuthTokenRefresher {
-    method public suspend Object? refresh(String? refreshToken, error.NonExistentClass);
+    method public suspend Object? refresh(String? refreshToken, kotlin.coroutines.Continuation<? super java.lang.String?>);
   }
 
   public final class AuthorizationHeaderKt {
@@ -276,7 +276,7 @@ package com.thanhng224.androidcomposebase.core.network.auth {
 
   public final class NoOpAuthTokenProvider implements com.thanhng224.androidcomposebase.core.network.auth.AuthTokenProvider {
     ctor public NoOpAuthTokenProvider();
-    method public suspend Object? getToken(error.NonExistentClass);
+    method public suspend Object? getToken(kotlin.coroutines.Continuation<? super java.lang.String?>);
     method public String? peekToken();
   }
 
@@ -285,9 +285,9 @@ package com.thanhng224.androidcomposebase.core.network.auth {
 package com.thanhng224.androidcomposebase.core.network.transfer {
 
   public interface FileTransferClient {
-    method public Flow<com.thanhng224.androidcomposebase.core.network.transfer.TransferEvent!> download(Request request, java.io.File destination);
-    method public Flow<com.thanhng224.androidcomposebase.core.network.transfer.TransferEvent<byte[]!,kotlin.Unit!>!> stream(Request request, optional int chunkSizeBytes);
-    method public Flow<com.thanhng224.androidcomposebase.core.network.transfer.TransferEvent!> upload(Request request);
+    method public kotlinx.coroutines.flow.Flow<com.thanhng224.androidcomposebase.core.network.transfer.TransferEvent> download(okhttp3.Request request, java.io.File destination);
+    method public kotlinx.coroutines.flow.Flow<com.thanhng224.androidcomposebase.core.network.transfer.TransferEvent<byte[],kotlin.Unit>> stream(okhttp3.Request request, optional int chunkSizeBytes);
+    method public kotlinx.coroutines.flow.Flow<com.thanhng224.androidcomposebase.core.network.transfer.TransferEvent> upload(okhttp3.Request request);
     field public static final com.thanhng224.androidcomposebase.core.network.transfer.FileTransferClient.Companion Companion;
     field public static final int DEFAULT_STREAM_CHUNK_SIZE_BYTES = 8192; // 0x2000
   }
@@ -389,7 +389,7 @@ package com.thanhng224.androidcomposebase.core.storage.secure {
 
   public final class DbPassphraseProvider {
     ctor public DbPassphraseProvider(com.thanhng224.androidcomposebase.core.foundation.SecureStore secureStore);
-    method public suspend Object? getOrCreate(error.NonExistentClass);
+    method public suspend Object? getOrCreate(kotlin.coroutines.Continuation<? super byte[]>);
   }
 
   public final class SecureStoreFactory {
@@ -408,7 +408,7 @@ package com.thanhng224.androidcomposebase.core.storage.settings {
   }
 
   public final class SettingsStoreFactory {
-    method public com.thanhng224.androidcomposebase.core.foundation.SettingsStore create(DataStore<Preferences!> dataStore);
+    method public com.thanhng224.androidcomposebase.core.foundation.SettingsStore create(androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences> dataStore);
     field public static final com.thanhng224.androidcomposebase.core.storage.settings.SettingsStoreFactory INSTANCE;
   }
 
@@ -428,10 +428,10 @@ package com.thanhng224.androidcomposebase.core.text {
   }
 
   public static final class UiText.StringResource implements com.thanhng224.androidcomposebase.core.text.UiText {
-    ctor public UiText.StringResource(int resId, optional java.util.List<?> formatArgs);
+    ctor public UiText.StringResource(@StringRes int resId, optional java.util.List<?> formatArgs);
     method public int component1();
     method public java.util.List<java.lang.Object> component2();
-    method public com.thanhng224.androidcomposebase.core.text.UiText.StringResource copy(optional int resId, optional java.util.List<?> formatArgs);
+    method public com.thanhng224.androidcomposebase.core.text.UiText.StringResource copy(optional @StringRes int resId, optional java.util.List<?> formatArgs);
     method @InaccessibleFromKotlin public java.util.List<java.lang.Object> getFormatArgs();
     method @InaccessibleFromKotlin public int getResId();
     property public java.util.List<java.lang.Object> formatArgs;
@@ -460,13 +460,13 @@ package com.thanhng224.androidcomposebase.core.theme {
   }
 
   public interface ThemeManager {
-    method public void applyTheme(com.thanhng224.androidcomposebase.core.theme.AppTheme theme);
-    method @InaccessibleFromKotlin public Flow<com.thanhng224.androidcomposebase.core.theme.AppTheme!> getCurrentTheme();
-    method public suspend Object? getTheme(error.NonExistentClass);
-    method @InaccessibleFromKotlin public StateFlow<java.lang.Boolean!> isThemeApplied();
-    method public suspend Object? setTheme(com.thanhng224.androidcomposebase.core.theme.AppTheme theme, error.NonExistentClass);
-    property public abstract ErrorType currentTheme;
-    property public abstract ErrorType isThemeApplied;
+    method @MainThread public void applyTheme(com.thanhng224.androidcomposebase.core.theme.AppTheme theme);
+    method @InaccessibleFromKotlin public kotlinx.coroutines.flow.Flow<com.thanhng224.androidcomposebase.core.theme.AppTheme> getCurrentTheme();
+    method public suspend Object? getTheme(kotlin.coroutines.Continuation<? super com.thanhng224.androidcomposebase.core.theme.AppTheme>);
+    method @InaccessibleFromKotlin public kotlinx.coroutines.flow.StateFlow<java.lang.Boolean> isThemeApplied();
+    method @MainThread public suspend Object? setTheme(com.thanhng224.androidcomposebase.core.theme.AppTheme theme, kotlin.coroutines.Continuation<? super kotlin.Unit>);
+    property public abstract kotlinx.coroutines.flow.Flow<com.thanhng224.androidcomposebase.core.theme.AppTheme> currentTheme;
+    property public abstract kotlinx.coroutines.flow.StateFlow<java.lang.Boolean> isThemeApplied;
     field public static final com.thanhng224.androidcomposebase.core.theme.ThemeManager.Companion Companion;
   }
 

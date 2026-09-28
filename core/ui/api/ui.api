@@ -1,14 +1,13 @@
 // Signature format: 4.0
 package com.thanhng224.androidcomposebase.core.ui.base {
 
-  public abstract class BaseComposeActivity {
+  public abstract class BaseComposeActivity extends androidx.activity.ComponentActivity {
     ctor public BaseComposeActivity();
-    method protected abstract void Content();
-    method public void onCreate(android.os.Bundle? savedInstanceState);
+    method @KotlinOnly @androidx.compose.runtime.Composable protected abstract void Content();
   }
 
   public final class ComposeInteropKt {
-    method public static void setThemedContent(ComposeView, kotlin.jvm.functions.Function0<kotlin.Unit> content);
+    method public static void setThemedContent(androidx.compose.ui.platform.ComposeView, kotlin.jvm.functions.Function0<kotlin.Unit> content);
   }
 
 }
@@ -16,54 +15,54 @@ package com.thanhng224.androidcomposebase.core.ui.base {
 package com.thanhng224.androidcomposebase.core.ui.components {
 
   public final class AppButtonKt {
-    method public static void AppOutlinedButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional Modifier modifier, optional boolean enabled, optional ImageVector? icon);
-    method public static void AppPrimaryButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional Modifier modifier, optional boolean enabled, optional boolean isLoading, optional ImageVector? icon);
-    method public static void AppSecondaryButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional Modifier modifier, optional boolean enabled, optional ImageVector? icon);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppOutlinedButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional androidx.compose.ui.Modifier modifier, optional boolean enabled, optional androidx.compose.ui.graphics.vector.ImageVector? icon);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppPrimaryButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional androidx.compose.ui.Modifier modifier, optional boolean enabled, optional boolean isLoading, optional androidx.compose.ui.graphics.vector.ImageVector? icon);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppSecondaryButton(String text, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional androidx.compose.ui.Modifier modifier, optional boolean enabled, optional androidx.compose.ui.graphics.vector.ImageVector? icon);
   }
 
   public final class AppCardKt {
-    method public static void AppCard(optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onClick, kotlin.jvm.functions.Function1<? super ColumnScope,kotlin.Unit> content);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppCard(optional androidx.compose.ui.Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onClick, kotlin.jvm.functions.Function1<androidx.compose.foundation.layout.ColumnScope,kotlin.Unit> content);
   }
 
   public final class AppFloatingNavBarKt {
-    method public static void AppFloatingNavBar(java.util.List<com.thanhng224.androidcomposebase.core.ui.components.AppNavItem> items, optional Modifier modifier, optional Color containerColor, optional Color contentColor, optional Color selectedIndicatorColor, optional Color selectedContentColor);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppFloatingNavBar(java.util.List<com.thanhng224.androidcomposebase.core.ui.components.AppNavItem> items, optional androidx.compose.ui.Modifier modifier, optional androidx.compose.ui.graphics.Color containerColor, optional androidx.compose.ui.graphics.Color contentColor, optional androidx.compose.ui.graphics.Color selectedIndicatorColor, optional androidx.compose.ui.graphics.Color selectedContentColor);
   }
 
   public final class AppNavItem {
-    ctor public AppNavItem(boolean selected, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, ImageVector selectedIcon, ImageVector unselectedIcon, String label, optional int badgeCount, optional String? contentDescription);
+    ctor public AppNavItem(boolean selected, kotlin.jvm.functions.Function0<kotlin.Unit> onClick, androidx.compose.ui.graphics.vector.ImageVector selectedIcon, androidx.compose.ui.graphics.vector.ImageVector unselectedIcon, String label, optional int badgeCount, optional String? contentDescription);
     method public boolean component1();
     method public kotlin.jvm.functions.Function0<kotlin.Unit> component2();
-    method public ImageVector component3();
-    method public ImageVector component4();
+    method public androidx.compose.ui.graphics.vector.ImageVector component3();
+    method public androidx.compose.ui.graphics.vector.ImageVector component4();
     method public String component5();
     method public int component6();
     method public String? component7();
-    method public com.thanhng224.androidcomposebase.core.ui.components.AppNavItem copy(optional boolean selected, optional kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional ImageVector selectedIcon, optional ImageVector unselectedIcon, optional String label, optional int badgeCount, optional String? contentDescription);
+    method public com.thanhng224.androidcomposebase.core.ui.components.AppNavItem copy(optional boolean selected, optional kotlin.jvm.functions.Function0<kotlin.Unit> onClick, optional androidx.compose.ui.graphics.vector.ImageVector selectedIcon, optional androidx.compose.ui.graphics.vector.ImageVector unselectedIcon, optional String label, optional int badgeCount, optional String? contentDescription);
     method @InaccessibleFromKotlin public int getBadgeCount();
     method @InaccessibleFromKotlin public String? getContentDescription();
     method @InaccessibleFromKotlin public String getLabel();
     method @InaccessibleFromKotlin public kotlin.jvm.functions.Function0<kotlin.Unit> getOnClick();
     method @InaccessibleFromKotlin public boolean getSelected();
-    method @InaccessibleFromKotlin public ImageVector getSelectedIcon();
-    method @InaccessibleFromKotlin public ImageVector getUnselectedIcon();
+    method @InaccessibleFromKotlin public androidx.compose.ui.graphics.vector.ImageVector getSelectedIcon();
+    method @InaccessibleFromKotlin public androidx.compose.ui.graphics.vector.ImageVector getUnselectedIcon();
     property public int badgeCount;
     property public String? contentDescription;
     property public String label;
     property public kotlin.jvm.functions.Function0<kotlin.Unit> onClick;
     property public boolean selected;
-    property public ErrorType selectedIcon;
-    property public ErrorType unselectedIcon;
+    property public androidx.compose.ui.graphics.vector.ImageVector selectedIcon;
+    property public androidx.compose.ui.graphics.vector.ImageVector unselectedIcon;
   }
 
   public final class AppStatesKt {
-    method public static void AppEmptyState(String title, optional Modifier modifier, optional String? message, optional ImageVector? icon, optional kotlin.jvm.functions.Function0<kotlin.Unit>? action);
-    method public static void AppErrorState(String title, optional Modifier modifier, optional String? message, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onRetry);
-    method public static void AppLoadingState(optional Modifier modifier, optional String? message);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppEmptyState(String title, optional androidx.compose.ui.Modifier modifier, optional String? message, optional androidx.compose.ui.graphics.vector.ImageVector? icon, optional kotlin.jvm.functions.Function0<kotlin.Unit>? action);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppErrorState(String title, optional androidx.compose.ui.Modifier modifier, optional String? message, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onRetry);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppLoadingState(optional androidx.compose.ui.Modifier modifier, optional String? message);
   }
 
   public final class AppTopBarKt {
-    method public static void AppCenterTopBar(String title, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<? super RowScope,kotlin.Unit> actions);
-    method public static void AppTopBar(String title, optional Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<? super RowScope,kotlin.Unit> actions);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppCenterTopBar(String title, optional androidx.compose.ui.Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<androidx.compose.foundation.layout.RowScope,kotlin.Unit> actions);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AppTopBar(String title, optional androidx.compose.ui.Modifier modifier, optional kotlin.jvm.functions.Function0<kotlin.Unit>? onBackClick, optional kotlin.jvm.functions.Function1<androidx.compose.foundation.layout.RowScope,kotlin.Unit> actions);
   }
 
 }
@@ -71,7 +70,7 @@ package com.thanhng224.androidcomposebase.core.ui.components {
 package com.thanhng224.androidcomposebase.core.ui.text {
 
   public final class UiTextExtensionsKt {
-    method public static String asString(UiText);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static String asString(com.thanhng224.androidcomposebase.core.text.UiText);
   }
 
 }
@@ -79,75 +78,48 @@ package com.thanhng224.androidcomposebase.core.ui.text {
 package com.thanhng224.androidcomposebase.core.ui.theme {
 
   public final class Dimens {
-    method @InaccessibleFromKotlin public Dp getButtonHeight();
-    method @InaccessibleFromKotlin public Dp getElevationHigh();
-    method @InaccessibleFromKotlin public Dp getElevationLow();
-    method @InaccessibleFromKotlin public Dp getElevationMedium();
-    method @InaccessibleFromKotlin public Dp getElevationNone();
-    method @InaccessibleFromKotlin public Dp getIconSizeLarge();
-    method @InaccessibleFromKotlin public Dp getIconSizeMedium();
-    method @InaccessibleFromKotlin public Dp getIconSizeSmall();
-    method @InaccessibleFromKotlin public Dp getInputHeight();
-    method @InaccessibleFromKotlin public Dp getMaxContentWidth();
-    method @InaccessibleFromKotlin public Dp getMaxNavBarWidth();
-    method @InaccessibleFromKotlin public Dp getMaxReadableWidth();
-    method @InaccessibleFromKotlin public Dp getMinTouchTarget();
-    method @InaccessibleFromKotlin public Dp getRadiusLarge();
-    method @InaccessibleFromKotlin public Dp getRadiusMedium();
-    method @InaccessibleFromKotlin public Dp getRadiusPill();
-    method @InaccessibleFromKotlin public Dp getRadiusSmall();
-    method @InaccessibleFromKotlin public Dp getSpaceLarge();
-    method @InaccessibleFromKotlin public Dp getSpaceMedium();
-    method @InaccessibleFromKotlin public Dp getSpaceMediumSmall();
-    method @InaccessibleFromKotlin public Dp getSpaceNone();
-    method @InaccessibleFromKotlin public Dp getSpaceSmall();
-    method @InaccessibleFromKotlin public Dp getSpaceXLarge();
-    method @InaccessibleFromKotlin public Dp getSpaceXSmall();
-    method @InaccessibleFromKotlin public Dp getSpaceXXLarge();
-    method @InaccessibleFromKotlin public Dp getSpaceXXSmall();
-    method @InaccessibleFromKotlin public Dp getSpaceXXXLarge();
-    property public ErrorType buttonHeight;
-    property public ErrorType elevationHigh;
-    property public ErrorType elevationLow;
-    property public ErrorType elevationMedium;
-    property public ErrorType elevationNone;
-    property public ErrorType iconSizeLarge;
-    property public ErrorType iconSizeMedium;
-    property public ErrorType iconSizeSmall;
-    property public ErrorType inputHeight;
-    property public ErrorType maxContentWidth;
-    property public ErrorType maxNavBarWidth;
-    property public ErrorType maxReadableWidth;
-    property public ErrorType minTouchTarget;
-    property public ErrorType radiusLarge;
-    property public ErrorType radiusMedium;
-    property public ErrorType radiusPill;
-    property public ErrorType radiusSmall;
-    property public ErrorType spaceLarge;
-    property public ErrorType spaceMedium;
-    property public ErrorType spaceMediumSmall;
-    property public ErrorType spaceNone;
-    property public ErrorType spaceSmall;
-    property public ErrorType spaceXLarge;
-    property public ErrorType spaceXSmall;
-    property public ErrorType spaceXXLarge;
-    property public ErrorType spaceXXSmall;
-    property public ErrorType spaceXXXLarge;
+    property public androidx.compose.ui.unit.Dp buttonHeight;
+    property public androidx.compose.ui.unit.Dp elevationHigh;
+    property public androidx.compose.ui.unit.Dp elevationLow;
+    property public androidx.compose.ui.unit.Dp elevationMedium;
+    property public androidx.compose.ui.unit.Dp elevationNone;
+    property public androidx.compose.ui.unit.Dp iconSizeLarge;
+    property public androidx.compose.ui.unit.Dp iconSizeMedium;
+    property public androidx.compose.ui.unit.Dp iconSizeSmall;
+    property public androidx.compose.ui.unit.Dp inputHeight;
+    property public androidx.compose.ui.unit.Dp maxContentWidth;
+    property public androidx.compose.ui.unit.Dp maxNavBarWidth;
+    property public androidx.compose.ui.unit.Dp maxReadableWidth;
+    property public androidx.compose.ui.unit.Dp minTouchTarget;
+    property public androidx.compose.ui.unit.Dp radiusLarge;
+    property public androidx.compose.ui.unit.Dp radiusMedium;
+    property public androidx.compose.ui.unit.Dp radiusPill;
+    property public androidx.compose.ui.unit.Dp radiusSmall;
+    property public androidx.compose.ui.unit.Dp spaceLarge;
+    property public androidx.compose.ui.unit.Dp spaceMedium;
+    property public androidx.compose.ui.unit.Dp spaceMediumSmall;
+    property public androidx.compose.ui.unit.Dp spaceNone;
+    property public androidx.compose.ui.unit.Dp spaceSmall;
+    property public androidx.compose.ui.unit.Dp spaceXLarge;
+    property public androidx.compose.ui.unit.Dp spaceXSmall;
+    property public androidx.compose.ui.unit.Dp spaceXXLarge;
+    property public androidx.compose.ui.unit.Dp spaceXXSmall;
+    property public androidx.compose.ui.unit.Dp spaceXXXLarge;
     field public static final com.thanhng224.androidcomposebase.core.ui.theme.Dimens INSTANCE;
   }
 
   public final class ShapeKt {
-    method @InaccessibleFromKotlin public static Shapes getAppShapes();
-    property public static ErrorType AppShapes;
+    method @InaccessibleFromKotlin public static androidx.compose.material3.Shapes getAppShapes();
+    property public static androidx.compose.material3.Shapes AppShapes;
   }
 
   public final class ThemeKt {
-    method public static void AndroidComposeBaseTheme(optional boolean darkTheme, optional boolean dynamicColor, kotlin.jvm.functions.Function0<kotlin.Unit> content);
+    method @KotlinOnly @androidx.compose.runtime.Composable public static void AndroidComposeBaseTheme(optional boolean darkTheme, optional boolean dynamicColor, kotlin.jvm.functions.Function0<kotlin.Unit> content);
   }
 
   public final class TypeKt {
-    method @InaccessibleFromKotlin public static Typography getAppTypography();
-    property public static ErrorType AppTypography;
+    method @InaccessibleFromKotlin public static androidx.compose.material3.Typography getAppTypography();
+    property public static androidx.compose.material3.Typography AppTypography;
   }
 
 }
