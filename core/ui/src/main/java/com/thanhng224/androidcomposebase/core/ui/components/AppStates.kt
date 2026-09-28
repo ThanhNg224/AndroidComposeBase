@@ -4,7 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,8 +30,8 @@ import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
 /**
- * Full-bleed loading placeholder for async screen content. When [message] changes it is
- * announced to accessibility services as a polite live region.
+ * Loading placeholder for async screen content. The caller controls its size. When [message]
+ * changes it is announced to accessibility services as a polite live region.
  */
 @Composable
 public fun AppLoadingState(
@@ -39,7 +39,7 @@ public fun AppLoadingState(
     message: String? = null,
 ) {
     Column(
-        modifier = modifier.fillMaxSize().padding(Dimens.spaceLarge),
+        modifier = modifier.padding(Dimens.spaceLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -58,8 +58,8 @@ public fun AppLoadingState(
 }
 
 /**
- * Full-bleed placeholder for a screen or section with no content, with an optional
- * illustrative [icon] and a caller-supplied [action], such as a button to create content.
+ * Placeholder for a screen or section with no content, with an optional illustrative [icon] and
+ * a caller-supplied [action], such as a button to create content. The caller controls its size.
  */
 @Composable
 public fun AppEmptyState(
@@ -70,7 +70,7 @@ public fun AppEmptyState(
     action: (@Composable () -> Unit)? = null,
 ) {
     Column(
-        modifier = modifier.fillMaxSize().padding(Dimens.spaceLarge),
+        modifier = modifier.padding(Dimens.spaceLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -112,8 +112,9 @@ public fun AppEmptyState(
 }
 
 /**
- * Full-bleed placeholder for a failed screen or section, with an optional [onRetry] action
- * rendered as a full-width [AppPrimaryButton].
+ * Placeholder for a failed screen or section, with an optional [onRetry] action rendered as an
+ * [AppPrimaryButton]. [action], when supplied, replaces the retry convenience.
+ * This component does not impose a size; the caller owns its available width and height.
  */
 @Composable
 public fun AppErrorState(
@@ -121,9 +122,10 @@ public fun AppErrorState(
     modifier: Modifier = Modifier,
     message: String? = null,
     onRetry: (() -> Unit)? = null,
+    action: (@Composable () -> Unit)? = null,
 ) {
     Column(
-        modifier = modifier.fillMaxSize().padding(Dimens.spaceLarge),
+        modifier = modifier.padding(Dimens.spaceLarge),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
@@ -155,12 +157,19 @@ public fun AppErrorState(
                 )
             }
         }
-        if (onRetry != null) {
+        if (action != null || onRetry != null) {
             Spacer(modifier = Modifier.height(Dimens.spaceLarge))
-            AppPrimaryButton(
-                text = stringResource(R.string.core_ui_retry),
-                onClick = onRetry,
-            )
+            if (action != null) {
+                action()
+            } else {
+                onRetry?.let { retry ->
+                    AppPrimaryButton(
+                        text = stringResource(R.string.core_ui_retry),
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = retry,
+                    )
+                }
+            }
         }
     }
 }

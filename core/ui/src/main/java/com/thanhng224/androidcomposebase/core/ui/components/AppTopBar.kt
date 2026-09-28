@@ -30,23 +30,30 @@ public fun AppCenterTopBar(
     onBackClick: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    CenterAlignedTopAppBar(
-        title = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-            )
-        },
+    AppCenterTopBar(
+        titleContent = { Text(title, style = MaterialTheme.typography.titleLarge) },
         navigationIcon = {
             if (onBackClick != null) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.core_ui_back),
-                    )
-                }
+                BackNavigationIcon(onClick = onBackClick)
             }
         },
+        modifier = modifier,
+        actions = actions,
+    )
+}
+
+/** A center-aligned top bar for custom title and navigation content. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+public fun AppCenterTopBar(
+    titleContent: @Composable () -> Unit,
+    navigationIcon: @Composable () -> Unit = {},
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    CenterAlignedTopAppBar(
+        title = { titleContent() },
+        navigationIcon = navigationIcon,
         actions = actions,
         colors =
             TopAppBarDefaults.topAppBarColors(
@@ -70,23 +77,30 @@ public fun AppTopBar(
     onBackClick: (() -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
-    TopAppBar(
-        title = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleLarge,
-            )
-        },
+    AppTopBar(
+        titleContent = { Text(title, style = MaterialTheme.typography.titleLarge) },
         navigationIcon = {
             if (onBackClick != null) {
-                IconButton(onClick = onBackClick) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.core_ui_back),
-                    )
-                }
+                BackNavigationIcon(onClick = onBackClick)
             }
         },
+        modifier = modifier,
+        actions = actions,
+    )
+}
+
+/** A left-aligned top bar for custom title and navigation content. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+public fun AppTopBar(
+    titleContent: @Composable () -> Unit,
+    navigationIcon: @Composable () -> Unit = {},
+    modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    TopAppBar(
+        title = { titleContent() },
+        navigationIcon = navigationIcon,
         actions = actions,
         colors =
             TopAppBarDefaults.topAppBarColors(
@@ -97,6 +111,16 @@ public fun AppTopBar(
             ),
         modifier = modifier,
     )
+}
+
+@Composable
+private fun BackNavigationIcon(onClick: () -> Unit) {
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+            contentDescription = stringResource(R.string.core_ui_back),
+        )
+    }
 }
 
 @Preview(showBackground = true)

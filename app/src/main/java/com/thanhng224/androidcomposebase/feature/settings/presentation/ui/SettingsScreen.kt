@@ -35,12 +35,10 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -63,10 +61,11 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.localization.AppLanguage
-import com.thanhng224.androidcomposebase.core.text.resolve
 import com.thanhng224.androidcomposebase.core.theme.AppTheme
 import com.thanhng224.androidcomposebase.core.ui.components.AppCard
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
+import com.thanhng224.androidcomposebase.core.ui.feedback.AppSnackbarEffect
+import com.thanhng224.androidcomposebase.core.ui.feedback.AppSnackbarMessage
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiEvent
@@ -101,16 +100,16 @@ public fun SettingsContent(
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
-
-    LaunchedEffect(state.pendingMessages) {
-        val message = state.pendingMessages.firstOrNull()
-        if (message != null) {
-            val text = message.text.resolve(context)
-            snackbarHostState.showSnackbar(message = text)
-            onMessageShown(message.id)
+    val message =
+        state.pendingMessages.firstOrNull()?.let { pending ->
+            AppSnackbarMessage(id = pending.id, text = pending.text)
         }
-    }
+
+    AppSnackbarEffect(
+        message = message,
+        hostState = snackbarHostState,
+        onResult = { id, _ -> onMessageShown(id) },
+    )
 
     Scaffold(
         topBar = {

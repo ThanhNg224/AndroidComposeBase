@@ -45,6 +45,10 @@ android {
     sourceSets {
         getByName("main") {
             kotlin.srcDir(if (includeCompose) "src/compose/java" else "src/standalone/java")
+            if (includeCompose) {
+                manifest.srcFile("src/compose/AndroidManifest.xml")
+                res.srcDir("src/compose/res")
+            }
         }
     }
 }

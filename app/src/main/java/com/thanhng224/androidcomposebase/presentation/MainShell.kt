@@ -6,12 +6,18 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -62,58 +69,97 @@ fun MainShell(modifier: Modifier = Modifier) {
             }
         }
 
-    val density = LocalDensity.current
-    var barHeight by remember { mutableStateOf(0.dp) }
+    val configuration = LocalConfiguration.current
+    val isExpanded = configuration.screenWidthDp >= 600 && configuration.screenHeightDp >= 480
 
-    Box(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-    ) {
-        NavDisplay(
-            entries = rememberAppNavEntries(navigator, entryProvider),
-            onBack = { navigator.goBack() },
-            transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-            popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-            predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-            modifier =
-                if (navigator.isOnTopLevelRoot) {
-                    // barHeight already includes AppFloatingNavBar's own navigationBarsPadding(),
-                    // so without consumeWindowInsets a screen's Scaffold (default
-                    // contentWindowInsets) would pad for that same bottom system-bar inset again,
-                    // leaving an empty gap above the bar equal to the inset's height.
-                    Modifier
-                        .padding(bottom = barHeight)
-                        .consumeWindowInsets(PaddingValues(bottom = barHeight))
-                } else {
-                    Modifier
-                },
-        )
-
-        if (navigator.isOnTopLevelRoot) {
-            AppFloatingNavBar(
-                items =
-                    topLevelDestinations.map { destination ->
-                        AppNavItem(
-                            selected = navigator.currentTopLevelKey == destination.key,
-                            onClick = { navigator.navigate(destination.key) },
-                            selectedIcon = ImageVector.vectorResource(destination.selectedIconRes),
-                            unselectedIcon = ImageVector.vectorResource(destination.unselectedIconRes),
-                            label = stringResource(destination.labelRes),
-                        )
-                    },
-                modifier =
-                    Modifier
-                        .align(Alignment.BottomCenter)
-                        // Measured before navigationBarsPadding()/padding() below, so barHeight
-                        // includes them and NavDisplay's bottom padding matches the bar's full
-                        // footprint (it grows with font scale instead of a fixed clearance).
-                        .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
-                        .navigationBarsPadding()
-                        .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
-                        .widthIn(max = Dimens.maxNavBarWidth),
+    val navItems =
+        topLevelDestinations.map { destination ->
+            AppNavItem(
+                id = destination.key.toString(),
+                selected = navigator.currentTopLevelKey == destination.key,
+                onClick = { navigator.navigate(destination.key) },
+                selectedIcon = ImageVector.vectorResource(destination.selectedIconRes),
+                unselectedIcon = ImageVector.vectorResource(destination.unselectedIconRes),
+                label = stringResource(destination.labelRes),
             )
+        }
+
+    if (isExpanded) {
+        Row(
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+        ) {
+            if (navigator.isOnTopLevelRoot) {
+                NavigationRail(
+                    modifier = Modifier.fillMaxHeight(),
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                ) {
+                    navItems.forEach { item ->
+                        NavigationRailItem(
+                            selected = item.selected,
+                            onClick = item.onClick,
+                            icon = {
+                                Icon(
+                                    imageVector = if (item.selected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.contentDescription ?: item.label,
+                                )
+                            },
+                            label = { Text(item.label) },
+                        )
+                    }
+                }
+            }
+
+            NavDisplay(
+                entries = rememberAppNavEntries(navigator, entryProvider),
+                onBack = { navigator.goBack() },
+                transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                modifier = Modifier.weight(1f),
+            )
+        }
+    } else {
+        val density = LocalDensity.current
+        var barHeight by remember { mutableStateOf(0.dp) }
+
+        Box(
+            modifier =
+                modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+        ) {
+            NavDisplay(
+                entries = rememberAppNavEntries(navigator, entryProvider),
+                onBack = { navigator.goBack() },
+                transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                modifier =
+                    if (navigator.isOnTopLevelRoot) {
+                        Modifier
+                            .padding(bottom = barHeight)
+                            .consumeWindowInsets(PaddingValues(bottom = barHeight))
+                    } else {
+                        Modifier
+                    },
+            )
+
+            if (navigator.isOnTopLevelRoot) {
+                AppFloatingNavBar(
+                    items = navItems,
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomCenter)
+                            .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
+                            .navigationBarsPadding()
+                            .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
+                            .widthIn(max = Dimens.maxNavBarWidth),
+                )
+            }
         }
     }
 }

@@ -9,7 +9,7 @@
     <color name="core_color_on_secondary_light">#FFFFFFFF</color>
     <color name="core_color_secondary_container_light">#FFE8EAF6</color>
     <color name="core_color_on_secondary_container_light">#FF1A237E</color>
-    <color name="core_color_tertiary_light">#FF009688</color>
+    <color name="core_color_tertiary_light">#FF00796B</color>
     <color name="core_color_on_tertiary_light">#FFFFFFFF</color>
     <color name="core_color_tertiary_container_light">#FFE0F2F1</color>
     <color name="core_color_on_tertiary_container_light">#FF004D40</color>
@@ -38,7 +38,7 @@
     <color name="core_color_primary_container_dark">#FF283593</color>
     <color name="core_color_on_primary_container_dark">#FFE8EAF6</color>
     <color name="core_color_secondary_dark">#FF9FA8DA</color>
-    <color name="core_color_on_secondary_dark">#FF283593</color>
+    <color name="core_color_on_secondary_dark">#FF1A237E</color>
     <color name="core_color_secondary_container_dark">#FF3949AB</color>
     <color name="core_color_on_secondary_container_dark">#FFE8EAF6</color>
     <color name="core_color_tertiary_dark">#FF80CBC4</color>

@@ -32,9 +32,17 @@ Startup waits up to two seconds for the persisted theme read before releasing th
 
 ## `:core:ui`
 
-`com.thanhng224.androidcomposebase.core.ui` contains the Compose design system and the `AndroidComposeBaseTheme` entry point. Its shared components include `AppPrimaryButton`, `AppSecondaryButton`, `AppOutlinedButton`, `AppTopBar`, `AppCenterTopBar`, `AppFloatingNavBar`, and the `AppLoadingState`, `AppEmptyState`, and `AppErrorState` screen states; `Dimens`, `AppShapes`, and `AppTypography` provide common design tokens, including the `maxContentWidth`/`maxReadableWidth`/`maxNavBarWidth` width caps for large-screen content columns. Use Material 3 directly for dialogs. `:app` owns Navigation 3 assembly and uses `AppFloatingNavBar` for its top-level tabs.
+`com.thanhng224.androidcomposebase.core.ui` contains the Compose design system and the `AndroidComposeBaseTheme` entry point. Its shared components include:
+- `BaseComposeActivity`: an `AppCompatActivity` host providing standard edge-to-edge and Compose setup for activities with full AppCompat backward compatibility.
+- Buttons & Top Bars: `AppPrimaryButton`, `AppSecondaryButton`, `AppOutlinedButton`, `AppTopBar`, and `AppCenterTopBar` with composable icon slots, caller-controlled width, and localized accessibility states.
+- Screen states: `AppLoadingState`, `AppEmptyState`, and `AppErrorState`.
+- Overlays & Containers: `AppDialog` (enforces max 560dp width and `surfaceContainerHigh` tonal elevation) and `AppModalBottomSheet` (cancellation-safe caller-owned visibility lifecycle). Material 3 `AlertDialog` is used directly for alert confirmations.
+- Selection rows: `AppSwitchRow`, `AppCheckboxRow`, and `AppRadioRow` providing unified single-target 48dp selection rows with hoisted semantics.
+- Feedback: `AppSnackbarEffect` and `AppSnackbarMessage` ensuring robust queue delivery and dismissal acknowledgement.
+- Navigation: `AppFloatingNavBar` with `AppNavItem` (with stable string `id`). `:app` owns Navigation 3 assembly and adapts between `AppFloatingNavBar` on compact screens and `NavigationRail` on wide screens.
+- Tokens: `Dimens`, `AppShapes`, and `AppTypography` provide common design tokens, including `maxContentWidth`/`maxReadableWidth`/`maxNavBarWidth` width caps for large-screen layouts.
 
-The `:core:ui` module depends on `:core` for selected foundation/theme support. It does not depend on app features. `UiText` is declared in `:core`; `:core:ui` provides Compose resolution helpers. A consuming app may depend on either module independently according to the APIs it uses.
+The `:core:ui` module depends on `:core` for selected foundation/theme support and `androidx.appcompat:appcompat` for activity host compatibility. It does not depend on app features. `UiText` is declared in `:core`; `:core:ui` provides Compose resolution helpers. A consuming app may depend on either module independently according to the APIs it uses.
 
 ## `:app` composition
 

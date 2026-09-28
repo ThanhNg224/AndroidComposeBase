@@ -22,17 +22,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -45,13 +44,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thanhng224.androidcomposebase.R
-import com.thanhng224.androidcomposebase.core.text.resolve
 import com.thanhng224.androidcomposebase.core.ui.components.AppCard
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
 import com.thanhng224.androidcomposebase.core.ui.components.AppErrorState
 import com.thanhng224.androidcomposebase.core.ui.components.AppLoadingState
 import com.thanhng224.androidcomposebase.core.ui.components.AppOutlinedButton
 import com.thanhng224.androidcomposebase.core.ui.components.AppPrimaryButton
+import com.thanhng224.androidcomposebase.core.ui.feedback.AppSnackbarEffect
+import com.thanhng224.androidcomposebase.core.ui.feedback.AppSnackbarMessage
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 import com.thanhng224.androidcomposebase.sample.demo.domain.model.DemoWeather
@@ -61,9 +61,8 @@ import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeat
 import com.thanhng224.androidcomposebase.sample.demo.presentation.state.DemoWeatherState
 import com.thanhng224.androidcomposebase.sample.demo.presentation.viewmodel.DemoViewModel
 
-// AppLoadingState/AppErrorState fill their available height, so the weather card needs a
-// minimum to lay out inside the unbounded LazyColumn item; heightIn(min = ...) lets the
-// message still grow beyond it (e.g. at large font scale) instead of clipping.
+// The weather states get caller-supplied minimum heights so their centered content has room
+// without making these reusable components screen-sized. heightIn still permits long text to grow.
 private val WeatherLoadingMinHeight = 112.dp
 private val WeatherErrorMinHeight = 190.dp
 private val WeatherIconSize = 36.dp
@@ -92,17 +91,23 @@ private fun DemoContent(
     modifier: Modifier = Modifier,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
-
-    LaunchedEffect(state.pendingMessages) {
-        val message = state.pendingMessages.firstOrNull() ?: return@LaunchedEffect
-        val result =
-            snackbarHostState.showSnackbar(
-                message = message.text.resolve(context),
-                actionLabel = message.actionLabel?.resolve(context),
+    val message =
+        state.pendingMessages.firstOrNull()?.let { pending ->
+            AppSnackbarMessage(
+                id = pending.id,
+                text = pending.text,
+                actionLabel = pending.actionLabel,
+                duration = if (pending.actionLabel != null) SnackbarDuration.Indefinite else SnackbarDuration.Short,
             )
-        if (result == SnackbarResult.ActionPerformed) onMessageAction(message.id) else onMessageHandled(message.id)
-    }
+        }
+
+    AppSnackbarEffect(
+        message = message,
+        hostState = snackbarHostState,
+        onResult = { id, result ->
+            if (result == SnackbarResult.ActionPerformed) onMessageAction(id) else onMessageHandled(id)
+        },
+    )
 
     Scaffold(
         topBar = { AppCenterTopBar(title = stringResource(R.string.demo_title)) },
@@ -154,7 +159,14 @@ private fun DemoContent(
                             Spacer(modifier = Modifier.height(Dimens.spaceMedium))
                             AppPrimaryButton(
                                 text = stringResource(R.string.demo_increment),
-                                icon = Icons.Default.Add,
+                                modifier = Modifier.fillMaxWidth(),
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(Dimens.iconSizeSmall),
+                                    )
+                                },
                                 onClick = { onEvent(DemoUiEvent.IncrementClicked) },
                             )
                         }
@@ -262,7 +274,14 @@ private fun WeatherContent(
     }
     AppOutlinedButton(
         text = stringResource(R.string.demo_weather_refresh),
-        icon = Icons.Default.Refresh,
+        modifier = Modifier.fillMaxWidth(),
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = null,
+                modifier = Modifier.size(Dimens.iconSizeSmall),
+            )
+        },
         onClick = { onEvent(DemoUiEvent.RefreshWeatherClicked) },
     )
 }

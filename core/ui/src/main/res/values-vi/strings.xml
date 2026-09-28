@@ -2,4 +2,5 @@
 <resources>
     <string name="core_ui_back">Quay lại</string>
     <string name="core_ui_retry">Thử lại</string>
+    <string name="core_ui_loading">Đang tải</string>
 </resources>

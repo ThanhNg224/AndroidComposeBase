@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -40,5 +41,27 @@ class AppStatesSemanticsTest {
             .performClick()
 
         assertTrue(retried)
+    }
+
+    @Test
+    fun customErrorActionTakesPrecedenceOverRetryConvenience() {
+        var retried = false
+        var customActionInvoked = false
+        composeRule.setContent {
+            AndroidComposeBaseTheme {
+                AppErrorState(
+                    title = "Something went wrong",
+                    onRetry = { retried = true },
+                    action = {
+                        AppPrimaryButton(text = "Contact support", onClick = { customActionInvoked = true })
+                    },
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("Contact support").assertHasClickAction().performClick()
+
+        assertTrue(customActionInvoked)
+        assertFalse(retried)
     }
 }

@@ -2,4 +2,5 @@
 <resources>
     <string name="core_ui_back">Back</string>
     <string name="core_ui_retry">Retry</string>
+    <string name="core_ui_loading">Loading</string>
 </resources>

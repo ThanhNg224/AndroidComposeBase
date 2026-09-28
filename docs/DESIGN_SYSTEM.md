@@ -18,18 +18,23 @@ Keep user-facing text in localized Android string resources, preserve a minimum 
 
 Current reusable public Compose components include:
 
-- `AppPrimaryButton`, `AppSecondaryButton`, and `AppOutlinedButton`.
-- `AppCard`, the standard content container. It is a Material 3 `Card` on the `surfaceContainer` tonal role with no drop shadow and `MaterialTheme.shapes.large`, so it stays distinct from the background in dark theme, where shadows are invisible. It applies no inner padding: callers pad their content (usually `Dimens.spaceMedium` or `Dimens.spaceLarge`). Pass `onClick` to make the whole card one clickable target. Use it instead of repeating a `Card` color/elevation configuration in each screen.
-- `AppTopBar` and `AppCenterTopBar`.
-- `AppLoadingState`, `AppEmptyState`, and `AppErrorState` for full-bleed screen/section placeholders. Each centers its content with `Dimens.spaceLarge` padding and reads colors from `MaterialTheme.colorScheme` only; `AppLoadingState`'s message is a polite live region, and `AppErrorState`'s `onRetry` renders an `AppPrimaryButton` labelled with `core_ui_retry`.
+- `AppPrimaryButton`, `AppSecondaryButton`, and `AppOutlinedButton`: standard buttons with optional composable icon slots, caller-controlled width (fill or wrap), and accessible loading state announcement.
+- `AppCard`, the standard content container. It is a Material 3 `Card` on the `surfaceContainer` tonal role with no drop shadow and `MaterialTheme.shapes.large`, so it stays distinct from the background in dark theme, where shadows are invisible. It applies no inner padding: callers pad their content (usually `Dimens.spaceMedium` or `Dimens.spaceLarge`). Pass `onClick` to make the whole card one clickable target.
+- `AppTopBar` and `AppCenterTopBar`: top app bars supporting both simple string titles and custom composable title/navigation/actions slots.
+- `AppLoadingState`, `AppEmptyState`, and `AppErrorState`: full-bleed screen/section placeholders. Each centers its content with `Dimens.spaceLarge` padding and reads colors from `MaterialTheme.colorScheme` only; `AppLoadingState`'s message is a polite live region, and `AppErrorState`'s `onRetry` renders an `AppPrimaryButton` labelled with `core_ui_retry`.
+- `AppDialog`: modal dialog surface container enforcing a 560dp maximum width, 24dp horizontal margins, `surfaceContainerHigh` tonal elevation, and `shapes.extraLarge` shape. Caller supplies inner content and scroll/action layouts. Material 3 `AlertDialog` is used directly for standard confirmation/action alerts.
+- `AppModalBottomSheet`: bottom sheet wrapper with caller-owned visibility, private composition-managed `SheetState`, cancellation-safe hide mechanics, and `dismissEnabled` handling.
+- `AppSwitchRow`, `AppCheckboxRow`, and `AppRadioRow`: selection rows with full 48dp single-touch-target ergonomics and hoisted selection semantics.
+- `AppSnackbarEffect` and `AppSnackbarMessage`: reliable snackbar queue management ensuring tail appends do not cancel the active snackbar and results are acknowledged once.
+- `BaseComposeActivity`: base activity extending `AppCompatActivity` for Compose screens requiring AppCompat backwards compatibility (locales, day/night).
 - `AndroidComposeBaseTheme`, `AppShapes`, `AppTypography`, and `Dimens`.
 - `ComposeView.setThemedContent` for an intentional Compose/View interop boundary.
 
-Import the component from `core.ui.components` and use its actual parameters. Add a reusable component to `:core:ui` only when its visual behavior is useful across app features and does not depend on app-specific state or resources.
+Import the component from `core.ui.components` (or `core.ui.feedback`/`core.ui.base`) and use its actual parameters. Add a reusable component to `:core:ui` only when its visual behavior is useful across app features and does not depend on app-specific state or resources.
 
-`AppButton`, `AppCard`, `AppTopBar`, and `AppStates` each carry private `@Preview` functions (light and dark, via `uiMode`) so Android Studio's preview pane renders them without running the app. Extend that pattern for new components instead of relying only on the sample gallery.
+`AppButton`, `AppCard`, `AppTopBar`, `AppStates`, `AppDialog`, `AppModalBottomSheet`, and `AppSelectionRow` each carry private `@Preview` functions (light and dark, via `uiMode`) so Android Studio's preview pane renders them without running the app. Extend that pattern for new components instead of relying only on the sample gallery.
 
-Use Material 3 components directly for dialogs. The app shell uses Navigation 3 and the reusable `AppFloatingNavBar` for top-level tabs, showing the bar while the selected tab is at its root. Each bar item is at least 48dp in both dimensions and exposes `Role.Tab` with its selected state inside a selectable group. Each tab has its own back stack. Screens should consume scaffold padding and safe drawing insets instead of adding a fixed navigation-bar spacer.
+The app shell uses Navigation 3 and adapts between the reusable `AppFloatingNavBar` on compact viewports and Material `NavigationRail` on wide/expanded viewports (width >= 600dp and height >= 480dp), showing navigation while the selected tab is at its root. Each bar item is at least 48dp in both dimensions and exposes `Role.Tab` with its selected state inside a selectable group. Each tab has its own back stack. Screens should consume scaffold padding and safe drawing insets instead of adding a fixed navigation-bar spacer.
 
 ## Sample gallery
 

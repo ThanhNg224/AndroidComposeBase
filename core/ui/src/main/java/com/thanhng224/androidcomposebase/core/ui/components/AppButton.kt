@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -16,19 +15,26 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.thanhng224.androidcomposebase.core.ui.R
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
 
 /**
- * Standard primary call-to-action button respecting touch target rules (min 48dp).
+ * Primary action button with a caller-owned width and at least a 48dp touch target.
+ * [icon] is an optional composable slot placed before [text]. While [isLoading], the label stays
+ * visible beside a progress indicator, the button is disabled, and its localized loading state is
+ * exposed to accessibility services.
  */
 @Composable
 public fun AppPrimaryButton(
@@ -37,16 +43,17 @@ public fun AppPrimaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     isLoading: Boolean = false,
-    icon: ImageVector? = null,
+    icon: (@Composable () -> Unit)? = null,
 ) {
+    val loadingDescription = stringResource(R.string.core_ui_loading)
     Button(
         onClick = onClick,
         enabled = enabled && !isLoading,
         shape = MaterialTheme.shapes.medium,
         modifier =
             modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = Dimens.minTouchTarget),
+                .semantics { if (isLoading) stateDescription = loadingDescription }
+                .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget),
         colors =
             ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -56,36 +63,26 @@ public fun AppPrimaryButton(
         if (isLoading) {
             CircularProgressIndicator(
                 modifier = Modifier.size(Dimens.iconSizeSmall),
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = LocalContentColor.current,
                 strokeWidth = 2.dp,
             )
-        } else {
-            if (icon != null) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(Dimens.iconSizeSmall),
-                )
-                Spacer(modifier = Modifier.width(Dimens.spaceSmall))
-            }
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelLarge,
-            )
+            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
+        } else if (icon != null) {
+            icon()
+            Spacer(modifier = Modifier.width(Dimens.spaceSmall))
         }
+        Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
 }
 
-/**
- * Tonal secondary action button.
- */
+/** Tonal secondary action button with caller-owned width and an optional leading [icon] slot. */
 @Composable
 public fun AppSecondaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    icon: ImageVector? = null,
+    icon: (@Composable () -> Unit)? = null,
 ) {
     FilledTonalButton(
         onClick = onClick,
@@ -93,8 +90,7 @@ public fun AppSecondaryButton(
         shape = MaterialTheme.shapes.medium,
         modifier =
             modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = Dimens.minTouchTarget),
+                .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget),
         colors =
             ButtonDefaults.filledTonalButtonColors(
                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -102,11 +98,7 @@ public fun AppSecondaryButton(
             ),
     ) {
         if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(Dimens.iconSizeSmall),
-            )
+            icon()
             Spacer(modifier = Modifier.width(Dimens.spaceSmall))
         }
         Text(
@@ -116,16 +108,14 @@ public fun AppSecondaryButton(
     }
 }
 
-/**
- * Outlined button for secondary, low-emphasis actions.
- */
+/** Outlined low-emphasis action with caller-owned width and an optional leading [icon] slot. */
 @Composable
 public fun AppOutlinedButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    icon: ImageVector? = null,
+    icon: (@Composable () -> Unit)? = null,
 ) {
     OutlinedButton(
         onClick = onClick,
@@ -133,15 +123,10 @@ public fun AppOutlinedButton(
         shape = MaterialTheme.shapes.medium,
         modifier =
             modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = Dimens.minTouchTarget),
+                .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget),
     ) {
         if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(Dimens.iconSizeSmall),
-            )
+            icon()
             Spacer(modifier = Modifier.width(Dimens.spaceSmall))
         }
         Text(
@@ -160,7 +145,11 @@ private fun AppButtonsPreview() {
             modifier = Modifier.padding(Dimens.spaceMedium),
             verticalArrangement = Arrangement.spacedBy(Dimens.spaceSmall),
         ) {
-            AppPrimaryButton(text = "Primary", icon = Icons.Default.Add, onClick = {})
+            AppPrimaryButton(
+                text = "Primary",
+                icon = { Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(Dimens.iconSizeSmall)) },
+                onClick = {},
+            )
             AppSecondaryButton(text = "Secondary", onClick = {})
             AppOutlinedButton(text = "Outlined", onClick = {})
             AppPrimaryButton(text = "Loading", isLoading = true, onClick = {})

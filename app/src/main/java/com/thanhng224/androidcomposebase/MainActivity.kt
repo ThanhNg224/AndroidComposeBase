@@ -1,11 +1,10 @@
 package com.thanhng224.androidcomposebase
 
 import android.os.Bundle
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.Composable
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.thanhng224.androidcomposebase.core.ui.base.BaseComposeActivity
 import com.thanhng224.androidcomposebase.presentation.AppRoot
 import com.thanhng224.androidcomposebase.presentation.AppUiState
 import com.thanhng224.androidcomposebase.presentation.AppViewModel
@@ -14,7 +13,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseComposeActivity() {
     @Inject
     lateinit var startupCoordinator: AppStartupCoordinator
 
@@ -26,9 +25,10 @@ class MainActivity : AppCompatActivity() {
         splashScreen.setKeepOnScreenCondition {
             !startupCoordinator.isReady.value || appViewModel.uiState.value is AppUiState.Loading
         }
-        enableEdgeToEdge()
-        setContent {
-            AppRoot(appViewModel)
-        }
+    }
+
+    @Composable
+    override fun Content() {
+        AppRoot(appViewModel)
     }
 }

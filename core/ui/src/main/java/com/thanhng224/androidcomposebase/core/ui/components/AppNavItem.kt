@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * Data item representing a destination within [AppFloatingNavBar].
  */
 public data class AppNavItem(
+    public val id: String,
     public val selected: Boolean,
     public val onClick: () -> Unit,
     public val selectedIcon: ImageVector,
