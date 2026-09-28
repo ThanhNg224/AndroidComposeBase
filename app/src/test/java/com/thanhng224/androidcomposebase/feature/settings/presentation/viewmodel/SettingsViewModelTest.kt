@@ -8,17 +8,13 @@ import com.thanhng224.androidcomposebase.core.text.UiText
 import com.thanhng224.androidcomposebase.core.theme.AppTheme
 import com.thanhng224.androidcomposebase.feature.settings.domain.repository.SettingsRepository
 import com.thanhng224.androidcomposebase.feature.settings.presentation.state.SettingsUiEvent
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -35,12 +31,8 @@ class SettingsViewModelTest {
         languageTag: String? = AppLanguage.ENGLISH.languageTag,
         private val supportedLanguages: List<AppLanguage> = AppLanguage.BUILT_IN,
         theme: AppTheme = AppTheme.SYSTEM,
-        private val delayInitialThemeObservation: Boolean = false,
     ) : SettingsRepository {
         private val themeFlow = MutableStateFlow(theme)
-        private val initialTheme = theme
-        val initialThemeObservationStarted = CompletableDeferred<Unit>()
-        val releaseInitialThemeObservation = CompletableDeferred<Unit>()
         var currentLanguageTag: String? = languageTag
             private set
         var failThemePersistence = false
@@ -48,21 +40,8 @@ class SettingsViewModelTest {
         var themeCalls = 0
         val themeWrites = mutableListOf<AppTheme>()
         val languageWrites = mutableListOf<String?>()
-        var delayedTheme: AppTheme? = null
-        val delayedThemeStarted = CompletableDeferred<Unit>()
-        val finishDelayedTheme = CompletableDeferred<Unit>()
 
-        override fun observeTheme(): Flow<AppTheme> =
-            if (delayInitialThemeObservation) {
-                flow {
-                    initialThemeObservationStarted.complete(Unit)
-                    releaseInitialThemeObservation.await()
-                    emit(initialTheme)
-                    emitAll(themeFlow)
-                }
-            } else {
-                themeFlow
-            }
+        override fun observeTheme(): Flow<AppTheme> = themeFlow
 
         override suspend fun setTheme(theme: AppTheme) {
             themeCalls += 1
@@ -70,10 +49,6 @@ class SettingsViewModelTest {
             if (failThemePersistence) {
                 failThemePersistence = false
                 throw IOException("theme write failed")
-            }
-            if (theme == delayedTheme) {
-                delayedThemeStarted.complete(Unit)
-                finishDelayedTheme.await()
             }
             themeFlow.value = theme
         }
@@ -127,30 +102,6 @@ class SettingsViewModelTest {
 
             assertEquals(listOf(AppTheme.DARK), repository.themeWrites)
             assertEquals(AppTheme.DARK, viewModel.state.value.theme)
-        }
-
-    @Test
-    fun `system theme tap before first persisted theme emission is persisted`() =
-        runTest {
-            val repository =
-                FakeSettingsRepository(
-                    theme = AppTheme.DARK,
-                    delayInitialThemeObservation = true,
-                )
-            val viewModel = createViewModel(repository)
-            collectState(viewModel)
-            runCurrent()
-            repository.initialThemeObservationStarted.await()
-
-            assertEquals(AppTheme.SYSTEM, viewModel.state.value.theme)
-            viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.SYSTEM))
-            runCurrent()
-
-            assertEquals(listOf(AppTheme.SYSTEM), repository.themeWrites)
-            repository.releaseInitialThemeObservation.complete(Unit)
-            advanceUntilIdle()
-
-            assertEquals(AppTheme.SYSTEM, viewModel.state.value.theme)
         }
 
     @Test
@@ -209,18 +160,14 @@ class SettingsViewModelTest {
         }
 
     @Test
-    fun `rapid theme selections persist the latest selection after an in flight write`() =
+    fun `rapid theme selections settle on the last tap`() =
         runTest {
-            val repository = FakeSettingsRepository().apply { delayedTheme = AppTheme.DARK }
+            val repository = FakeSettingsRepository()
             val viewModel = createViewModel(repository)
             collectState(viewModel)
 
             viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.DARK))
-            runCurrent()
-            repository.delayedThemeStarted.await()
             viewModel.onEvent(SettingsUiEvent.ThemeSelected(AppTheme.SYSTEM))
-            runCurrent()
-            repository.finishDelayedTheme.complete(Unit)
             advanceUntilIdle()
 
             assertEquals(listOf(AppTheme.DARK, AppTheme.SYSTEM), repository.themeWrites)

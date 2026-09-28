@@ -17,12 +17,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.io.IOException
 import javax.inject.Inject
 
@@ -36,14 +33,11 @@ class SettingsViewModel
         private val languages = supportedLanguages.values
         private val selectedLanguage = MutableStateFlow(languageFor(repository.currentLanguageTag()))
         private val pendingMessages = MutableStateFlow(emptyList<PendingSettingsMessage>())
-        private val themeMutationMutex = Mutex()
-        private var requestedTheme: AppTheme? = null
-        private var observedTheme: AppTheme? = null
         private var nextMessageId = 0L
 
         val state: StateFlow<SettingsUiState> =
             combine(
-                repository.observeTheme().onEach { observedTheme = it },
+                repository.observeTheme(),
                 selectedLanguage,
                 pendingMessages,
             ) { theme, language, messages ->
@@ -77,22 +71,14 @@ class SettingsViewModel
         }
 
         private fun selectTheme(theme: AppTheme) {
-            if (theme == requestedTheme) return
-            if (requestedTheme == null && theme == observedTheme) return
-            requestedTheme = theme
+            if (theme == state.value.theme) return
             viewModelScope.launch {
-                themeMutationMutex.withLock {
-                    try {
-                        repository.setTheme(theme)
-                        if (requestedTheme == theme) requestedTheme = null
-                    } catch (exception: CancellationException) {
-                        throw exception
-                    } catch (_: IOException) {
-                        if (requestedTheme == theme) {
-                            requestedTheme = null
-                            enqueue(R.string.settings_theme_update_failed)
-                        }
-                    }
+                try {
+                    repository.setTheme(theme)
+                } catch (exception: CancellationException) {
+                    throw exception
+                } catch (_: IOException) {
+                    enqueue(R.string.settings_theme_update_failed)
                 }
             }
         }
