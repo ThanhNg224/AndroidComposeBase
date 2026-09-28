@@ -11,7 +11,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +19,8 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -38,6 +39,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
@@ -74,6 +76,7 @@ public fun AppFloatingNavBar(
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    .selectableGroup()
                     .padding(horizontal = Dimens.spaceSmall, vertical = Dimens.spaceSmall),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
@@ -107,12 +110,17 @@ public fun AppFloatingNavBar(
                 Box(
                     modifier =
                         Modifier
+                            // The pill itself is the touch target: at least 48dp in both
+                            // dimensions, with Tab semantics so TalkBack announces the tab and
+                            // its selected state.
                             .defaultMinSize(minWidth = Dimens.minTouchTarget, minHeight = Dimens.minTouchTarget)
                             .clip(capsuleShape)
                             .background(itemIndicatorColor, shape = capsuleShape)
-                            .clickable(
+                            .selectable(
+                                selected = isSelected,
                                 interactionSource = interactionSource,
                                 indication = ripple(bounded = true, color = selectedContentColor),
+                                role = Role.Tab,
                                 onClick = {
                                     if (!isSelected) {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -127,7 +135,14 @@ public fun AppFloatingNavBar(
                         horizontalArrangement = Arrangement.Center,
                     ) {
                         val iconVector = if (isSelected) item.selectedIcon else item.unselectedIcon
-                        val accessibilityLabel = item.contentDescription ?: item.label
+                        // While selected, the visible label already names the tab; describing the
+                        // icon too would make TalkBack read the name twice.
+                        val iconDescription =
+                            when {
+                                item.contentDescription != null -> item.contentDescription
+                                isSelected -> null
+                                else -> item.label
+                            }
 
                         if (item.badgeCount > 0) {
                             BadgedBox(
@@ -145,11 +160,11 @@ public fun AppFloatingNavBar(
                             ) {
                                 Icon(
                                     imageVector = iconVector,
-                                    contentDescription = accessibilityLabel,
+                                    contentDescription = iconDescription,
                                     tint = itemContentColor,
                                     modifier =
                                         Modifier
-                                            .size(24.dp)
+                                            .size(Dimens.iconSizeMedium)
                                             .graphicsLayer {
                                                 scaleX = iconScale
                                                 scaleY = iconScale
@@ -159,11 +174,11 @@ public fun AppFloatingNavBar(
                         } else {
                             Icon(
                                 imageVector = iconVector,
-                                contentDescription = accessibilityLabel,
+                                contentDescription = iconDescription,
                                 tint = itemContentColor,
                                 modifier =
                                     Modifier
-                                        .size(24.dp)
+                                        .size(Dimens.iconSizeMedium)
                                         .graphicsLayer {
                                             scaleX = iconScale
                                             scaleY = iconScale
