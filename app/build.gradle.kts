@@ -149,9 +149,17 @@ kover {
                 )
             }
         }
-        verify {
-            rule {
-                minBound(80)
+        total {
+            verify {
+                onCheck = false
+            }
+        }
+        variant("debug") {
+            verify {
+                onCheck = true
+                rule {
+                    minBound(80)
+                }
             }
         }
     }

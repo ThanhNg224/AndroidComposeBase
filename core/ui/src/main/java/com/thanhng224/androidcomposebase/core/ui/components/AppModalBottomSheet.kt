@@ -62,6 +62,7 @@ public fun AppModalBottomSheet(
         ModalBottomSheet(
             onDismissRequest = {
                 if (dismissEnabled) {
+                    isComposed = false
                     currentOnDismiss()
                 }
             },
@@ -76,8 +77,10 @@ public fun AppModalBottomSheet(
     }
 
     LaunchedEffect(visible) {
-        if (!visible && sheetState.isVisible) {
-            sheetState.hide()
+        if (!visible) {
+            if (sheetState.isVisible) {
+                sheetState.hide()
+            }
             isComposed = false
         }
     }
