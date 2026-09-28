@@ -20,8 +20,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -42,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.thanhng224.androidcomposebase.R
+import com.thanhng224.androidcomposebase.core.ui.components.AppCard
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
 import com.thanhng224.androidcomposebase.core.ui.components.AppEmptyState
 import com.thanhng224.androidcomposebase.core.ui.components.AppErrorState
@@ -136,12 +135,7 @@ private fun DesignSystemContent(
                 }
 
                 item {
-                    Card(
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
                         Column(
                             modifier = Modifier.padding(Dimens.spaceMedium),
                             verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
@@ -174,12 +168,7 @@ private fun DesignSystemContent(
                 }
 
                 item {
-                    Card(
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
                         AppLoadingState(
                             modifier = Modifier.heightIn(min = LoadingStateCardMinHeight),
                             message = stringResource(R.string.design_system_states_loading_message),
@@ -188,12 +177,7 @@ private fun DesignSystemContent(
                 }
 
                 item {
-                    Card(
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
                         AppEmptyState(
                             title = stringResource(R.string.design_system_states_empty_title),
                             modifier = Modifier.heightIn(min = EmptyStateCardMinHeight),
@@ -209,12 +193,7 @@ private fun DesignSystemContent(
                 }
 
                 item {
-                    Card(
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
                         AppErrorState(
                             title = stringResource(R.string.design_system_states_error_title),
                             modifier = Modifier.heightIn(min = ErrorStateCardMinHeight),
@@ -235,12 +214,7 @@ private fun DesignSystemContent(
                 }
 
                 item {
-                    Card(
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(Dimens.spaceMedium)) {
                             Text(
                                 text = stringResource(R.string.design_system_dialog_description),

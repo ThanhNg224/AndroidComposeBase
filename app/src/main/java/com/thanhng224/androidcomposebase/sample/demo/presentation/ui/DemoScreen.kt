@@ -1,8 +1,8 @@
 package com.thanhng224.androidcomposebase.sample.demo.presentation.ui
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -18,8 +18,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -48,6 +46,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.thanhng224.androidcomposebase.R
 import com.thanhng224.androidcomposebase.core.text.resolve
+import com.thanhng224.androidcomposebase.core.ui.components.AppCard
 import com.thanhng224.androidcomposebase.core.ui.components.AppCenterTopBar
 import com.thanhng224.androidcomposebase.core.ui.components.AppErrorState
 import com.thanhng224.androidcomposebase.core.ui.components.AppLoadingState
@@ -135,12 +134,7 @@ private fun DemoContent(
                     )
                 }
                 item {
-                    Card(
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
                         Column(
                             modifier = Modifier.padding(Dimens.spaceLarge),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -176,12 +170,7 @@ private fun DemoContent(
                     )
                 }
                 item {
-                    Card(
-                        shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                        elevation = CardDefaults.cardElevation(defaultElevation = Dimens.elevationLow),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
+                    AppCard(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(Dimens.spaceLarge)) {
                             when (val weather = state.weather) {
                                 DemoWeatherState.Loading ->
@@ -243,38 +232,22 @@ private fun WeatherContent(
     }
 
     Spacer(modifier = Modifier.height(Dimens.spaceLarge))
-    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        val temperature = stringResource(R.string.demo_weather_temperature_value, weather.weather.temperatureCelsius)
-        val windSpeed = stringResource(R.string.demo_weather_wind_value, weather.weather.windSpeedKph)
-        val temperatureLabel = stringResource(R.string.demo_weather_temperature_label)
-        val windLabel = stringResource(R.string.demo_weather_wind_label)
-        if (maxWidth < 360.dp) {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.spaceMedium)) {
-                WeatherMetric(
-                    icon = { Icon(painterResource(R.drawable.ic_thermostat), contentDescription = null) },
-                    value = temperature,
-                    label = temperatureLabel,
-                )
-                WeatherMetric(
-                    icon = { Icon(painterResource(R.drawable.ic_air), contentDescription = null) },
-                    value = windSpeed,
-                    label = windLabel,
-                )
-            }
-        } else {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround) {
-                WeatherMetric(
-                    icon = { Icon(painterResource(R.drawable.ic_thermostat), contentDescription = null) },
-                    value = temperature,
-                    label = temperatureLabel,
-                )
-                WeatherMetric(
-                    icon = { Icon(painterResource(R.drawable.ic_air), contentDescription = null) },
-                    value = windSpeed,
-                    label = windLabel,
-                )
-            }
-        }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(Dimens.spaceMedium),
+    ) {
+        WeatherMetric(
+            iconRes = R.drawable.ic_thermostat,
+            value = stringResource(R.string.demo_weather_temperature_value, weather.weather.temperatureCelsius),
+            label = stringResource(R.string.demo_weather_temperature_label),
+            modifier = Modifier.weight(1f),
+        )
+        WeatherMetric(
+            iconRes = R.drawable.ic_air,
+            value = stringResource(R.string.demo_weather_wind_value, weather.weather.windSpeedKph),
+            label = stringResource(R.string.demo_weather_wind_label),
+            modifier = Modifier.weight(1f),
+        )
     }
 
     Spacer(modifier = Modifier.height(Dimens.spaceLarge))
@@ -294,19 +267,31 @@ private fun WeatherContent(
     )
 }
 
+/**
+ * One weather reading: decorative icon, value, then label. Semantics are merged so TalkBack reads
+ * the cell as a single item ("31.7°C, Temperature").
+ */
 @Composable
 private fun WeatherMetric(
-    icon: @Composable () -> Unit,
+    @DrawableRes iconRes: Int,
     value: String,
     label: String,
+    modifier: Modifier = Modifier,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        icon()
-        Spacer(modifier = Modifier.height(Dimens.spaceXXSmall))
+    Column(
+        modifier = modifier.semantics(mergeDescendants = true) {},
+        verticalArrangement = Arrangement.spacedBy(Dimens.spaceXSmall),
+    ) {
+        Icon(
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(Dimens.iconSizeMedium),
+        )
         Text(text = value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Text(
             text = label,
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
