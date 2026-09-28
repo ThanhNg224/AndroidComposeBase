@@ -80,8 +80,10 @@ package com.thanhng224.androidcomposebase.core.ui.theme {
     method @InaccessibleFromKotlin public Dp getElevationLow();
     method @InaccessibleFromKotlin public Dp getElevationMedium();
     method @InaccessibleFromKotlin public Dp getElevationNone();
-    method @InaccessibleFromKotlin public Dp getFloatingNavBarClearance();
     method @InaccessibleFromKotlin public Dp getInputHeight();
+    method @InaccessibleFromKotlin public Dp getMaxContentWidth();
+    method @InaccessibleFromKotlin public Dp getMaxNavBarWidth();
+    method @InaccessibleFromKotlin public Dp getMaxReadableWidth();
     method @InaccessibleFromKotlin public Dp getMinTouchTarget();
     method @InaccessibleFromKotlin public Dp getRadiusLarge();
     method @InaccessibleFromKotlin public Dp getRadiusMedium();
@@ -102,8 +104,10 @@ package com.thanhng224.androidcomposebase.core.ui.theme {
     property public ErrorType elevationLow;
     property public ErrorType elevationMedium;
     property public ErrorType elevationNone;
-    property public ErrorType floatingNavBarClearance;
     property public ErrorType inputHeight;
+    property public ErrorType maxContentWidth;
+    property public ErrorType maxNavBarWidth;
+    property public ErrorType maxReadableWidth;
     property public ErrorType minTouchTarget;
     property public ErrorType radiusLarge;
     property public ErrorType radiusMedium;

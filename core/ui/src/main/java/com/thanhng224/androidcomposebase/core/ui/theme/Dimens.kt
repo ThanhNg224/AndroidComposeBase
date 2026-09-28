@@ -25,8 +25,16 @@ public object Dimens {
     public val buttonHeight: Dp = 48.dp
     public val inputHeight: Dp = 56.dp
 
-    /** Bottom clearance for content laid out beneath `AppFloatingNavBar`, so the bar never covers it. */
-    public val floatingNavBarClearance: Dp = 80.dp
+    // Width caps for large-screen content columns
+
+    /** Cap for a screen's main content column (Home, Settings, Demo, DesignSystem). */
+    public val maxContentWidth: Dp = 720.dp
+
+    /** Cap for a narrow reading/CTA column, such as Onboarding. */
+    public val maxReadableWidth: Dp = 560.dp
+
+    /** Cap for the floating top-level navigation bar's width. */
+    public val maxNavBarWidth: Dp = 600.dp
 
     // Corner radiuses
     public val radiusSmall: Dp = 8.dp

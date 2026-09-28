@@ -11,10 +11,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
@@ -55,6 +60,9 @@ fun MainShell(modifier: Modifier = Modifier) {
             }
         }
 
+    val density = LocalDensity.current
+    var barHeight by remember { mutableStateOf(0.dp) }
+
     Box(
         modifier =
             modifier
@@ -69,7 +77,7 @@ fun MainShell(modifier: Modifier = Modifier) {
             predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
             modifier =
                 if (navigator.isOnTopLevelRoot) {
-                    Modifier.padding(bottom = Dimens.floatingNavBarClearance)
+                    Modifier.padding(bottom = barHeight)
                 } else {
                     Modifier
                 },
@@ -90,9 +98,13 @@ fun MainShell(modifier: Modifier = Modifier) {
                 modifier =
                     Modifier
                         .align(Alignment.BottomCenter)
+                        // Measured before navigationBarsPadding()/padding() below, so barHeight
+                        // includes them and NavDisplay's bottom padding matches the bar's full
+                        // footprint (it grows with font scale instead of a fixed clearance).
+                        .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
                         .navigationBarsPadding()
                         .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
-                        .widthIn(max = 600.dp),
+                        .widthIn(max = Dimens.maxNavBarWidth),
             )
         }
     }
