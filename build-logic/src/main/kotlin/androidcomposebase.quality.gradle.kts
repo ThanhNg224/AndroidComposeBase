@@ -63,4 +63,13 @@ if (frameworkIndependentSourceRoot.asFile.isDirectory) {
         }
 
     tasks.named("check") { dependsOn(verifyFrameworkIndependentSources) }
+} else if (project.path == ":core") {
+    // :core is the one module this boundary gate must cover. A missing foundation source root
+    // here almost certainly means the path above went stale (e.g. a rename that did not carry
+    // it along), which would otherwise silently drop the gate instead of failing loudly.
+    throw GradleException(
+        "core.foundation source root not found at $frameworkIndependentSourceRoot. " +
+            "verifyFrameworkIndependentSources cannot be registered for :core; " +
+            "update frameworkIndependentSourceRoot in androidcomposebase.quality.gradle.kts.",
+    )
 }
