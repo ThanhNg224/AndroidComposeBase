@@ -32,9 +32,13 @@ Add a use case when it names a meaningful business operation, coordinates multip
 Put the serializable route key, entry registration, and (for a top-level tab) destination metadata in `navigation/`:
 
 ```kotlin
+// One file per feature holds its route key, tab destination, and entry registration.
+@file:Suppress("MatchingDeclarationName")
+
+package com.example.app.feature.profile.navigation
+
 import androidx.navigation3.runtime.EntryProviderScope
 import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entry
 import com.example.app.R
 import com.example.app.navigation.TopLevelDestination
 import kotlinx.serialization.Serializable
