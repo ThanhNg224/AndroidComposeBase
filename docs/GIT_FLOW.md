@@ -1,5 +1,9 @@
 # Git Workflow
 
+> **Lưu ý về Repository Base Template (Giai đoạn Solo Maintainer):**
+> - Đối với repo base template này, maintainer phát triển trực tiếp trên nhánh `main` để giữ quy trình tinh gọn.
+> - Khi dự án được khởi tạo thành dự án thực tế qua `scripts/init_project.py`, dự án có thể vận hành theo mô hình GitFlow (`main`, `develop`, `feature/*`, `release/*`, `hotfix/*`) hoặc trunk-based tùy theo quy mô của team.
+
 `main` is the repository's primary branch. Use a short-lived topic branch when the task is intended for a shared remote pull request; local template work may use the current checkout when the task requests it. Do not create a worktree or temporary branch unless requested.
 
 ## Commits

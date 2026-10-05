@@ -708,6 +708,32 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def configure_gitflow_for_new_project(root: Path) -> None:
+    dependabot_file = root / ".github" / "dependabot.yml"
+    if dependabot_file.exists():
+        try:
+            content = dependabot_file.read_text(encoding="utf-8")
+            if "target-branch:" not in content:
+                content = content.replace('directory: "/"\n', 'directory: "/"\n    target-branch: "develop"\n')
+                dependabot_file.write_text(content, encoding="utf-8")
+        except Exception:
+            pass
+
+    if (root / ".git").exists():
+        try:
+            branch_res = subprocess.run(["git", "branch", "--show-current"], cwd=root, capture_output=True, text=True)
+            current_branch = branch_res.stdout.strip()
+            if current_branch != "develop":
+                check_res = subprocess.run(["git", "rev-parse", "--verify", "develop"], cwd=root, capture_output=True)
+                if check_res.returncode == 0:
+                    subprocess.run(["git", "checkout", "develop"], cwd=root, check=True, capture_output=True)
+                else:
+                    subprocess.run(["git", "checkout", "-b", "develop"], cwd=root, check=True, capture_output=True)
+                print("GitFlow: Switched to branch 'develop'.")
+        except Exception:
+            pass
+
+
 def main() -> int:
     args = parse_args()
     root = Path(__file__).resolve().parent.parent
@@ -720,7 +746,12 @@ def main() -> int:
         return 1
     print(f"Initialized {args.project_name} ({args.scope}; clean_samples={args.clean_samples}) with {changed} source changes.")
     if not args.dry_run:
+        configure_gitflow_for_new_project(root)
         print("Generate a fresh baseline profile after adding your app journeys: ./gradlew :app:generateBaselineProfile")
+        print("Next steps:")
+        print("  1. Review changes: git status && git diff")
+        print("  2. Push branches to your new remote:")
+        print("       git push -u origin main && git push -u origin develop")
     return 0
 
 
