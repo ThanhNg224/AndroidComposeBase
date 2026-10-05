@@ -23,18 +23,7 @@ Keep each commit focused. Do not include generated output, credentials, unrelate
 
 Keep each PR reviewable and describe behavior changes, architecture/API impact, and the checks actually run. Resolve review feedback before merging. Verify branch protection and required checks in the repository settings; do not infer them from this guide.
 
-Before requesting review, run the checks that apply:
-
-```bash
-./gradlew check
-./gradlew :app:assembleRelease
-./gradlew :core:apiCheck :core:ui:apiCheck
-python3 -m unittest discover -s scripts -p 'test_*.py' --verbose
-python3 scripts/smoke_init_project.py --build full-clean
-./scripts/verify-publication.sh --release
-```
-
-For a docs-only or narrowly scoped change, use judgment and report any skipped gate with the reason. A local run cannot establish remote workflow success.
+Before requesting review, use the applicable risk level and commands in [Verification](VERIFICATION.md). Report local results separately from remote workflow success.
 
 Changes to `:core` or `:core:ui` APIs require review of the generated `apiDump` diff and the matching `apiCheck`. An intentional breaking change is allowed while there is no real downstream consumer and no API freeze has been requested; record the API impact in the change summary.
 

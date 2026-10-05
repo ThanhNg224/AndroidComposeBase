@@ -1,61 +1,38 @@
 # AndroidComposeBase
 
-AndroidComposeBase is a cloneable Android application base using Kotlin, Jetpack Compose, Material 3, Navigation 3, Hilt, Room, DataStore, and coroutines. It keeps the current Gradle modules small and places application features in `:app` until a real reuse boundary justifies extraction.
+An Android application starter with Jetpack Compose and reusable core libraries.
 
-## Start a project
+## Prerequisites
 
-Clone this repository, then initialize it from the repository root. The default `full` scope renames the app and core packages; `app-only` renames the app while retaining the `:core` package. `--clean-samples` removes the weather and design-system demos and keeps the app shell, theme, navigation, onboarding, and settings.
+Use Python 3.12+, Android Studio with JDK 21, and an Android SDK matching the checked-in Gradle configuration. The Gradle wrapper owns the build-tool version.
 
-```bash
-python3 scripts/init_project.py \
-  --project-name AcmeShop \
-  --app-name "Acme Shop" \
-  --package com.acme.shop \
-  --scope full \
-  --clean-samples
-```
+## Initialize
 
-Omit `--clean-samples` to keep the offline weather and design-system examples. Choose `--scope app-only` if the reusable core namespace should remain `com.thanhng224.androidcomposebase.core`. The initializer validates recognized source markers and builds the result unless `--skip-build-check` is supplied. See `python3 scripts/init_project.py --help` for every option.
-
-Open the initialized directory in Android Studio with JDK 21, sync Gradle, then run the `:app` configuration on an emulator or device. The app shell adapts navigation between a bottom bar and navigation rail; feature screens should use Compose insets and scrollable content instead of reserving fixed space for navigation. Add product capabilities under `app/src/main/java/<package>/feature/`; see [the feature guide](docs/FEATURE_TEMPLATE.md) and [architecture](docs/ARCHITECTURE.md).
-
-## Modules
-
-| Module | Responsibility |
-|---|---|
-| `:app` | Application composition root, Hilt graph, navigation, onboarding, settings, and sample features. |
-| `:core` | Reusable Android foundation: storage contracts and factories, localization, network, secure storage, dispatchers, and theme state. |
-| `:core:ui` | Compose theme and reusable Compose components. |
-| `:baselineprofile` | Macrobenchmark target and baseline-profile journey for the sample app. |
-
-The dependency direction inside a feature is presentation to domain contracts, with data implementing those contracts. Features own serializable route keys and entry registrations; `:app` assembles them in `MainShell` and owns the ordered top-level destinations. Each top-level tab retains its own back stack. See the [feature guide](docs/FEATURE_TEMPLATE.md) for the Navigation 3 recipe and [core modules](docs/CORE_MODULES.md) for reusable library boundaries.
-
-Theme selection is persisted in DataStore and applied using app-specific platform night mode on Android 12+ with an AppCompat fallback on older versions. Language selection uses the platform/AppCompat per-app locale as its single persisted source; selecting System clears the app override. See [theme and locale behavior](docs/CORE_MODULES.md#theme-and-locale-behavior) for API-level behavior, startup timing, and the pre-Android 13 storage tradeoff.
-
-## Local checks
+Clone into your new project directory, then run:
 
 ```bash
-./gradlew check
-./gradlew :app:assembleRelease
-./gradlew :core:apiCheck :core:ui:apiCheck
-python3 -m unittest discover -s scripts -p 'test_*.py' --verbose
-python3 scripts/smoke_init_project.py --build full-clean
-./scripts/verify-publication.sh --release
+python3 scripts/init_project.py --project-name AcmeShop --app-name "Acme Shop" --package com.acme.shop --scope full --clean-samples
 ```
 
-The repository workflow runs Python checks, initializer archive smoke, Gradle checks, `:core:assembleRelease`, and an isolated publication consumer. The local app release gate is `:app:assembleRelease`. A green local run does not establish that GitHub Actions or branch protection is configured on the remote.
+Add `--dry-run` to preview first. Omit `--clean-samples` to retain demos, or use `--scope app-only` to preserve the library namespace. The initializer checks the recognized source layout and runs its build gate unless `--skip-build-check` is explicit. See `--help` and [Git workflow](docs/GIT_FLOW.md) for the existing derived-project Gitflow behavior.
 
-Dependabot eligibility checks run, but auto-merge is inactive. As of 2026-09-28, repository auto-merge is disabled and `main` has no branch protection; see the [Git workflow guide](docs/GIT_FLOW.md#release-and-dependency-automation) for the required setup and workflow details.
+## Prepare
 
-## Library publication
+Open the initialized directory in Android Studio with JDK 21 and sync Gradle. Add application features following [the feature guide](docs/FEATURE_TEMPLATE.md); keep reusable modules independent of app features.
 
-`:core` and `:core:ui` are configured for Maven publication and have isolated local consumer checks. Version `0.1.0` is the current source version; no matching release tag or published JitPack artifact is claimed here. Before changing a public API, inspect the API dump and its callers. Breaking changes are allowed while no real downstream consumer exists and no API freeze has been requested; still review the generated `apiDump` diff and run the matching `apiCheck`. See the [publication guide](docs/CORE_MODULES.md#api-and-compatibility) before consuming these modules outside this repository.
+## Verify
+
+Use the risk levels and exact commands in [Verification](docs/VERIFICATION.md), including Python tooling tests, four archive smoke modes, and the existing publication gates. A local result is separate from remote CI and device proof.
+
+## Run
+
+Run the `:app` configuration on an Android emulator or device. Generate a fresh baseline profile after defining your application's journeys. See [Core modules](docs/CORE_MODULES.md) for theme/locale behavior and library integration.
 
 ## Further reading
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Kotlin and Android standards](docs/STANDARD.md)
-- [Git workflow](docs/GIT_FLOW.md)
-- [Feature template](docs/FEATURE_TEMPLATE.md)
-- [Compose design system](docs/DESIGN_SYSTEM.md)
-- [Android 13 UI and adaptive layout smoke](docs/performance/ANDROID_13_SMOKE.md)
+- [Agent workflow](AGENTS.md) and [Git workflow](docs/GIT_FLOW.md)
+- [Architecture](docs/ARCHITECTURE.md) and [Standards](docs/STANDARD.md)
+- [Core modules, API and publication](docs/CORE_MODULES.md)
+- [Design system](docs/DESIGN_SYSTEM.md) and [Android 13 smoke](docs/performance/ANDROID_13_SMOKE.md)
+
+The current source version is `0.1.0`; this README does not establish a matching release tag or published artifact. Dependency automation prerequisites and the recorded remote status remain in the Git workflow guide.

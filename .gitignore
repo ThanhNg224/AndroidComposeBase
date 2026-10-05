@@ -16,3 +16,16 @@ __pycache__/
 *.pyc
 /docs/plans
 /docs/specs
+
+# Local plans, tooling, environment and signing inputs
+/docs/plans/
+.env
+.env.*
+!*.env.example
+!*.env.*.example
+*.jks
+*.keystore
+**/keystore.properties
+**/key.properties
+**/signing.properties
+.kotlin/
