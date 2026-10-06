@@ -1,6 +1,5 @@
 package com.thanhng224.androidcomposebase.sample.designsystem
 
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Build
 import androidx.activity.ComponentActivity
@@ -16,14 +15,21 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asAndroidBitmap
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -177,11 +183,11 @@ class FoundationScreenshotCaptureTest {
             composeRule.runOnUiThread {
                 composeRule.activity.setContent {
                     val expanded =
-                        Configuration(LocalConfiguration.current).apply {
-                            screenWidthDp = 600
-                            screenHeightDp = 800
+                        object : WindowInfo {
+                            override val isWindowFocused = true
+                            override val containerDpSize = DpSize(600.dp, 800.dp)
                         }
-                    CompositionLocalProvider(LocalConfiguration provides expanded) {
+                    CompositionLocalProvider(LocalWindowInfo provides expanded) {
                         AndroidComposeBaseTheme(darkTheme = darkTheme, dynamicColor = false) {
                             MainShell()
                         }
@@ -189,6 +195,8 @@ class FoundationScreenshotCaptureTest {
                 }
             }
             composeRule.waitForIdle()
+            val tabs = composeRule.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Tab)).fetchSemanticsNodes()
+            check(tabs.size > 1 && tabs.map { it.positionInRoot.x }.distinct().size == 1) { "Expected tabs stacked in a rail" }
             capture(directory, "rail-simulated-${if (darkTheme) "dark" else "light"}")
         }
     }

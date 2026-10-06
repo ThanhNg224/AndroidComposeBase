@@ -19,9 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -59,8 +60,8 @@ fun MainShell(modifier: Modifier = Modifier) {
             }
         }
 
-    val configuration = LocalConfiguration.current
-    val isExpanded = configuration.screenWidthDp >= 600 && configuration.screenHeightDp >= 480
+    val windowSize = LocalWindowInfo.current.containerDpSize
+    val isExpanded = windowSize.width >= 600.dp && windowSize.height >= 480.dp
 
     val currentKey = navigator.currentTopLevelKey
     val navItems =

@@ -37,8 +37,8 @@ kotlin {
 dependencies {
     // AndroidX & Core UI
     implementation(libs.androidx.core.ktx)
-    api(libs.androidx.lifecycle.runtime.ktx)
-    api(libs.androidx.lifecycle.viewmodel.ktx)
+    api(libs.androidx.lifecycle.runtime)
+    api(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.activity.ktx)
     api(libs.androidx.appcompat)
     implementation(libs.androidx.core.splashscreen)
