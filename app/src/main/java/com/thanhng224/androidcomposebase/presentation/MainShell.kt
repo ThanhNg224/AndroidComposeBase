@@ -4,10 +4,7 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -19,19 +16,12 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
@@ -81,7 +71,7 @@ fun MainShell(modifier: Modifier = Modifier) {
             val label = stringResource(destination.labelRes)
             remember(destination.key, isSelected, label, selectedIcon, unselectedIcon) {
                 AppNavItem(
-                    id = destination.key.toString(),
+                    id = destination.id,
                     selected = isSelected,
                     onClick = { navigator.navigate(destination.key) },
                     selectedIcon = selectedIcon,
@@ -130,43 +120,30 @@ fun MainShell(modifier: Modifier = Modifier) {
             )
         }
     } else {
-        val density = LocalDensity.current
-        var barHeight by remember { mutableStateOf(0.dp) }
-
-        Box(
-            modifier =
-                modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-        ) {
-            NavDisplay(
-                entries = rememberAppNavEntries(navigator, entryProvider),
-                onBack = { navigator.goBack() },
-                transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-                popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-                predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
-                modifier =
-                    if (navigator.isOnTopLevelRoot) {
-                        Modifier
-                            .padding(bottom = barHeight)
-                            .consumeWindowInsets(PaddingValues(bottom = barHeight))
-                    } else {
-                        Modifier
-                    },
-            )
-
-            if (navigator.isOnTopLevelRoot) {
-                AppFloatingNavBar(
-                    items = navItems,
-                    modifier =
-                        Modifier
-                            .align(Alignment.BottomCenter)
-                            .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
-                            .navigationBarsPadding()
-                            .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
-                            .widthIn(max = Dimens.maxNavBarWidth),
+        FloatingNavigationLayout(
+            modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+            navigation = {
+                if (navigator.isOnTopLevelRoot) {
+                    AppFloatingNavBar(
+                        items = navItems,
+                        modifier =
+                            Modifier
+                                .navigationBarsPadding()
+                                .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
+                                .widthIn(max = Dimens.maxNavBarWidth),
+                    )
+                }
+            },
+            content = { contentModifier ->
+                NavDisplay(
+                    entries = rememberAppNavEntries(navigator, entryProvider),
+                    onBack = { navigator.goBack() },
+                    transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                    popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                    predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+                    modifier = contentModifier,
                 )
-            }
-        }
+            },
+        )
     }
 }

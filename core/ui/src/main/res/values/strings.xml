@@ -3,4 +3,8 @@
     <string name="core_ui_back">Back</string>
     <string name="core_ui_retry">Retry</string>
     <string name="core_ui_loading">Loading</string>
+    <plurals name="core_ui_nav_badge_count">
+        <item quantity="one">%d notification</item>
+        <item quantity="other">%d notifications</item>
+    </plurals>
 </resources>

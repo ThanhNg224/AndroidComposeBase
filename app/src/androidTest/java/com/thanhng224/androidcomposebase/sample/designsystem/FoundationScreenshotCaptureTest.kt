@@ -1,13 +1,10 @@
 package com.thanhng224.androidcomposebase.sample.designsystem
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Build
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -15,21 +12,18 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -38,6 +32,8 @@ import com.thanhng224.androidcomposebase.core.ui.components.AppFloatingNavBar
 import com.thanhng224.androidcomposebase.core.ui.components.AppNavItem
 import com.thanhng224.androidcomposebase.core.ui.theme.AndroidComposeBaseTheme
 import com.thanhng224.androidcomposebase.core.ui.theme.Dimens
+import com.thanhng224.androidcomposebase.presentation.FloatingNavigationLayout
+import com.thanhng224.androidcomposebase.presentation.MainShell
 import com.thanhng224.androidcomposebase.sample.designsystem.presentation.ui.DesignSystemScreen
 import org.junit.Rule
 import org.junit.Test
@@ -70,50 +66,45 @@ class FoundationScreenshotCaptureTest {
                 composeRule.activity.setContent {
                     AndroidComposeBaseTheme(darkTheme = darkTheme, dynamicColor = false) {
                         key(darkTheme) {
-                            val density = LocalDensity.current
-                            var barHeight by remember { mutableStateOf(0.dp) }
-                            Box(modifier = Modifier.fillMaxSize()) {
-                                DesignSystemScreen(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxSize()
-                                            .padding(bottom = barHeight)
-                                            .consumeWindowInsets(PaddingValues(bottom = barHeight)),
-                                )
-                                AppFloatingNavBar(
-                                    items =
-                                        listOf(
-                                            AppNavItem(
-                                                false,
-                                                {},
-                                                Icons.Default.Home,
-                                                Icons.Default.Home,
-                                                stringResource(R.string.navigation_home),
+                            FloatingNavigationLayout(
+                                content = { contentModifier -> DesignSystemScreen(modifier = contentModifier) },
+                                navigation = {
+                                    AppFloatingNavBar(
+                                        items =
+                                            listOf(
+                                                AppNavItem(
+                                                    "home",
+                                                    false,
+                                                    {},
+                                                    Icons.Default.Home,
+                                                    Icons.Default.Home,
+                                                    stringResource(R.string.navigation_home),
+                                                ),
+                                                AppNavItem(
+                                                    "design",
+                                                    true,
+                                                    {},
+                                                    Icons.Default.CheckCircle,
+                                                    Icons.Default.CheckCircle,
+                                                    stringResource(R.string.navigation_design),
+                                                ),
+                                                AppNavItem(
+                                                    "settings",
+                                                    false,
+                                                    {},
+                                                    Icons.Default.Settings,
+                                                    Icons.Default.Settings,
+                                                    stringResource(R.string.navigation_settings),
+                                                ),
                                             ),
-                                            AppNavItem(
-                                                true,
-                                                {},
-                                                Icons.Default.CheckCircle,
-                                                Icons.Default.CheckCircle,
-                                                stringResource(R.string.navigation_design),
-                                            ),
-                                            AppNavItem(
-                                                false,
-                                                {},
-                                                Icons.Default.Settings,
-                                                Icons.Default.Settings,
-                                                stringResource(R.string.navigation_settings),
-                                            ),
-                                        ),
-                                    modifier =
-                                        Modifier
-                                            .align(Alignment.BottomCenter)
-                                            .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
-                                            .navigationBarsPadding()
-                                            .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
-                                            .widthIn(max = Dimens.maxNavBarWidth),
-                                )
-                            }
+                                        modifier =
+                                            Modifier
+                                                .navigationBarsPadding()
+                                                .padding(horizontal = Dimens.spaceMedium, vertical = Dimens.spaceSmall)
+                                                .widthIn(max = Dimens.maxNavBarWidth),
+                                    )
+                                },
+                            )
                         }
                     }
                 }
@@ -178,6 +169,30 @@ class FoundationScreenshotCaptureTest {
         android.util.Log.i("FoundationCapture", "Screenshots: ${outputDirectory.absolutePath}")
     }
 
+    @Test
+    fun captureRailInSimulatedExpandedConfiguration() {
+        val directory = File(requireNotNull(composeRule.activity.getExternalFilesDir(null)), "foundation-captures").apply { mkdirs() }
+        listOf(false, true).forEach { darkTheme ->
+            setWindowAppearance(darkTheme)
+            composeRule.runOnUiThread {
+                composeRule.activity.setContent {
+                    val expanded =
+                        Configuration(LocalConfiguration.current).apply {
+                            screenWidthDp = 600
+                            screenHeightDp = 800
+                        }
+                    CompositionLocalProvider(LocalConfiguration provides expanded) {
+                        AndroidComposeBaseTheme(darkTheme = darkTheme, dynamicColor = false) {
+                            MainShell()
+                        }
+                    }
+                }
+            }
+            composeRule.waitForIdle()
+            capture(directory, "rail-simulated-${if (darkTheme) "dark" else "light"}")
+        }
+    }
+
     private fun setWindowAppearance(darkTheme: Boolean) {
         composeRule.runOnUiThread {
             val window = composeRule.activity.window
@@ -195,10 +210,7 @@ class FoundationScreenshotCaptureTest {
         directory: File,
         name: String,
     ) {
-        val bitmap =
-            requireNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot()) {
-                "UiAutomation did not return a screenshot"
-            }
+        val bitmap = composeRule.onRoot().captureToImage().asAndroidBitmap()
         FileOutputStream(File(directory, "$name.png")).use { output ->
             check(bitmap.compress(Bitmap.CompressFormat.PNG, 100, output)) {
                 "Could not write $name.png"

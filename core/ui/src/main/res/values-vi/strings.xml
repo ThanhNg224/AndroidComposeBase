@@ -3,4 +3,8 @@
     <string name="core_ui_back">Quay lại</string>
     <string name="core_ui_retry">Thử lại</string>
     <string name="core_ui_loading">Đang tải</string>
+    <plurals name="core_ui_nav_badge_count">
+        <item quantity="one">%d thông báo</item>
+        <item quantity="other">%d thông báo</item>
+    </plurals>
 </resources>
