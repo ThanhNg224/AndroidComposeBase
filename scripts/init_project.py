@@ -150,6 +150,7 @@ def _replacement_pairs(project_name: str, app_package: str, core_package: str, s
             (f"L{SOURCE_CORE_PACKAGE.replace('.', '/')}/", f"L{core_package.replace('.', '/')}/"),
             (SOURCE_PLUGIN_PACKAGE, f"{plugin_prefix}.buildlogic"),
             ("androidcomposebase.", f"{plugin_prefix}."),
+            ("# Android App Starter (Compose)", f"# {project_name}"),
             ("AndroidComposeBase", project_name),
             ("Widget.AndroidComposeBase", f"Widget.{project_name}"),
             ("TextAppearance.AndroidComposeBase", f"TextAppearance.{project_name}"),

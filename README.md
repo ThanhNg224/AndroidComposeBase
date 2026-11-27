@@ -1,4 +1,4 @@
-# AndroidComposeBase
+# Android App Starter (Compose)
 
 An Android application starter with Jetpack Compose and reusable core libraries.
 
